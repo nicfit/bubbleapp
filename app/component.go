@@ -204,6 +204,11 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 func (base *Base) AddChild(child UIModel) {
 	base.Children = append(base.Children, child)
 }
+
+func (base *Base) AddChildren(children ...UIModel) {
+	base.Children = append(base.Children, children...)
+}
+
 func (base *Base) RemoveChild(ID string) bool {
 	for i, c := range base.Children {
 		if c.Base().ID == ID {

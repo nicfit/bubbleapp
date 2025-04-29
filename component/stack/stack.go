@@ -7,15 +7,22 @@ import (
 )
 
 type StackOptions struct {
-	Vertical bool
+	Vertical        bool // Implemented in the future
+	initialChildren []app.UIModel
 }
+type StackOption func(o *StackOptions)
+
+func WithChildren(items ...app.UIModel) StackOption {
+	return func(o *StackOptions) {
+		o.initialChildren = items
+	}
+}
+
 type model struct {
 	base  *app.Base
 	opts  StackOptions
 	style lipgloss.Style
 }
-
-type StackOption func(o *StackOptions)
 
 func New(ctx *app.Context, opts ...StackOption) model {
 	options := StackOptions{
@@ -25,6 +32,10 @@ func New(ctx *app.Context, opts ...StackOption) model {
 		opt(&options)
 	}
 	base := app.New(ctx, app.WithGrow(true))
+
+	if options.initialChildren != nil {
+		base.AddChildren(options.initialChildren...)
+	}
 
 	return model{
 		base:  base,
@@ -58,50 +69,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.base.Width = msg.Width
 		m.style = m.style.Width(msg.Width).Height(msg.Height)
 
-		growerCount := 0
-		for _, child := range m.base.GetChildren() {
-			if child.Base().Opts.GrowY {
-				growerCount++
-			}
-		}
+		cmds = append(cmds, app.CalculateHeights(m.base, msg))
 
-		nonGrowerHeight := 0
-		for _, child := range m.base.GetChildren() {
-			if !child.Base().Opts.GrowY {
-				childHeight := lipgloss.Height(child.View())
-				nonGrowerHeight += childHeight
-
-				newChild, cmd := child.Update(tea.WindowSizeMsg{
-					Width:  msg.Width,
-					Height: childHeight,
-				})
-				newChildTyped := newChild.(app.UIModel)
-				m.base.ReplaceChild(child.Base().ID, newChildTyped)
-				cmds = append(cmds, cmd)
-			}
-		}
-
-		if growerCount > 0 {
-			availableHeight := msg.Height - nonGrowerHeight
-			growerHeight := availableHeight / growerCount
-			remainder := availableHeight % growerCount
-			for _, child := range m.base.GetChildren() {
-				if child.Base().Opts.GrowY {
-					currentGrowerHeight := growerHeight
-					if remainder > 0 {
-						currentGrowerHeight++
-						remainder--
-					}
-					newChild, cmd := child.Update(tea.WindowSizeMsg{
-						Width:  msg.Width,
-						Height: currentGrowerHeight,
-					})
-					newChildTyped := newChild.(app.UIModel)
-					m.base.ReplaceChild(child.Base().ID, newChildTyped)
-					cmds = append(cmds, cmd)
-				}
-			}
-		}
 		return m, tea.Batch(cmds...)
 	}
 
@@ -112,7 +81,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-
 	childrenViews := make([]string, 0, len(m.base.GetChildren()))
 	for _, child := range m.base.GetChildren() {
 		childrenViews = append(childrenViews, child.View())

@@ -21,9 +21,10 @@ type model struct {
 }
 
 type options struct {
-	text      string
-	textColor *color.Color
-	color     *color.Color
+	text                string
+	textColor           *color.Color
+	textBackgroundColor *color.Color
+	color               *color.Color
 }
 
 type option func(*options)
@@ -36,6 +37,11 @@ func WithText(text string) option {
 func WithTextColor(color color.Color) option {
 	return func(o *options) {
 		o.textColor = &color
+	}
+}
+func WithTextBackgroundColor(color color.Color) option {
+	return func(o *options) {
+		o.textBackgroundColor = &color
 	}
 }
 
@@ -60,6 +66,9 @@ func New(ctx *app.Context, variant Spinner, opts ...option) model {
 
 	if options.textColor != nil {
 		styleText = styleText.Foreground(*options.textColor)
+	}
+	if options.textBackgroundColor != nil {
+		styleText = styleText.Background(*options.textBackgroundColor)
 	}
 	if options.color != nil {
 		styleSpinner = styleSpinner.Foreground(*options.color)

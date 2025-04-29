@@ -12,7 +12,8 @@ import (
 )
 
 type BoxOptions struct {
-	Bg *color.Color
+	Bg           *color.Color
+	initialChild app.UIModel
 }
 type model struct {
 	base         *app.Base
@@ -34,6 +35,12 @@ func WithBg(color color.Color) BoxOption {
 	}
 }
 
+func WithChild(item app.UIModel) BoxOption {
+	return func(o *BoxOptions) {
+		o.initialChild = item
+	}
+}
+
 func New(ctx *app.Context, opts ...BoxOption) model {
 	options := BoxOptions{
 		Bg: nil, // TODO theming for default value
@@ -42,6 +49,10 @@ func New(ctx *app.Context, opts ...BoxOption) model {
 		opt(&options)
 	}
 	base := app.New(ctx, app.WithGrow(true))
+
+	if options.initialChild != nil {
+		base.AddChild(options.initialChild)
+	}
 
 	viewport := viewport.New()
 

@@ -98,7 +98,7 @@ base.AddChild(stack)
 
 ![Stack](./examples/stack/demo.gif)
 
-### [Tabs](./examples/stack/main.go)
+### [Tabs](./examples/tabs/main.go)
 
 ```go
 var tabsData = []tabs.TabElement{
@@ -131,3 +131,30 @@ var tabsData = []tabs.TabElement{
 ```
 
 ![Tabs](./examples/tabs/demo.gif)
+
+### [Grid](./examples/grid/main.go)
+
+```go
+// This does look a bit messy. Maybe there is a better way.
+gridView := grid.New(ctx)
+gridView.AddItems(
+    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.PrimaryDark), box.WithChild(
+        text.New(ctx, "I wish I could center text! Some day...")),
+    ), grid.WithXs(12)),
+    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)), grid.WithXsv(6)),
+    grid.NewItem(button.New(ctx, "BUTTON 1", button.WithVariant(button.Success)), grid.WithXs(6)),
+    grid.NewItem(button.New(ctx, "BUTTON 2"), grid.WithXs(3)),
+    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.InfoDark), box.WithChild(
+        stack.New(ctx, stack.WithChildren(
+            text.New(ctx, "I am in a stack!"),
+            loader.New(ctx, loader.Meter, loader.WithText("Text style messes up bg. Fix!"), loader.WithColor(ctx.Styles.Colors.Black))),
+        ),
+    )), grid.WithXs(6)),
+    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)), grid.WithXs(3)),
+)
+
+base := app.New(ctx, app.AsRoot())
+base.AddChild(gridView)
+```
+
+![Grid](./examples/grid/demo.gif)
