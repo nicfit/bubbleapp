@@ -30,6 +30,7 @@ type model struct {
 	opts         ButtonOptions
 	style        lipgloss.Style
 	styleFocused lipgloss.Style
+	styleHovered lipgloss.Style
 	KeyMap       KeyMap
 }
 
@@ -57,6 +58,7 @@ func New(ctx *app.Context, text string, opts ...ButtonOption) model {
 
 	style := lipgloss.NewStyle()
 
+	// TODO: This seems too much code. Is there a better way?
 	switch options.Color {
 	case Primary:
 		style = style.Foreground(ctx.Styles.Colors.Primary)
@@ -92,11 +94,30 @@ func New(ctx *app.Context, text string, opts ...ButtonOption) model {
 		styleFocused = styleFocused.Background(ctx.Styles.Colors.Info).Foreground(ctx.Styles.Colors.Black)
 	}
 
+	styleHovered := style
+	switch options.Color {
+	case Primary:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.PrimaryDark)
+	case Secondary:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.SecondaryDark)
+	case Tertiary:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.TertiaryDark)
+	case Success:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.SuccessDark)
+	case Danger:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.DangerDark)
+	case Warning:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.WarningDark)
+	case Info:
+		styleHovered = styleFocused.Background(ctx.Styles.Colors.InfoDark)
+	}
+
 	return model{
 		base:         app.New(ctx, app.WithFocusable(true)),
 		Text:         text,
 		style:        style,
 		styleFocused: styleFocused,
+		styleHovered: styleHovered,
 		opts:         options,
 		KeyMap: KeyMap{
 			Submit: key.NewBinding(
@@ -150,6 +171,9 @@ func (m model) View() string {
 	style := m.style
 	if m.base.Focused {
 		style = m.styleFocused
+	}
+	if m.base.Hovered {
+		style = m.styleHovered
 	}
 	return m.base.Ctx.Zone.Mark(m.base.ID, style.Render("[ "+m.Text+" ]"))
 }
