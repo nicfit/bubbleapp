@@ -37,9 +37,13 @@ return model{
 
 ![Hello world!](./examples/hello-world/demo.gif)
 
+---
+
 ### [Multiple Views](./examples/multiple-views/main.go)
 
 ![Multiple Views](./examples/multiple-views/demo.gif)
+
+---
 
 ### [Tabbing](./examples/tabbing/main.go)
 
@@ -82,6 +86,8 @@ case button.ButtonPressMsg:
 
 ![Tabbing](./examples/tabbing/demo.gif)
 
+---
+
 ### [Stack](./examples/stack/main.go)
 
 ```go
@@ -97,6 +103,8 @@ base.AddChild(stack)
 ```
 
 ![Stack](./examples/stack/demo.gif)
+
+---
 
 ### [Tabs](./examples/tabs/main.go)
 
@@ -131,6 +139,8 @@ var tabsData = []tabs.TabElement{
 ```
 
 ![Tabs](./examples/tabs/demo.gif)
+
+---
 
 ### [Grid](./examples/grid/main.go)
 
