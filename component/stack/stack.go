@@ -68,8 +68,53 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.base.Height = msg.Height
 		m.base.Width = msg.Width
 		m.style = m.style.Width(msg.Width).Height(msg.Height)
+		var (
+			cmds []tea.Cmd
+		)
+		growerCount := 0
+		for _, child := range m.base.GetChildren() {
+			if child.Base().Opts.GrowY {
+				growerCount++
+			}
+		}
 
-		cmds = append(cmds, app.CalculateHeights(m.base, msg))
+		nonGrowerHeight := 0
+		for _, child := range m.base.GetChildren() {
+			if !child.Base().Opts.GrowY {
+				childHeight := lipgloss.Height(child.View())
+				nonGrowerHeight += childHeight
+
+				newChild, cmd := child.Update(tea.WindowSizeMsg{
+					Width:  msg.Width,
+					Height: childHeight,
+				})
+				newChildTyped := newChild.(app.UIModel)
+				m.base.ReplaceChild(child.Base().ID, newChildTyped)
+				cmds = append(cmds, cmd)
+			}
+		}
+
+		if growerCount > 0 {
+			availableHeight := msg.Height - nonGrowerHeight
+			growerHeight := availableHeight / growerCount
+			remainder := availableHeight % growerCount
+			for _, child := range m.base.GetChildren() {
+				if child.Base().Opts.GrowY {
+					currentGrowerHeight := growerHeight
+					if remainder > 0 {
+						currentGrowerHeight++
+						remainder--
+					}
+					newChild, cmd := child.Update(tea.WindowSizeMsg{
+						Width:  msg.Width,
+						Height: currentGrowerHeight,
+					})
+					newChildTyped := newChild.(app.UIModel)
+					m.base.ReplaceChild(child.Base().ID, newChildTyped)
+					cmds = append(cmds, cmd)
+				}
+			}
+		}
 
 		return m, tea.Batch(cmds...)
 	}

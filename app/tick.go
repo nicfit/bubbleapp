@@ -13,7 +13,3 @@ func (m Base) tick() tea.Cmd {
 		return TickMsg(t)
 	})
 }
-
-func (m Base) Tick() tea.Msg {
-	return TickMsg(time.Now())
-}

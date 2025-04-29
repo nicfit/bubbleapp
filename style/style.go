@@ -21,6 +21,8 @@ type Styles struct {
 	TextGhost     lipgloss.Style
 }
 
+// TODO: Add a way to define Themes.
+// Maybe use bubbletint if possible? Perhaps we need more colors though.
 func DefaultStyles() *Styles {
 
 	s := new(Styles)
