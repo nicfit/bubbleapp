@@ -150,7 +150,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.inputView,
 		)
 
-		errorText := text.New(m.base.Ctx, msg.Error) // Add variant to text for Error text
+		errorText := text.New(m.base.Ctx, msg.Error, text.WithColor(m.base.Ctx.Styles.Colors.Danger)) // Add variant to text for Error text
 		m.errorTextID = errorText.Base().ID
 		m.base.GetChildren()[0].Base().AddChild(
 			errorText,
