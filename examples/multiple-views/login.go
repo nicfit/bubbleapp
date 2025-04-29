@@ -88,19 +88,10 @@ type LoginFailedMsg struct {
 
 func LoginCmd(m model, fail bool) tea.Cmd {
 	return func() tea.Msg {
-		if m.errorTextID != "" {
-			m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
-			m.errorTextID = ""
-		}
-		m.base.ReplaceChild(
-			m.inputView.Base().ID,
-			m.loggingInView,
-		)
-
 		time.Sleep(2 * time.Second)
 		if fail {
 			return LoginFailedMsg{
-				Error: "Login failed by chance",
+				Error: "\nLogin failed. Ouch!",
 			}
 		}
 
@@ -131,8 +122,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.quitButtonID:
 			return m, tea.Quit
 		case m.failButtonID:
+			if m.errorTextID != "" {
+				m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
+				m.errorTextID = ""
+			}
+			m.base.ReplaceChild(
+				m.inputView.Base().ID,
+				m.loggingInView,
+			)
 			return m, LoginCmd(m, true)
 		case m.loginButtonID:
+			if m.errorTextID != "" {
+				m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
+				m.errorTextID = ""
+			}
+			m.base.ReplaceChild(
+				m.inputView.Base().ID,
+				m.loggingInView,
+			)
 			return m, LoginCmd(m, false)
 		}
 	case LoginSuccessMsg:

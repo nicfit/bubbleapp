@@ -4,11 +4,11 @@ Set FontSize 16
 Set Width 1200
 Set Height 600
 
+Hide
 Type "go run ."
-
-Sleep 500ms
-
 Enter
+Sleep 3s
+Show
 
 Sleep 3s
 
