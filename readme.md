@@ -1,7 +1,7 @@
 # BubbleApp
 
-[!WARNING]
-This is work in progress and just exploration for now
+> [!WARNING]
+> This is work in progress and just exploration for now
 
 An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be a lot of manual work. For every state of the app you need to store that state in your model and branch accordingly.
 
@@ -17,14 +17,83 @@ With BubbleApp you can compose models and gain things like
 
 ## Examples
 
-Hello, World!
-![Tabbing](./examples/hello-world/demo.gif)
+### [Hello World!](./examples/hello-world/main.go)
 
-Multiple Views
+```go
+stack := stack.New(ctx)
+stack.AddChildren(
+    text.New(ctx, "Hello World!"),
+    divider.New(ctx),
+    text.New(ctx, "Press [q] to quit."),
+)
+
+base := app.New(ctx)
+base.AddChild(stack)
+
+return model{
+    base: base,
+}
+```
+
+![Hello world!](./examples/hello-world/demo.gif)
+
+### [Multiple Views](./examples/multiple-views/main.go)
+
 ![Multiple Views](./examples/multiple-views/demo.gif)
 
-Tabbing
+### [Tabbing](./examples/tabbing/main.go)
+
+```go
+boxFill := box.New(ctx)
+
+addButton := button.New(ctx, "Button 1",
+    button.WithVariant(button.Primary),
+)
+
+quitButton := button.New(ctx, "Quit App",
+    button.WithVariant(button.Danger),
+)
+
+stack := stack.New(ctx)
+stack.AddChildren(
+    text.New(ctx, "Tab through the buttons to see focus state!"),
+    addButton,
+    boxFill,
+    divider.New(ctx),
+    quitButton,
+)
+
+base := app.New(ctx, app.AsRoot())
+base.AddChild(stack)
+```
+
+```go
+case button.ButtonPressMsg:
+    switch msg.ID {
+    case m.quitButtonID:
+        return m, tea.Quit
+    case m.addButtonID:
+        m.base.GetChild(m.containerID).Base().AddChild(
+            text.New(m.base.Ctx, "Button pressed"),
+        )
+        return m, nil
+    }
+```
+
 ![Tabbing](./examples/tabbing/demo.gif)
 
-Stack
+### [Stack](./examples/stack/main.go)
+
+```go
+stack := stack.New(ctx)
+stack.AddChildren(
+    box.New(ctx, box.WithBg(ctx.Styles.Colors.Danger)),
+    box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)),
+    box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)),
+)
+
+base := app.New(ctx)
+base.AddChild(stack)
+```
+
 ![Stack](./examples/stack/demo.gif)
