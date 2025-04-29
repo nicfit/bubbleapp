@@ -79,10 +79,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.viewport.SetWidth(msg.Width - 1)
+		m.viewport.SetWidth(msg.Width)
 		m.viewport.SetHeight(msg.Height)
-		m.base.Height = msg.Height
-		m.base.Width = msg.Width
 		// Does not support multiple children with fill
 
 	case tea.KeyMsg:

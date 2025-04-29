@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(NewLogin(), tea.WithAltScreen())
+	p := tea.NewProgram(NewLogin(), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

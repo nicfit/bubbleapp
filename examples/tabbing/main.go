@@ -61,7 +61,7 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.base.Init(), m.base.Ctx.FocusManager.FocusFirstCmd(m.base.GetChildren()[0]))
+	return m.base.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -99,7 +99,7 @@ func (m model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(NewRoot(), tea.WithAltScreen())
+	p := tea.NewProgram(NewRoot(), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

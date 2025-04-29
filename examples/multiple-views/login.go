@@ -111,7 +111,7 @@ func LoginCmd(m model, fail bool) tea.Cmd {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.base.Init(), m.base.Ctx.FocusManager.FocusFirstCmd(m.base.GetChildren()[0]))
+	return m.base.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

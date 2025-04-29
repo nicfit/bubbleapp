@@ -26,7 +26,7 @@ func NewRoot() model {
 		box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)),
 	)
 
-	base := app.New(ctx)
+	base := app.New(ctx, app.AsRoot())
 	base.AddChild(stack)
 
 	return model{

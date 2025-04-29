@@ -9,9 +9,8 @@ import (
 )
 
 type TabElement struct {
-	Title    string
-	Content  func(ctx *app.Context) app.UIModel
-	Shortcut string
+	Title   string
+	Content func(ctx *app.Context) app.UIModel
 }
 
 type model struct {
@@ -25,7 +24,7 @@ type model struct {
 	tabContent []app.UIModel
 }
 
-func New(ctx *app.Context, tabs []TabElement, height int) model {
+func New(ctx *app.Context, tabs []TabElement) model {
 
 	tabTitles := make([]string, len(tabs))
 	tabContent := make([]app.UIModel, len(tabs))
@@ -77,8 +76,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		cmds = append(cmds, newTab.Init(), func() tea.Msg {
 			return tea.WindowSizeMsg{
-				Width:  m.base.Ctx.Width,
-				Height: m.base.Ctx.Height,
+				Width:  m.base.Width,
+				Height: m.base.Height,
 			}
 		})
 	}
@@ -90,7 +89,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.base.GetChildren()[0].View()
+	return m.base.View()
 }
 
 func (m model) Base() *app.Base {

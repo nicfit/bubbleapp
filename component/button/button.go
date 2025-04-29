@@ -8,7 +8,7 @@ import (
 )
 
 type ButtonOptions struct {
-	Color *ButtonColor
+	Color ButtonColor
 }
 type ButtonOption func(o *ButtonOptions)
 
@@ -43,56 +43,53 @@ type ButtonPressMsg struct {
 
 func WithVariant(Color ButtonColor) ButtonOption {
 	return func(o *ButtonOptions) {
-		o.Color = &Color
+		o.Color = Color
 	}
 }
 
 func New(ctx *app.Context, text string, opts ...ButtonOption) model {
 	options := ButtonOptions{
-		Color: nil, // TODO theming for default value
+		Color: Primary,
 	}
 	for _, opt := range opts {
 		opt(&options)
 	}
 
 	style := lipgloss.NewStyle()
-	if options.Color != nil {
-		switch *options.Color {
-		case Primary:
-			style = style.Foreground(ctx.Styles.Colors.Primary)
-		case Secondary:
-			style = style.Foreground(ctx.Styles.Colors.Secondary)
-		case Tertiary:
-			style = style.Foreground(ctx.Styles.Colors.Tertiary)
-		case Success:
-			style = style.Foreground(ctx.Styles.Colors.Success)
-		case Danger:
-			style = style.Foreground(ctx.Styles.Colors.Danger)
-		case Warning:
-			style = style.Foreground(ctx.Styles.Colors.Warning)
-		case Info:
-			style = style.Foreground(ctx.Styles.Colors.Info)
-		}
+
+	switch options.Color {
+	case Primary:
+		style = style.Foreground(ctx.Styles.Colors.Primary)
+	case Secondary:
+		style = style.Foreground(ctx.Styles.Colors.Secondary)
+	case Tertiary:
+		style = style.Foreground(ctx.Styles.Colors.Tertiary)
+	case Success:
+		style = style.Foreground(ctx.Styles.Colors.Success)
+	case Danger:
+		style = style.Foreground(ctx.Styles.Colors.Danger)
+	case Warning:
+		style = style.Foreground(ctx.Styles.Colors.Warning)
+	case Info:
+		style = style.Foreground(ctx.Styles.Colors.Info)
 	}
 
 	styleFocused := style
-	if options.Color != nil {
-		switch *options.Color {
-		case Primary:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.White)
-		case Secondary:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Secondary).Foreground(ctx.Styles.Colors.White)
-		case Tertiary:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Tertiary).Foreground(ctx.Styles.Colors.Black)
-		case Success:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Success).Foreground(ctx.Styles.Colors.Black)
-		case Danger:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Danger).Foreground(ctx.Styles.Colors.White)
-		case Warning:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Warning).Foreground(ctx.Styles.Colors.Black)
-		case Info:
-			styleFocused = styleFocused.Background(ctx.Styles.Colors.Info).Foreground(ctx.Styles.Colors.Black)
-		}
+	switch options.Color {
+	case Primary:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.White)
+	case Secondary:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Secondary).Foreground(ctx.Styles.Colors.White)
+	case Tertiary:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Tertiary).Foreground(ctx.Styles.Colors.Black)
+	case Success:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Success).Foreground(ctx.Styles.Colors.Black)
+	case Danger:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Danger).Foreground(ctx.Styles.Colors.White)
+	case Warning:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Warning).Foreground(ctx.Styles.Colors.Black)
+	case Info:
+		styleFocused = styleFocused.Background(ctx.Styles.Colors.Info).Foreground(ctx.Styles.Colors.Black)
 	}
 
 	return model{

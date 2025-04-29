@@ -4,14 +4,33 @@ import (
 	"os"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/component/divider"
-	"github.com/alexanderbh/bubbleapp/component/stack"
-	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/component/tabs"
 	"github.com/alexanderbh/bubbleapp/style"
 
 	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
+
+var tabsData = []tabs.TabElement{
+	{
+		Title: "Overview",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewOverview(ctx)
+		},
+	},
+	{
+		Title: "Loaders",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewLoaders(ctx)
+		},
+	},
+	{
+		Title: "Scolling",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewScrolling(ctx)
+		},
+	},
+}
 
 func NewRoot() model {
 	ctx := &app.Context{
@@ -20,15 +39,10 @@ func NewRoot() model {
 		Zone:         zone.New(),
 	}
 
-	stack := stack.New(ctx)
-	stack.AddChildren(
-		text.New(ctx, "Hello World!"),
-		divider.New(ctx),
-		text.New(ctx, "Press [q] to quit."),
-	)
+	tabs := tabs.New(ctx, tabsData)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	base.AddChild(tabs)
 
 	return model{
 		base: base,
@@ -44,17 +58,8 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		}
-	}
 	cmd := m.base.Update(msg)
-
 	return m, cmd
-
 }
 
 func (m model) View() string {
@@ -62,7 +67,7 @@ func (m model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(NewRoot(), tea.WithAltScreen())
+	p := tea.NewProgram(NewRoot(), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

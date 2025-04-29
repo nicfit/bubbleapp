@@ -27,7 +27,7 @@ stack.AddChildren(
     text.New(ctx, "Press [q] to quit."),
 )
 
-base := app.New(ctx)
+base := app.New(ctx, app.AsRoot())
 base.AddChild(stack)
 
 return model{
@@ -92,8 +92,42 @@ stack.AddChildren(
     box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)),
 )
 
-base := app.New(ctx)
+base := app.New(ctx, app.AsRoot())
 base.AddChild(stack)
 ```
 
 ![Stack](./examples/stack/demo.gif)
+
+### [Tabs](./examples/stack/main.go)
+
+```go
+var tabsData = []tabs.TabElement{
+	{
+		Title: "Overview",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewOverview(ctx)
+		},
+	},
+	{
+		Title: "Loaders",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewLoaders(ctx)
+		},
+	},
+	{
+		Title: "Scolling",
+		Content: func(ctx *app.Context) app.UIModel {
+			return NewScrolling(ctx)
+		},
+	},
+}
+```
+
+```go
+	tabs := tabs.New(ctx, tabsData)
+
+	base := app.New(ctx, app.AsRoot())
+	base.AddChild(tabs)
+```
+
+![Tabs](./examples/tabs/demo.gif)

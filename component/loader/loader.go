@@ -98,7 +98,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	return m.styleSpinner.Render(m.spinner.Frames[m.frame]) + m.styleText.Render(m.options.text)
+	text := m.options.text
+	if text != "" {
+		text = " " + text
+	}
+	return m.styleSpinner.Render(m.spinner.Frames[m.frame]) + m.styleText.Render(text)
 }
 
 func (m model) Base() *app.Base {

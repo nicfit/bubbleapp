@@ -123,6 +123,9 @@ func (m Base) Init() tea.Cmd {
 	if m.Opts.TickFPS > 0 {
 		cmds = append(cmds, m.tick())
 	}
+	if m.Opts.IsRoot {
+		cmds = append(cmds, m.Ctx.FocusManager.FocusFirstCmd(m.GetChildren()[0]))
+	}
 	return tea.Batch(cmds...)
 }
 func (m *Base) Update(msg tea.Msg) tea.Cmd {
@@ -162,6 +165,10 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 	case tea.WindowSizeMsg:
 		m.Height = msg.Height
 		m.Width = msg.Width
+		if m.Opts.IsRoot {
+			m.Ctx.Width = msg.Width
+			m.Ctx.Height = msg.Height
+		}
 
 	case tea.MouseMsg:
 		switch msg := msg.(type) {
@@ -245,7 +252,12 @@ func (base *Base) View() string {
 	for _, child := range base.Children {
 		children = append(children, child.View())
 	}
-	return strings.Join(children, "\n")
+	result := strings.Join(children, "\n")
+
+	if base.Opts.IsRoot {
+		return base.Ctx.Zone.Scan(result)
+	}
+	return result
 }
 
 // --- FocusManager ---
