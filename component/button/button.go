@@ -129,6 +129,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	switch msg := msg.(type) {
+	case tea.MouseClickMsg:
+		if msg.Button == tea.MouseLeft {
+			if m.base.Ctx.Zone.Get(m.Base().ID).InBounds(msg) {
+				return m, func() tea.Msg {
+					return ButtonPressMsg{ID: m.base.ID}
+				}
+			}
+		}
+	}
+
 	cmd = m.base.Update(msg)
 	cmds = append(cmds, cmd)
 
