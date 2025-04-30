@@ -24,9 +24,7 @@ func NewRoot() model[CustomData] {
 	}
 
 	boxFill := box.New(ctx, &box.Options[CustomData]{})
-
 	addButton := button.New(ctx, "Button 1", &button.Options{Variant: button.Primary})
-
 	quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
 
 	stack := stack.New(ctx, &stack.Options[CustomData]{

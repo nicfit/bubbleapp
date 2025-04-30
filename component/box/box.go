@@ -47,14 +47,6 @@ func New[T any](ctx *app.Context[T], options *Options[T]) model[T] {
 		contentCache: "",
 	}
 }
-func (m *model[T]) AddChild(item *app.Base[T]) {
-	m.base.AddChild(item)
-}
-func (m *model[T]) AddChildren(items ...*app.Base[T]) {
-	for _, item := range items {
-		m.base.AddChild(item)
-	}
-}
 
 func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()

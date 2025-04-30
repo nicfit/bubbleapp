@@ -34,12 +34,12 @@ func New[T any](ctx *app.Context[T], items ...Item[T]) model[T] {
 		itemConfigs: make(map[string]Item[T]),
 	}
 
-	m.AddItems(items...)
+	m.addItems(items...)
 
 	return m
 }
 
-func (m model[T]) AddItems(items ...Item[T]) {
+func (m model[T]) addItems(items ...Item[T]) {
 	for _, item := range items {
 		if item.Xs == 0 {
 			item.Xs = 12
