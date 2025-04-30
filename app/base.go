@@ -101,8 +101,8 @@ func New[T any](ctx *Context[T], opts ...Option) *Base[T] {
 
 func (m *Base[T]) Init() tea.Cmd {
 	cmds := []tea.Cmd{}
-	if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
-		for _, child := range m.GetChildren() {
+	if len(m.Children) > 0 {
+		for _, child := range m.Children {
 			cmds = append(cmds, child.Init())
 		}
 	}
@@ -110,7 +110,7 @@ func (m *Base[T]) Init() tea.Cmd {
 		cmds = append(cmds, m.tick())
 	}
 	if m.Opts.IsRoot {
-		cmds = append(cmds, m.Ctx.FocusFirstCmd(m.GetChildren()[0]))
+		cmds = append(cmds, m.Ctx.FocusFirstCmd(m.Children[0]))
 	}
 	return tea.Batch(cmds...)
 }
@@ -124,9 +124,9 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 		if m.Opts.IsRoot {
 			switch msg.String() {
 			case "tab":
-				return m.Ctx.FocusNextCmd(m.GetChildren()[0])
+				return m.Ctx.FocusNextCmd(m.Children[0])
 			case "shift+tab":
-				return m.Ctx.FocusPrevCmd(m.GetChildren()[0])
+				return m.Ctx.FocusPrevCmd(m.Children[0])
 			}
 		}
 	case FocusComponentMsg:
@@ -136,8 +136,8 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 			if m.Opts.Focusable {
 				m.Focused = true // Target should be focused
 			} else {
-				if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
-					cmds = append(cmds, sendFocusMsg(m.GetChildren()[0].ID))
+				if len(m.Children) > 0 {
+					cmds = append(cmds, sendFocusMsg(m.Children[0].ID))
 				}
 			}
 
@@ -173,9 +173,9 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 	}
 
 	// For each child, update and collect commands
-	if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
-		newChildren := make([]*Base[T], len(m.GetChildren()))
-		for i, child := range m.GetChildren() {
+	if len(m.Children) > 0 {
+		newChildren := make([]*Base[T], len(m.Children))
+		for i, child := range m.Children {
 			updatedChild, cmd := child.Model.Update(msg)
 			typedChild := updatedChild.(UIModel[T])
 			typedChild.Base().Model = typedChild // Update the UIModel on the *Base
@@ -247,8 +247,4 @@ func (base *Base[T]) GetChild(id string) *Base[T] {
 		}
 	}
 	return nil
-}
-
-func (fc *Base[T]) GetChildren() []*Base[T] {
-	return fc.Children
 }

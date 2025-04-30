@@ -53,14 +53,14 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds []tea.Cmd
 		)
 		growerCount := 0
-		for _, child := range m.base.GetChildren() {
+		for _, child := range m.base.Children {
 			if child.Opts.GrowY {
 				growerCount++
 			}
 		}
 
 		nonGrowerHeight := 0
-		for _, child := range m.base.GetChildren() {
+		for _, child := range m.base.Children {
 			if !child.Opts.GrowY {
 				childHeight := lipgloss.Height(child.Model.View())
 				nonGrowerHeight += childHeight
@@ -80,7 +80,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			availableHeight := msg.Height - nonGrowerHeight
 			growerHeight := availableHeight / growerCount
 			remainder := availableHeight % growerCount
-			for _, child := range m.base.GetChildren() {
+			for _, child := range m.base.Children {
 				if child.Opts.GrowY {
 					currentGrowerHeight := growerHeight
 					if remainder > 0 {
@@ -109,8 +109,8 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	childrenViews := make([]string, 0, len(m.base.GetChildren()))
-	for _, child := range m.base.GetChildren() {
+	childrenViews := make([]string, 0, len(m.base.Children))
+	for _, child := range m.base.Children {
 		childrenViews = append(childrenViews, child.Model.View())
 	}
 	return m.style.Render(lipgloss.JoinVertical(lipgloss.Left, childrenViews...))

@@ -87,7 +87,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		currentRowSpan := 0
 		widthPerSpanUnit := float64(containerWidth) / 12.0
 
-		children := m.base.GetChildren()
+		children := m.base.Children
 		childWidths := make(map[string]int) // Store calculated widths
 
 		for i, child := range children {
@@ -237,7 +237,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	if len(m.base.GetChildren()) == 0 {
+	if len(m.base.Children) == 0 {
 		return ""
 	}
 
@@ -250,7 +250,7 @@ func (m model[T]) View() string {
 	widthPerSpanUnit := float64(containerWidth) / 12.0
 	remainder := containerWidth % 12 // is this right??
 
-	for _, child := range m.base.GetChildren() {
+	for _, child := range m.base.Children {
 		childID := child.ID
 
 		config, ok := m.itemConfigs[childID]

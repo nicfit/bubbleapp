@@ -58,7 +58,7 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T]) *app.Base[T] {
 		titlesID:   tabTitlesModel.ID,
 
 		base:        base,
-		activeTabID: contentBox.GetChildren()[0].ID,
+		activeTabID: contentBox.Children[0].ID,
 	}.Base()
 }
 
@@ -77,7 +77,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		currentTabID := m.activeTabID
 		newTab := m.tabContent[msg.ActiveTab]
 		m.activeTabID = newTab.ID
-		m.base.GetChildren()[0].GetChildren()[1].ReplaceChild(currentTabID, newTab)
+		m.base.Children[0].Children[1].ReplaceChild(currentTabID, newTab)
 
 		cmds = append(cmds, newTab.Init(), func() tea.Msg {
 			return tea.WindowSizeMsg{

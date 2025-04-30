@@ -83,9 +83,9 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	if m.base.GetChildren() != nil && len(m.base.GetChildren()) > 0 {
-		childContent := make([]string, len(m.base.GetChildren()))
-		for i, child := range m.base.GetChildren() {
+	if m.base.Children != nil && len(m.base.Children) > 0 {
+		childContent := make([]string, len(m.base.Children))
+		for i, child := range m.base.Children {
 			childContent[i] = child.Model.View()
 		}
 
