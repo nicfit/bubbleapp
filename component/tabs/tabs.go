@@ -79,7 +79,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.activeTabID = newTab.ID
 		m.base.Children[0].Children[1].ReplaceChild(currentTabID, newTab)
 
-		cmds = append(cmds, newTab.Init(), func() tea.Msg {
+		cmds = append(cmds, newTab.Model.Init(), func() tea.Msg {
 			return tea.WindowSizeMsg{
 				Width:  m.base.Width,
 				Height: m.base.Height,
