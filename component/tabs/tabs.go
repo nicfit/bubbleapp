@@ -8,26 +8,26 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type TabElement struct {
+type TabElement[T any] struct {
 	Title   string
-	Content func(ctx *app.Context) app.UIModel
+	Content func(ctx *app.Context[T]) *app.Base[T]
 }
 
-type model struct {
+type model[T any] struct {
 	ID string
 
-	base *app.Base
+	base *app.Base[T]
 
 	activeTabID string
 	titlesID    string
 
-	tabContent []app.UIModel
+	tabContent []*app.Base[T]
 }
 
-func New(ctx *app.Context, tabs []TabElement) model {
+func New[T any](ctx *app.Context[T], tabs []TabElement[T]) model[T] {
 
 	tabTitles := make([]string, len(tabs))
-	tabContent := make([]app.UIModel, len(tabs))
+	tabContent := make([]*app.Base[T], len(tabs))
 
 	for i, tab := range tabs {
 		tabTitles[i] = tab.Title
@@ -39,29 +39,34 @@ func New(ctx *app.Context, tabs []TabElement) model {
 
 	base := app.New(ctx, app.WithGrow(true))
 
-	contentBox := box.New(ctx)
-	contentBox.AddChild(tabContent[0])
-	stackChild := stack.New(ctx)
-	stackChild.AddChildren(tabTitlesModel, contentBox)
+	contentBox := box.New(ctx, box.Options[T]{
+		Child: tabContent[0],
+	})
+	stackChild := stack.New(ctx, stack.Options[T]{
+		Children: []*app.Base[T]{
+			tabTitlesModel.Base(),
+			contentBox.Base(),
+		},
+	})
 
-	base.AddChild(stackChild)
+	base.AddChild(stackChild.Base())
 
-	return model{
+	return model[T]{
 		ID: idPrefix,
 
 		tabContent: tabContent,
 		titlesID:   tabTitlesModel.Base().ID,
 
 		base:        base,
-		activeTabID: contentBox.Base().GetChildren()[0].Base().ID,
+		activeTabID: contentBox.Base().GetChildren()[0].ID,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -71,8 +76,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tabtitles.TabChangedMsg:
 		currentTabID := m.activeTabID
 		newTab := m.tabContent[msg.ActiveTab]
-		m.activeTabID = newTab.Base().ID
-		m.base.GetChildren()[0].Base().GetChildren()[1].Base().ReplaceChild(currentTabID, newTab)
+		m.activeTabID = newTab.ID
+		m.base.GetChildren()[0].GetChildren()[1].ReplaceChild(currentTabID, newTab)
 
 		cmds = append(cmds, newTab.Init(), func() tea.Msg {
 			return tea.WindowSizeMsg{
@@ -88,10 +93,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

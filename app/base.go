@@ -10,19 +10,20 @@ import (
 	"github.com/google/uuid"
 )
 
-type UIModel interface {
+type UIModel[T any] interface {
 	View() string
 	Update(msg tea.Msg) (tea.Model, tea.Cmd)
 	Init() tea.Cmd
-	Base() *Base
+	Base() *Base[T]
 }
 
-type Base struct {
-	Ctx      *Context
+type Base[T any] struct {
+	Ctx      *Context[T]
 	ID       string
 	Focused  bool
 	Hovered  bool
-	Children []UIModel
+	Model    UIModel[T]
+	Children []*Base[T]
 	Width    int
 	Height   int
 	Opts     BaseOptions
@@ -76,7 +77,7 @@ func AsRoot() Option {
 	}
 }
 
-func New(ctx *Context, opts ...Option) *Base {
+func New[T any](ctx *Context[T], opts ...Option) *Base[T] {
 	options := BaseOptions{
 		GrowX:     false,
 		GrowY:     false,
@@ -87,16 +88,18 @@ func New(ctx *Context, opts ...Option) *Base {
 		opt(&options)
 	}
 
-	return &Base{
+	b := &Base[T]{
 		Ctx:      ctx,
 		ID:       uuid.New().String(),
 		Focused:  false,
 		Opts:     options,
-		Children: []UIModel{},
+		Children: []*Base[T]{},
 	}
+
+	return b
 }
 
-func (m Base) Init() tea.Cmd {
+func (m *Base[T]) Init() tea.Cmd {
 	cmds := []tea.Cmd{}
 	if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
 		for _, child := range m.GetChildren() {
@@ -107,11 +110,11 @@ func (m Base) Init() tea.Cmd {
 		cmds = append(cmds, m.tick())
 	}
 	if m.Opts.IsRoot {
-		cmds = append(cmds, m.Ctx.FocusManager.FocusFirstCmd(m.GetChildren()[0]))
+		cmds = append(cmds, m.Ctx.FocusFirstCmd(m.GetChildren()[0]))
 	}
 	return tea.Batch(cmds...)
 }
-func (m *Base) Update(msg tea.Msg) tea.Cmd {
+func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 	var (
 		cmds []tea.Cmd
 	)
@@ -121,9 +124,9 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 		if m.Opts.IsRoot {
 			switch msg.String() {
 			case "tab":
-				return m.Ctx.FocusManager.FocusNextCmd(m.GetChildren()[0])
+				return m.Ctx.FocusNextCmd(m.GetChildren()[0])
 			case "shift+tab":
-				return m.Ctx.FocusManager.FocusPrevCmd(m.GetChildren()[0])
+				return m.Ctx.FocusPrevCmd(m.GetChildren()[0])
 			}
 		}
 	case FocusComponentMsg:
@@ -134,7 +137,7 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 				m.Focused = true // Target should be focused
 			} else {
 				if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
-					cmds = append(cmds, sendFocusMsg(m.GetChildren()[0].Base().ID))
+					cmds = append(cmds, sendFocusMsg(m.GetChildren()[0].ID))
 				}
 			}
 
@@ -171,10 +174,12 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 
 	// For each child, update and collect commands
 	if m.GetChildren() != nil && len(m.GetChildren()) > 0 {
-		newChildren := make([]UIModel, len(m.GetChildren()))
+		newChildren := make([]*Base[T], len(m.GetChildren()))
 		for i, child := range m.GetChildren() {
-			updatedChild, cmd := child.Update(msg)
-			child = updatedChild.(UIModel)
+			updatedChild, cmd := child.Model.Update(msg)
+			typedChild := updatedChild.(UIModel[T])
+			typedChild.Base().Model = typedChild // Update the UIModel on the *Base
+			child = updatedChild.(UIModel[T]).Base()
 			cmds = append(cmds, cmd)
 			newChildren[i] = child
 		}
@@ -184,10 +189,10 @@ func (m *Base) Update(msg tea.Msg) tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (base *Base) View() string {
+func (base *Base[T]) Render() string {
 	children := []string{}
 	for _, child := range base.Children {
-		children = append(children, child.View())
+		children = append(children, child.Model.View())
 	}
 	result := strings.Join(children, "\n")
 
@@ -197,46 +202,46 @@ func (base *Base) View() string {
 	return result
 }
 
-func (base *Base) AddChild(child UIModel) {
+func (base *Base[T]) AddChild(child *Base[T]) {
 	base.Children = append(base.Children, child)
 }
 
-func (base *Base) AddChildren(children ...UIModel) {
+func (base *Base[T]) AddChildren(children ...*Base[T]) {
 	base.Children = append(base.Children, children...)
 }
 
-func (base *Base) RemoveChild(ID string) bool {
+func (base *Base[T]) RemoveChild(ID string) bool {
 	for i, c := range base.Children {
-		if c.Base().ID == ID {
+		if c.ID == ID {
 			base.Children = slices.Delete(base.Children, i, i+1)
 			return true
 		}
 	}
 	for _, c := range base.Children {
-		rec := c.Base().RemoveChild(ID)
+		rec := c.RemoveChild(ID)
 		if rec {
 			return true
 		}
 	}
 	return false
 }
-func (base *Base) ReplaceChild(ID string, new UIModel) {
+func (base *Base[T]) ReplaceChild(ID string, new *Base[T]) {
 	for i, c := range base.Children {
-		if c.Base().ID == ID {
+		if c.ID == ID {
 			base.Children[i] = new
 			break
 		}
 	}
 }
 
-func (base *Base) GetChild(id string) UIModel {
+func (base *Base[T]) GetChild(id string) *Base[T] {
 	for _, child := range base.Children {
-		if child.Base().ID == id {
+		if child.ID == id {
 			return child
 		}
 	}
 	for _, child := range base.Children {
-		rec := child.Base().GetChild(id)
+		rec := child.GetChild(id)
 		if rec != nil {
 			return rec
 		}
@@ -244,6 +249,6 @@ func (base *Base) GetChild(id string) UIModel {
 	return nil
 }
 
-func (fc *Base) GetChildren() []UIModel {
+func (fc *Base[T]) GetChildren() []*Base[T] {
 	return fc.Children
 }

@@ -15,14 +15,15 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+type CustomData struct{}
+
+func NewRoot() model[CustomData] {
+	ctx := &app.Context[CustomData]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
 	}
 
-	boxFill := box.New(ctx)
+	boxFill := box.New(ctx, box.Options[CustomData]{})
 
 	addButton := button.New(ctx, "Button 1",
 		button.WithVariant(button.Primary),
@@ -32,19 +33,20 @@ func NewRoot() model {
 		button.WithVariant(button.Danger),
 	)
 
-	stack := stack.New(ctx)
-	stack.AddChildren(
-		text.New(ctx, "Tab through the buttons to see focus state!"),
-		addButton,
-		boxFill,
-		divider.New(ctx),
-		quitButton,
+	stack := stack.New(ctx, stack.Options[CustomData]{
+		Children: []*app.Base[CustomData]{
+			text.New(ctx, "Tab through the buttons to see focus state!").Base(),
+			addButton.Base(),
+			boxFill.Base(),
+			divider.New(ctx).Base(),
+			quitButton.Base(),
+		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	base.AddChild(stack.Base())
 
-	return model{
+	return model[CustomData]{
 		base:         base,
 		containerID:  boxFill.Base().ID,
 		addButtonID:  addButton.Base().ID,
@@ -52,19 +54,19 @@ func NewRoot() model {
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T CustomData] struct {
+	base *app.Base[T]
 
 	containerID  string
 	addButtonID  string
 	quitButtonID string
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd tea.Cmd
 	)
@@ -81,8 +83,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.quitButtonID:
 			return m, tea.Quit
 		case m.addButtonID:
-			m.base.GetChild(m.containerID).Base().AddChild(
-				text.New(m.base.Ctx, "Button pressed"),
+			m.base.GetChild(m.containerID).AddChild(
+				text.New(m.base.Ctx, "Button pressed").Base(),
 			)
 			return m, nil
 		}
@@ -94,8 +96,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
 func main() {

@@ -6,58 +6,45 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type StackOptions struct {
-	Vertical        bool // Implemented in the future
-	initialChildren []app.UIModel
-}
-type StackOption func(o *StackOptions)
-
-func WithChildren(items ...app.UIModel) StackOption {
-	return func(o *StackOptions) {
-		o.initialChildren = items
-	}
+type Options[T any] struct {
+	Vertical bool // Implemented in the future
+	Children []*app.Base[T]
 }
 
-type model struct {
-	base  *app.Base
-	opts  StackOptions
+type model[T any] struct {
+	base  *app.Base[T]
+	opts  Options[T]
 	style lipgloss.Style
 }
 
-func New(ctx *app.Context, opts ...StackOption) model {
-	options := StackOptions{
-		Vertical: true,
-	}
-	for _, opt := range opts {
-		opt(&options)
-	}
+func New[T any](ctx *app.Context[T], options Options[T]) model[T] {
 	base := app.New(ctx, app.WithGrow(true))
 
-	if options.initialChildren != nil {
-		base.AddChildren(options.initialChildren...)
+	if options.Children != nil {
+		base.AddChildren(options.Children...)
 	}
 
-	return model{
+	return model[T]{
 		base:  base,
 		opts:  options,
 		style: lipgloss.NewStyle(),
 	}
 }
 
-func (m *model) AddChild(item app.UIModel) {
+func (m *model[T]) AddChild(item *app.Base[T]) {
 	m.base.AddChild(item)
 }
-func (m *model) AddChildren(items ...app.UIModel) {
+func (m *model[T]) AddChildren(items ...*app.Base[T]) {
 	for _, item := range items {
 		m.base.AddChild(item)
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -73,23 +60,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 		growerCount := 0
 		for _, child := range m.base.GetChildren() {
-			if child.Base().Opts.GrowY {
+			if child.Opts.GrowY {
 				growerCount++
 			}
 		}
 
 		nonGrowerHeight := 0
 		for _, child := range m.base.GetChildren() {
-			if !child.Base().Opts.GrowY {
-				childHeight := lipgloss.Height(child.View())
+			if !child.Opts.GrowY {
+				childHeight := lipgloss.Height(child.Model.View())
 				nonGrowerHeight += childHeight
 
-				newChild, cmd := child.Update(tea.WindowSizeMsg{
+				newChild, cmd := child.Model.Update(tea.WindowSizeMsg{
 					Width:  msg.Width,
 					Height: childHeight,
 				})
-				newChildTyped := newChild.(app.UIModel)
-				m.base.ReplaceChild(child.Base().ID, newChildTyped)
+				newChildTyped := newChild.(app.UIModel[T])
+				newChildTyped.Base().Model = newChildTyped // TODO: This seems fragile. Is it needed? Can it be moved to the ReplaceChild?
+				m.base.ReplaceChild(child.ID, newChildTyped.Base())
 				cmds = append(cmds, cmd)
 			}
 		}
@@ -99,18 +87,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			growerHeight := availableHeight / growerCount
 			remainder := availableHeight % growerCount
 			for _, child := range m.base.GetChildren() {
-				if child.Base().Opts.GrowY {
+				if child.Opts.GrowY {
 					currentGrowerHeight := growerHeight
 					if remainder > 0 {
 						currentGrowerHeight++
 						remainder--
 					}
-					newChild, cmd := child.Update(tea.WindowSizeMsg{
+					newChild, cmd := child.Model.Update(tea.WindowSizeMsg{
 						Width:  msg.Width,
 						Height: currentGrowerHeight,
 					})
-					newChildTyped := newChild.(app.UIModel)
-					m.base.ReplaceChild(child.Base().ID, newChildTyped)
+					newChildTyped := newChild.(app.UIModel[T])
+					newChildTyped.Base().Model = newChildTyped // TODO: This seems fragile. Is it needed? Can it be moved to the ReplaceChild?
+					m.base.ReplaceChild(child.ID, newChildTyped.Base())
 					cmds = append(cmds, cmd)
 				}
 			}
@@ -125,14 +114,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	childrenViews := make([]string, 0, len(m.base.GetChildren()))
 	for _, child := range m.base.GetChildren() {
-		childrenViews = append(childrenViews, child.View())
+		childrenViews = append(childrenViews, child.Model.View())
 	}
 	return m.style.Render(lipgloss.JoinVertical(lipgloss.Left, childrenViews...))
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

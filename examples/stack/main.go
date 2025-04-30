@@ -12,37 +12,39 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+type CustomData struct{}
+
+func NewRoot() model[CustomData] {
+	ctx := &app.Context[CustomData]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
 	}
 
-	stack := stack.New(ctx)
-	stack.AddChildren(
-		box.New(ctx, box.WithBg(ctx.Styles.Colors.Danger)),
-		box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)),
-		box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)),
+	stack := stack.New(ctx, stack.Options[CustomData]{
+		Children: []*app.Base[CustomData]{
+			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
+			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
+			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	base.AddChild(stack.Base())
 
-	return model{
+	return model[CustomData]{
 		base: base,
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T CustomData] struct {
+	base *app.Base[T]
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -56,8 +58,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
 func main() {

@@ -8,25 +8,25 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type Model struct {
-	base      *app.Base
+type model[T any] struct {
+	base      *app.Base[T]
 	msgCount  map[string]int64
 	tickTimes []time.Time
 }
 
-func New(ctx *app.Context) Model {
-	return Model{
+func New[T any](ctx *app.Context[T]) model[T] {
+	return model[T]{
 		base:      app.New(ctx),
 		msgCount:  make(map[string]int64),
 		tickTimes: make([]time.Time, 0),
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msgType := msg.(type) {
 	case app.TickMsg:
 		m.tickTimes = append(m.tickTimes, time.Now())
@@ -46,7 +46,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m Model) View() string {
+func (m model[T]) View() string {
 	if len(m.tickTimes) < 2 {
 		return "Tick FPS: 0.00"
 	}
@@ -58,6 +58,7 @@ func (m Model) View() string {
 	return fmt.Sprintf("Tick FPS: %.2f", fps)
 }
 
-func (m Model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

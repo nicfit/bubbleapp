@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type model struct {
-	base         *app.Base
+type model[T any] struct {
+	base         *app.Base[T]
 	options      options
 	styleSpinner lipgloss.Style
 	styleText    lipgloss.Style
@@ -51,7 +51,7 @@ func WithColor(color color.Color) option {
 	}
 }
 
-func New(ctx *app.Context, variant Spinner, opts ...option) model {
+func New[T any](ctx *app.Context[T], variant Spinner, opts ...option) model[T] {
 	color := ctx.Styles.Colors.Info
 	options := options{
 		text:  "",
@@ -73,7 +73,7 @@ func New(ctx *app.Context, variant Spinner, opts ...option) model {
 	if options.color != nil {
 		styleSpinner = styleSpinner.Foreground(*options.color)
 	}
-	return model{
+	return model[T]{
 		base:         app.New(ctx),
 		spinner:      variant,
 		options:      options,
@@ -84,11 +84,11 @@ func New(ctx *app.Context, variant Spinner, opts ...option) model {
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg.(type) {
 	case app.TickMsg:
 		// Only update frame if enough time has passed according to spinner FPS
@@ -106,7 +106,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	text := m.options.text
 	if text != "" {
 		text = " " + text
@@ -114,7 +114,8 @@ func (m model) View() string {
 	return m.styleSpinner.Render(m.spinner.Frames[m.frame]) + m.styleText.Render(text)
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }
 

@@ -13,37 +13,37 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+func NewRoot() model[struct{}] {
+	ctx := &app.Context[struct{}]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
 	}
 
-	stack := stack.New(ctx)
-	stack.AddChildren(
-		text.New(ctx, "Hello World!"),
-		divider.New(ctx),
-		text.New(ctx, "Press [q] to quit."),
+	stack := stack.New(ctx, stack.Options[struct{}]{
+		Children: []*app.Base[struct{}]{
+			text.New(ctx, "Hello World!").Base(),
+			divider.New(ctx).Base(),
+			text.New(ctx, "Press [q] to quit.").Base(),
+		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	base.AddChild(stack.Base())
 
-	return model{
+	return model[struct{}]{
 		base: base,
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T any] struct {
+	base *app.Base[T]
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -57,8 +57,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
 func main() {

@@ -8,25 +8,25 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type model struct {
-	base  *app.Base
+type model[T any] struct {
+	base  *app.Base[T]
 	style lipgloss.Style
 }
 
-func New(ctx *app.Context) model {
+func New[T any](ctx *app.Context[T]) model[T] {
 	style := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Ghost)
 
-	return model{
+	return model[T]{
 		base:  app.New(ctx, app.WithFocusable(false)),
 		style: style,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -38,13 +38,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	if m.base.Width == 0 {
 		return ""
 	}
 	return m.style.Render(strings.Repeat("─", m.base.Width-1))
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

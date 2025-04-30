@@ -25,14 +25,14 @@ func WithBackgroundColor(color color.Color) TextOption {
 	}
 }
 
-type model struct {
-	base  *app.Base
+type model[T any] struct {
+	base  *app.Base[T]
 	text  string
 	opts  TextOptions
 	style lipgloss.Style
 }
 
-func New(ctx *app.Context, text string, opts ...TextOption) model {
+func New[T any](ctx *app.Context[T], text string, opts ...TextOption) model[T] {
 	options := TextOptions{
 		Foreground: lipgloss.NoColor{},
 		Background: lipgloss.NoColor{},
@@ -43,7 +43,7 @@ func New(ctx *app.Context, text string, opts ...TextOption) model {
 
 	style := lipgloss.NewStyle().Foreground(options.Foreground).Background(options.Background)
 
-	return model{
+	return model[T]{
 		base:  app.New(ctx),
 		text:  text,
 		style: style,
@@ -51,11 +51,11 @@ func New(ctx *app.Context, text string, opts ...TextOption) model {
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -67,10 +67,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	return m.style.UnsetWidth().Render(m.text)
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

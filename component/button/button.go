@@ -24,8 +24,8 @@ const (
 	Warning
 )
 
-type model struct {
-	base         *app.Base
+type model[T any] struct {
+	base         *app.Base[T]
 	Text         string
 	opts         ButtonOptions
 	style        lipgloss.Style
@@ -48,7 +48,7 @@ func WithVariant(Color ButtonColor) ButtonOption {
 	}
 }
 
-func New(ctx *app.Context, text string, opts ...ButtonOption) model {
+func New[T any](ctx *app.Context[T], text string, opts ...ButtonOption) model[T] {
 	options := ButtonOptions{
 		Color: Primary,
 	}
@@ -112,7 +112,7 @@ func New(ctx *app.Context, text string, opts ...ButtonOption) model {
 		styleHovered = styleFocused.Background(ctx.Styles.Colors.InfoDark)
 	}
 
-	return model{
+	return model[T]{
 		base:         app.New(ctx, app.WithFocusable(true)),
 		Text:         text,
 		style:        style,
@@ -124,15 +124,14 @@ func New(ctx *app.Context, text string, opts ...ButtonOption) model {
 				key.WithKeys("enter"),
 				key.WithHelp("enter", "submit"),
 			),
-		},
-	}
+		}}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -167,7 +166,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	style := m.style
 	if m.base.Focused {
 		style = m.styleFocused
@@ -178,6 +177,7 @@ func (m model) View() string {
 	return m.base.Ctx.Zone.Mark(m.base.ID, style.Render("[ "+m.Text+" ]"))
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

@@ -14,11 +14,15 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewLogin() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+type CustomData struct {
+	UserID string
+}
+
+func NewLogin() model[CustomData] {
+	ctx := &app.Context[CustomData]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
+		Data:   &CustomData{},
 	}
 
 	loginButton := button.New(ctx, "Log in",
@@ -33,44 +37,42 @@ func NewLogin() model {
 		button.WithVariant(button.Danger),
 	)
 
-	stackView := stack.New(ctx)
-	stackView.AddChildren(
-		text.New(ctx, `██       ██████   ██████  ██ ███    ██ 
-██      ██    ██ ██       ██ ████   ██ 
-██      ██    ██ ██   ███ ██ ██ ██  ██ 
-██      ██    ██ ██    ██ ██ ██  ██ ██ 
-███████  ██████   ██████  ██ ██   ████`+"\n\n"),
-		text.New(ctx, "Log in or fail! Up to you!"),
-		// Put a horizontal stack here once we have it perhaps
-		loginButton,
-		failButton,
-		quitButton,
+	stackView := stack.New(ctx, stack.Options[CustomData]{
+		Children: []*app.Base[CustomData]{
+			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n").Base(),
+			text.New(ctx, "Log in or fail! Up to you!").Base(),
+			// Put a horizontal stack here once we have it perhaps
+			loginButton.Base(),
+			failButton.Base(),
+			quitButton.Base(),
+		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stackView)
+	base.AddChild(stackView.Base())
 
-	loggingInView := stack.New(ctx)
-	loggingInView.AddChildren(
-		text.New(ctx, "Please wait..."),
-		loader.New(ctx, loader.Meter, loader.WithText("Logging in...")),
+	loggingInView := stack.New(ctx, stack.Options[CustomData]{
+		Children: []*app.Base[CustomData]{
+			text.New(ctx, "Please wait...").Base(),
+			loader.New(ctx, loader.Meter, loader.WithText("Logging in...")).Base(),
+		}},
 	)
 
-	return model{
+	return model[CustomData]{
 		base:          base,
-		loggingInView: loggingInView,
-		inputView:     stackView,
+		loggingInView: loggingInView.Base(),
+		inputView:     stackView.Base(),
 		failButtonID:  failButton.Base().ID,
 		loginButtonID: loginButton.Base().ID,
 		quitButtonID:  quitButton.Base().ID,
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T CustomData] struct {
+	base *app.Base[CustomData]
 
-	loggingInView app.UIModel
-	inputView     app.UIModel
+	loggingInView *app.Base[CustomData]
+	inputView     *app.Base[CustomData]
 
 	errorTextID   string
 	failButtonID  string
@@ -78,15 +80,13 @@ type model struct {
 	quitButtonID  string
 }
 
-type LoginSuccessMsg struct {
-	UserID string
-}
+type LoginSuccessMsg struct{}
 
 type LoginFailedMsg struct {
 	Error string
 }
 
-func LoginCmd(m model, fail bool) tea.Cmd {
+func LoginCmd(data *CustomData, fail bool) tea.Cmd {
 	return func() tea.Msg {
 		time.Sleep(2 * time.Second)
 		if fail {
@@ -95,17 +95,17 @@ func LoginCmd(m model, fail bool) tea.Cmd {
 			}
 		}
 
-		return LoginSuccessMsg{
-			UserID: "1234abc",
-		}
+		// Setting global state here. Could be from DB or something else.
+		data.UserID = "1234abc"
+		return LoginSuccessMsg{}
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd tea.Cmd
 	)
@@ -127,33 +127,33 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
-				m.inputView.Base().ID,
+				m.inputView.ID,
 				m.loggingInView,
 			)
-			return m, LoginCmd(m, true)
+			return m, LoginCmd(m.base.Ctx.Data, true)
 		case m.loginButtonID:
 			if m.errorTextID != "" {
 				m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
-				m.inputView.Base().ID,
+				m.inputView.ID,
 				m.loggingInView,
 			)
-			return m, LoginCmd(m, false)
+			return m, LoginCmd(m.base.Ctx.Data, false)
 		}
 	case LoginSuccessMsg:
-		return NewAuthModel(msg.UserID), nil // Context is thrown away here. Is that what we want?
+		return NewAuthModel(m.base.Ctx), nil // Context is thrown away here. Is that what we want?
 	case LoginFailedMsg:
 		m.base.ReplaceChild(
-			m.loggingInView.Base().ID,
+			m.loggingInView.ID,
 			m.inputView,
 		)
 
 		errorText := text.New(m.base.Ctx, msg.Error, text.WithColor(m.base.Ctx.Styles.Colors.Danger)) // Add variant to text for Error text
 		m.errorTextID = errorText.Base().ID
-		m.base.GetChildren()[0].Base().AddChild(
-			errorText,
+		m.base.GetChildren()[0].AddChild(
+			errorText.Base(),
 		)
 	}
 
@@ -163,6 +163,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }

@@ -6,29 +6,29 @@ import (
 	"github.com/charmbracelet/glamour"
 )
 
-type model struct {
-	base            *app.Base
+type model[T any] struct {
+	base            *app.Base[T]
 	text            string
 	glamourRenderer *glamour.TermRenderer
 }
 
-func New(ctx *app.Context, text string) model {
+func New[T any](ctx *app.Context[T], text string) model[T] {
 	r, _ := glamour.NewTermRenderer(
 		glamour.WithWordWrap(ctx.Width - 1),
 	)
 
-	return model{
+	return model[T]{
 		base:            app.New(ctx, app.WithFocusable(false)),
 		text:            text,
 		glamourRenderer: r,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -47,11 +47,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	out, _ := m.glamourRenderer.Render(m.text)
 	return out
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

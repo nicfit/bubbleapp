@@ -5,63 +5,38 @@ import (
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/charmbracelet/bubbles/v2/key"
 	"github.com/charmbracelet/bubbles/v2/viewport"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type BoxOptions struct {
-	Bg           *color.Color
-	initialChild app.UIModel
+type Options[T any] struct {
+	Bg    color.Color
+	Child *app.Base[T]
 }
-type model struct {
-	base         *app.Base
-	opts         BoxOptions
+type model[T any] struct {
+	base         *app.Base[T]
+	opts         Options[T]
 	style        lipgloss.Style
 	viewport     viewport.Model
 	contentCache string
 }
 
-type KeyMap struct {
-	Submit key.Binding
-}
-
-type BoxOption func(o *BoxOptions)
-
-func WithBg(color color.Color) BoxOption {
-	return func(o *BoxOptions) {
-		o.Bg = &color
-	}
-}
-
-func WithChild(item app.UIModel) BoxOption {
-	return func(o *BoxOptions) {
-		o.initialChild = item
-	}
-}
-
-func New(ctx *app.Context, opts ...BoxOption) model {
-	options := BoxOptions{
-		Bg: nil, // TODO theming for default value
-	}
-	for _, opt := range opts {
-		opt(&options)
-	}
+func New[T any](ctx *app.Context[T], options Options[T]) model[T] {
 	base := app.New(ctx, app.WithGrow(true))
 
-	if options.initialChild != nil {
-		base.AddChild(options.initialChild)
+	if options.Child != nil {
+		base.AddChild(options.Child)
 	}
 
 	viewport := viewport.New()
 
 	style := lipgloss.NewStyle()
 	if options.Bg != nil {
-		style = style.Background(*options.Bg)
+		style = style.Background(options.Bg)
 	}
 
-	return model{
+	return model[T]{
 		base:         base,
 		opts:         options,
 		style:        style,
@@ -69,20 +44,20 @@ func New(ctx *app.Context, opts ...BoxOption) model {
 		contentCache: "",
 	}
 }
-func (m *model) AddChild(item app.UIModel) {
+func (m *model[T]) AddChild(item *app.Base[T]) {
 	m.base.AddChild(item)
 }
-func (m *model) AddChildren(items ...app.UIModel) {
+func (m *model[T]) AddChildren(items ...*app.Base[T]) {
 	for _, item := range items {
 		m.base.AddChild(item)
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -112,11 +87,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	if m.base.GetChildren() != nil && len(m.base.GetChildren()) > 0 {
 		childContent := make([]string, len(m.base.GetChildren()))
 		for i, child := range m.base.GetChildren() {
-			childContent[i] = child.View()
+			childContent[i] = child.Model.View()
 		}
 
 		cont := strings.Join(childContent, "\n")
@@ -128,6 +103,7 @@ func (m model) View() string {
 	return m.base.Ctx.Zone.Mark(m.base.ID, m.style.Height(m.base.Height).Width(m.base.Width).Render(m.viewport.View()))
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

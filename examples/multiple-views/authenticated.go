@@ -5,43 +5,36 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
 	"github.com/alexanderbh/bubbleapp/component/tickfps"
-	"github.com/alexanderbh/bubbleapp/style"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewAuthModel(userID string) authModel {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
-	}
-
-	stack := stack.New(ctx)
-	stack.AddChildren(
-		text.New(ctx, "You are logged in as: "+userID), // Find a way to generically have custom data in app.Context to save userID and more
-		text.New(ctx, "Press [q] to quit.\n"),
-		tickfps.New(ctx),
+func NewAuthModel(ctx *app.Context[CustomData]) authModel[CustomData] {
+	stack := stack.New(ctx, stack.Options[CustomData]{
+		Children: []*app.Base[CustomData]{
+			text.New(ctx, "You are logged in as: "+ctx.Data.UserID).Base(), // Find a way to generically have custom data in app.Context to save userID and more
+			text.New(ctx, "Press [q] to quit.\n").Base(),
+			tickfps.New(ctx).Base(),
+		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	base.AddChild(stack.Base())
 
-	return authModel{
+	return authModel[CustomData]{
 		base: base,
 	}
 }
 
-type authModel struct {
-	base *app.Base
+type authModel[T CustomData] struct {
+	base *app.Base[T]
 }
 
-func (m authModel) Init() tea.Cmd {
+func (m authModel[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m authModel[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -55,6 +48,6 @@ func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m authModel) View() string {
-	return m.base.View()
+func (m authModel[T]) View() string {
+	return m.base.Render()
 }

@@ -15,15 +15,15 @@ const (
 	breakpointLg = 120
 )
 
-type GridItemConfig struct {
-	item app.UIModel
+type Item[T any] struct {
+	Item *app.Base[T]
 	Xs   int
 	Sm   int
 	Md   int
 	Lg   int
 }
 
-func (c GridItemConfig) GetSpanForWidth(width int) int {
+func (c Item[T]) GetSpanForWidth(width int) int {
 	span := c.Xs
 	if span <= 0 {
 		span = 12
@@ -57,71 +57,41 @@ func (c GridItemConfig) GetSpanForWidth(width int) int {
 	return span
 }
 
-type GridItemConfigOption func(*GridItemConfig)
-
-func WithXs(xs int) GridItemConfigOption {
-	return func(c *GridItemConfig) {
-		c.Xs = xs
-	}
-}
-func WithSm(sm int) GridItemConfigOption {
-	return func(c *GridItemConfig) {
-		c.Sm = sm
-	}
-}
-func WithMd(md int) GridItemConfigOption {
-	return func(c *GridItemConfig) {
-		c.Md = md
-	}
-}
-func WithLg(lg int) GridItemConfigOption {
-	return func(c *GridItemConfig) {
-		c.Lg = lg
-	}
-}
-func NewItem(item app.UIModel, opts ...GridItemConfigOption) GridItemConfig {
-	config := GridItemConfig{
-		item: item,
-		Xs:   0,
-		Sm:   0,
-		Md:   0,
-		Lg:   0,
-	}
-	for _, opt := range opts {
-		opt(&config)
-	}
-	if config.Xs == 0 {
-		config.Xs = 12
-	}
-	return config
+type model[T any] struct {
+	base        *app.Base[T]
+	itemConfigs map[string]Item[T]
 }
 
-type model struct {
-	base        *app.Base
-	itemConfigs map[string]GridItemConfig
-}
-
-func New(ctx *app.Context) model {
-	return model{
+func New[T any](ctx *app.Context[T], items ...Item[T]) model[T] {
+	m := model[T]{
 		base:        app.New(ctx, app.WithGrow(true)),
-		itemConfigs: make(map[string]GridItemConfig),
+		itemConfigs: make(map[string]Item[T]),
 	}
+
+	m.AddItems(items...)
+
+	return m
 }
 
-func (m model) AddItems(items ...GridItemConfig) {
+func (m model[T]) AddItems(items ...Item[T]) {
 	for _, item := range items {
-		itemBox := box.New(m.base.Ctx)
-		itemBox.AddChild(item.item)
-		m.base.AddChild(itemBox)
+		if item.Xs == 0 {
+			item.Xs = 12
+		}
+		// We need a box here for now. To ensure it has grow set to fill out the grid cell
+		itemBox := box.New(m.base.Ctx, box.Options[T]{
+			Child: item.Item,
+		})
+		m.base.AddChild(itemBox.Base())
 		m.itemConfigs[itemBox.Base().ID] = item
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -141,7 +111,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// AI VIBING BELOW
 		type rowInfo struct {
-			children       []app.UIModel
+			children       []*app.Base[T]
 			maxChildHeight int // Max height of non-growing children in this row
 			hasGrower      bool
 			totalSpan      int
@@ -155,10 +125,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		childWidths := make(map[string]int) // Store calculated widths
 
 		for i, child := range children {
-			childID := child.Base().ID
+			childID := child.ID
 			config, ok := m.itemConfigs[childID]
 			if !ok {
-				config = GridItemConfig{Xs: 12} // Default fallback
+				config = Item[T]{Xs: 12} // Default fallback
 			}
 			childSpan := config.GetSpanForWidth(containerWidth)
 
@@ -171,7 +141,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if i == len(children)-1 && currentRowSpan+childSpan <= 12 {
 				currentTotalWidth := 0
 				for _, c := range currentRow.children {
-					currentTotalWidth += childWidths[c.Base().ID]
+					currentTotalWidth += childWidths[c.ID]
 				}
 				targetChildWidth = containerWidth - currentTotalWidth
 			} else if currentRowSpan+childSpan > 12 {
@@ -199,11 +169,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Add child to current row
 			currentRow.children = append(currentRow.children, child)
 			currentRowSpan += childSpan
-			if child.Base().Opts.GrowY {
+			if child.Opts.GrowY {
 				currentRow.hasGrower = true
 			} else {
 				// Calculate natural height only for non-growers
-				childHeight := lipgloss.Height(child.View()) // Get natural height
+				childHeight := lipgloss.Height(child.Model.View()) // Get natural height
 				if childHeight > currentRow.maxChildHeight {
 					currentRow.maxChildHeight = childHeight
 				}
@@ -259,15 +229,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// More complex: Distribute remaining height in growing rows among growing children.
 			// Let's use the simple approach for now.
 			for _, child := range row.children {
-				childID := child.Base().ID
+				childID := child.ID
 				targetWidth := childWidths[childID] // Use pre-calculated width
 
 				// Determine target height for this child
 				targetHeight := rowHeight // Default to row height
-				if !row.hasGrower && !child.Base().Opts.GrowY {
+				if !row.hasGrower && !child.Opts.GrowY {
 					// If it's a non-growing row and non-growing child, use its natural height,
 					// but capped by the row height (in case other items forced row higher).
-					naturalHeight := lipgloss.Height(child.View())
+					naturalHeight := lipgloss.Height(child.Model.View())
 					if naturalHeight < targetHeight {
 						targetHeight = naturalHeight
 					}
@@ -276,12 +246,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					targetHeight = 0
 				}
 
-				newChild, updateCmd := child.Update(tea.WindowSizeMsg{
+				newChild, updateCmd := child.Model.Update(tea.WindowSizeMsg{
 					Width:  targetWidth,
 					Height: targetHeight,
 				})
-				if newChildTyped, ok := newChild.(app.UIModel); ok {
-					m.base.ReplaceChild(childID, newChildTyped)
+				if newChildTyped, ok := newChild.(app.UIModel[T]); ok {
+					newChildTyped.Base().Model = newChildTyped
+					m.base.ReplaceChild(childID, newChildTyped.Base())
 				} // else: handle error or unexpected type?
 				if updateCmd != nil {
 					cmds = append(cmds, updateCmd)
@@ -299,7 +270,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m model[T]) View() string {
 	if len(m.base.GetChildren()) == 0 {
 		return ""
 	}
@@ -314,11 +285,11 @@ func (m model) View() string {
 	remainder := containerWidth % 12 // is this right??
 
 	for _, child := range m.base.GetChildren() {
-		childID := child.Base().ID
+		childID := child.ID
 
 		config, ok := m.itemConfigs[childID]
 		if !ok {
-			config = GridItemConfig{Xs: 12}
+			config = Item[T]{Xs: 12}
 		}
 
 		childSpan := config.GetSpanForWidth(containerWidth)
@@ -332,8 +303,8 @@ func (m model) View() string {
 			targetChildWidth = 1
 		}
 
-		child.Base().Width = targetChildWidth // this seems like a hack. something is off on this approach
-		childView := child.View()
+		child.Width = targetChildWidth // this seems like a hack. something is off on this approach
+		childView := child.Model.View()
 
 		styledChildView := lipgloss.NewStyle().Render(childView)
 
@@ -361,6 +332,7 @@ func (m model) View() string {
 	return lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
 }
 
-func (m model) Base() *app.Base {
+func (m model[T]) Base() *app.Base[T] {
+	m.base.Model = m
 	return m.base
 }

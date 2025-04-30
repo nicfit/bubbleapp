@@ -16,47 +16,75 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+type CustomData struct{}
+
+func NewRoot() model[CustomData] {
+	ctx := &app.Context[CustomData]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
 	}
 
-	gridView := grid.New(ctx)
-	gridView.AddItems(
-		grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.PrimaryDark), box.WithChild(
-			text.New(ctx, "I wish I could center text! Some day...")),
-		), grid.WithXs(12)),
-		grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)), grid.WithXs(6)),
-		grid.NewItem(button.New(ctx, "BUTTON 1", button.WithVariant(button.Success)), grid.WithXs(6)),
-		grid.NewItem(button.New(ctx, "BUTTON 2"), grid.WithXs(3)),
-		grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.InfoDark), box.WithChild(
-			stack.New(ctx, stack.WithChildren(
-				text.New(ctx, "I am in a stack!"),
-				loader.New(ctx, loader.Meter, loader.WithText("Text style messes up bg. Fix!"), loader.WithColor(ctx.Styles.Colors.Black))),
-			),
-		)), grid.WithXs(6)),
-		grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)), grid.WithXs(3)),
+	gridView := grid.New(ctx,
+		grid.Item[CustomData]{
+			Xs: 12,
+			Item: box.New(ctx, box.Options[CustomData]{
+				Bg:    ctx.Styles.Colors.PrimaryDark,
+				Child: text.New(ctx, "I wish I could center text! Some day...").Base(),
+			}).Base(),
+		},
+		grid.Item[CustomData]{
+			Xs:   6,
+			Item: box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}).Base(),
+		},
+		grid.Item[CustomData]{
+			Xs: 6,
+			Item: stack.New(ctx, stack.Options[CustomData]{
+				Children: []*app.Base[CustomData]{
+					text.New(ctx, "Background mess up if this text has foreground style.").Base(),
+					text.New(ctx, "Fix the margin to the left here. Not intentional.").Base(),
+					button.New(ctx, "BUTTON 1").Base(),
+				},
+			}).Base(),
+		},
+		grid.Item[CustomData]{
+			Xs:   3,
+			Item: button.New(ctx, "BUTTON 2").Base(),
+		},
+		grid.Item[CustomData]{
+			Xs: 6,
+			Item: box.New(ctx, box.Options[CustomData]{
+				Bg: ctx.Styles.Colors.InfoDark,
+				Child: stack.New(ctx, stack.Options[CustomData]{
+					Children: []*app.Base[CustomData]{
+						text.New(ctx, "I am in a stack!").Base(),
+						loader.New(ctx, loader.Meter, loader.WithText("Text style messes up bg. Fix!"), loader.WithColor(ctx.Styles.Colors.Black)).Base(),
+					},
+				}).Base(),
+			}).Base(),
+		},
+		grid.Item[CustomData]{
+			Xs:   3,
+			Item: box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+		},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(gridView)
+	base.AddChild(gridView.Base())
 
-	return model{
+	return model[CustomData]{
 		base: base,
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T CustomData] struct {
+	base *app.Base[T]
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -70,8 +98,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
 func main() {

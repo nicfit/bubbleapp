@@ -5,10 +5,11 @@ import (
 	zone "github.com/alexanderbh/bubblezone/v2"
 )
 
-type Context struct {
-	Zone         *zone.Manager
-	Styles       *style.Styles
-	FocusManager *FocusManager
-	Width        int
-	Height       int
+type Context[T any] struct {
+	Zone      *zone.Manager
+	Styles    *style.Styles
+	FocusedID string
+	Width     int
+	Height    int
+	Data      *T
 }

@@ -11,59 +11,65 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-var tabsData = []tabs.TabElement{
+var tabsData = []tabs.TabElement[CustomData]{
 	{
 		Title: "Overview",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewOverview(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewOverview(ctx).Base()
 		},
 	},
 	{
 		Title: "Loaders",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewLoaders(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewLoaders(ctx).Base()
 		},
 	},
 	{
 		Title: "Scolling",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewScrolling(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewScrolling(ctx).Base()
 		},
 	},
 }
 
-func NewRoot() model {
-	ctx := &app.Context{
-		Styles:       style.DefaultStyles(),
-		FocusManager: app.NewFocusManager(),
-		Zone:         zone.New(),
+type CustomData struct {
+	HowCoolIsThis string
+}
+
+func NewRoot() model[CustomData] {
+	ctx := &app.Context[CustomData]{
+		Styles: style.DefaultStyles(),
+		Zone:   zone.New(),
+		Data: &CustomData{
+			HowCoolIsThis: "Very cool!",
+		},
 	}
 
 	tabs := tabs.New(ctx, tabsData)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(tabs)
+	base.AddChild(tabs.Base())
 
-	return model{
+	return model[CustomData]{
 		base: base,
 	}
 }
 
-type model struct {
-	base *app.Base
+type model[T CustomData] struct {
+	base *app.Base[T]
 }
 
-func (m model) Init() tea.Cmd {
+func (m model[T]) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd := m.base.Update(msg)
 	return m, cmd
 }
 
-func (m model) View() string {
-	return m.base.View()
+func (m model[T]) View() string {
+	return m.base.Render()
 }
 
 func main() {
