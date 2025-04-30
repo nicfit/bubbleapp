@@ -23,19 +23,15 @@ func NewRoot() model[CustomData] {
 		Zone:   zone.New(),
 	}
 
-	boxFill := box.New(ctx, box.Options[CustomData]{})
+	boxFill := box.New(ctx, &box.Options[CustomData]{})
 
-	addButton := button.New(ctx, "Button 1",
-		button.WithVariant(button.Primary),
-	)
+	addButton := button.New(ctx, "Button 1", &button.Options{Variant: button.Primary})
 
-	quitButton := button.New(ctx, "Quit App",
-		button.WithVariant(button.Danger),
-	)
+	quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
 
-	stack := stack.New(ctx, stack.Options[CustomData]{
+	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "Tab through the buttons to see focus state!").Base(),
+			text.New(ctx, "Tab through the buttons to see focus state!", nil).Base(),
 			addButton.Base(),
 			boxFill.Base(),
 			divider.New(ctx).Base(),
@@ -84,7 +80,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case m.addButtonID:
 			m.base.GetChild(m.containerID).AddChild(
-				text.New(m.base.Ctx, "Button pressed").Base(),
+				text.New(m.base.Ctx, "Button pressed", nil).Base(),
 			)
 			return m, nil
 		}

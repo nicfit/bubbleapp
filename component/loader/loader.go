@@ -12,7 +12,7 @@ import (
 
 type model[T any] struct {
 	base         *app.Base[T]
-	options      options
+	options      *Options
 	styleSpinner lipgloss.Style
 	styleText    lipgloss.Style
 	spinner      Spinner
@@ -20,58 +20,32 @@ type model[T any] struct {
 	lastTick     time.Time // Track last frame update
 }
 
-type options struct {
-	text                string
-	textColor           *color.Color
-	textBackgroundColor *color.Color
-	color               *color.Color
+type Options struct {
+	Text                string
+	TextColor           color.Color
+	TextBackgroundColor color.Color
+	Color               color.Color
 }
 
-type option func(*options)
-
-func WithText(text string) option {
-	return func(o *options) {
-		o.text = text
+func New[T any](ctx *app.Context[T], variant Spinner, options *Options) model[T] {
+	if options == nil {
+		options = &Options{}
 	}
-}
-func WithTextColor(color color.Color) option {
-	return func(o *options) {
-		o.textColor = &color
-	}
-}
-func WithTextBackgroundColor(color color.Color) option {
-	return func(o *options) {
-		o.textBackgroundColor = &color
-	}
-}
-
-func WithColor(color color.Color) option {
-	return func(o *options) {
-		o.color = &color
-	}
-}
-
-func New[T any](ctx *app.Context[T], variant Spinner, opts ...option) model[T] {
-	color := ctx.Styles.Colors.Info
-	options := options{
-		text:  "",
-		color: &color,
-	}
-	for _, opt := range opts {
-		opt(&options)
+	if options.Color == nil {
+		options.Color = ctx.Styles.Colors.Info
 	}
 
 	styleText := lipgloss.NewStyle()
 	styleSpinner := lipgloss.NewStyle()
 
-	if options.textColor != nil {
-		styleText = styleText.Foreground(*options.textColor)
+	if options.TextColor != nil {
+		styleText = styleText.Foreground(options.TextColor)
 	}
-	if options.textBackgroundColor != nil {
-		styleText = styleText.Background(*options.textBackgroundColor)
+	if options.TextBackgroundColor != nil {
+		styleText = styleText.Background(options.TextBackgroundColor)
 	}
-	if options.color != nil {
-		styleSpinner = styleSpinner.Foreground(*options.color)
+	if options.Color != nil {
+		styleSpinner = styleSpinner.Foreground(options.Color)
 	}
 	return model[T]{
 		base:         app.New(ctx),
@@ -80,7 +54,7 @@ func New[T any](ctx *app.Context[T], variant Spinner, opts ...option) model[T] {
 		styleText:    styleText,
 		styleSpinner: styleSpinner,
 		frame:        0,
-		lastTick:     time.Now(), // Initialize lastTick
+		lastTick:     time.Now(),
 	}
 }
 
@@ -107,7 +81,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	text := m.options.text
+	text := m.options.Text
 	if text != "" {
 		text = " " + text
 	}

@@ -39,10 +39,10 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T]) model[T] {
 
 	base := app.New(ctx, app.WithGrow(true))
 
-	contentBox := box.New(ctx, box.Options[T]{
+	contentBox := box.New(ctx, &box.Options[T]{
 		Child: tabContent[0],
 	})
-	stackChild := stack.New(ctx, stack.Options[T]{
+	stackChild := stack.New(ctx, &stack.Options[T]{
 		Children: []*app.Base[T]{
 			tabTitlesModel.Base(),
 			contentBox.Base(),

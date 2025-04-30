@@ -7,17 +7,20 @@ import (
 )
 
 type Options[T any] struct {
-	Vertical bool // Implemented in the future
-	Children []*app.Base[T]
+	Horizontal bool // Implemented in the future
+	Children   []*app.Base[T]
 }
 
 type model[T any] struct {
 	base  *app.Base[T]
-	opts  Options[T]
+	opts  *Options[T]
 	style lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], options Options[T]) model[T] {
+func New[T any](ctx *app.Context[T], options *Options[T]) model[T] {
+	if options == nil {
+		options = &Options[T]{}
+	}
 	base := app.New(ctx, app.WithGrow(true))
 
 	if options.Children != nil {

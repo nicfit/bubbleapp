@@ -25,22 +25,16 @@ func NewLogin() model[CustomData] {
 		Data:   &CustomData{},
 	}
 
-	loginButton := button.New(ctx, "Log in",
-		button.WithVariant(button.Primary),
-	)
+	loginButton := button.New(ctx, "Log in", &button.Options{Variant: button.Primary})
 
-	failButton := button.New(ctx, "Fail log in",
-		button.WithVariant(button.Warning),
-	)
+	failButton := button.New(ctx, "Fail log in", &button.Options{Variant: button.Warning})
 
-	quitButton := button.New(ctx, "Quit App",
-		button.WithVariant(button.Danger),
-	)
+	quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
 
-	stackView := stack.New(ctx, stack.Options[CustomData]{
+	stackView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n").Base(),
-			text.New(ctx, "Log in or fail! Up to you!").Base(),
+			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil).Base(),
+			text.New(ctx, "Log in or fail! Up to you!", nil).Base(),
 			// Put a horizontal stack here once we have it perhaps
 			loginButton.Base(),
 			failButton.Base(),
@@ -51,10 +45,10 @@ func NewLogin() model[CustomData] {
 	base := app.New(ctx, app.AsRoot())
 	base.AddChild(stackView.Base())
 
-	loggingInView := stack.New(ctx, stack.Options[CustomData]{
+	loggingInView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "Please wait...").Base(),
-			loader.New(ctx, loader.Meter, loader.WithText("Logging in...")).Base(),
+			text.New(ctx, "Please wait...", nil).Base(),
+			loader.New(ctx, loader.Meter, &loader.Options{Text: "Logging in..."}).Base(),
 		}},
 	)
 
@@ -150,7 +144,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.inputView,
 		)
 
-		errorText := text.New(m.base.Ctx, msg.Error, text.WithColor(m.base.Ctx.Styles.Colors.Danger)) // Add variant to text for Error text
+		errorText := text.New(m.base.Ctx, msg.Error, &text.Options{Foreground: m.base.Ctx.Styles.Colors.Danger}) // Add variant to text for Error text
 		m.errorTextID = errorText.Base().ID
 		m.base.GetChildren()[0].AddChild(
 			errorText.Base(),

@@ -20,11 +20,11 @@ func NewRoot() model[CustomData] {
 		Zone:   zone.New(),
 	}
 
-	stack := stack.New(ctx, stack.Options[CustomData]{
+	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
-			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
-			box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
 		}},
 	)
 

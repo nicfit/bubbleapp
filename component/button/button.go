@@ -7,15 +7,13 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type ButtonOptions struct {
-	Color ButtonColor
+type Options struct {
+	Variant ButtonVariant
 }
-type ButtonOption func(o *ButtonOptions)
-
-type ButtonColor int
+type ButtonVariant int
 
 const (
-	Primary ButtonColor = iota
+	Primary ButtonVariant = iota // This is the default it seems
 	Secondary
 	Tertiary
 	Success
@@ -27,7 +25,7 @@ const (
 type model[T any] struct {
 	base         *app.Base[T]
 	Text         string
-	opts         ButtonOptions
+	opts         *Options
 	style        lipgloss.Style
 	styleFocused lipgloss.Style
 	styleHovered lipgloss.Style
@@ -42,24 +40,16 @@ type ButtonPressMsg struct {
 	ID string
 }
 
-func WithVariant(Color ButtonColor) ButtonOption {
-	return func(o *ButtonOptions) {
-		o.Color = Color
-	}
-}
+func New[T any](ctx *app.Context[T], text string, options *Options) model[T] {
 
-func New[T any](ctx *app.Context[T], text string, opts ...ButtonOption) model[T] {
-	options := ButtonOptions{
-		Color: Primary,
-	}
-	for _, opt := range opts {
-		opt(&options)
+	if options == nil {
+		options = &Options{}
 	}
 
 	style := lipgloss.NewStyle()
 
 	// TODO: This seems too much code. Is there a better way?
-	switch options.Color {
+	switch options.Variant {
 	case Primary:
 		style = style.Foreground(ctx.Styles.Colors.Primary)
 	case Secondary:
@@ -77,7 +67,7 @@ func New[T any](ctx *app.Context[T], text string, opts ...ButtonOption) model[T]
 	}
 
 	styleFocused := style
-	switch options.Color {
+	switch options.Variant {
 	case Primary:
 		styleFocused = styleFocused.Background(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.White)
 	case Secondary:
@@ -95,7 +85,7 @@ func New[T any](ctx *app.Context[T], text string, opts ...ButtonOption) model[T]
 	}
 
 	styleHovered := style
-	switch options.Color {
+	switch options.Variant {
 	case Primary:
 		styleHovered = styleFocused.Background(ctx.Styles.Colors.PrimaryDark)
 	case Secondary:

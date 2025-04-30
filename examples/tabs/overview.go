@@ -10,12 +10,12 @@ import (
 )
 
 func NewOverview(ctx *app.Context[CustomData]) app.UIModel[CustomData] {
-	quitButton := button.New(ctx, "Quit", button.WithVariant(button.Danger))
+	quitButton := button.New(ctx, "Quit", &button.Options{Variant: button.Danger})
 
-	stack := stack.New(ctx, stack.Options[CustomData]{
+	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n").Base(),
-			text.New(ctx, "From global data: "+ctx.Data.HowCoolIsThis).Base(),
+			text.New(ctx, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n", nil).Base(),
+			text.New(ctx, "From global data: "+ctx.Data.HowCoolIsThis, nil).Base(),
 			quitButton.Base(),
 		}},
 	)

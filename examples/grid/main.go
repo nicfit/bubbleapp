@@ -27,44 +27,47 @@ func NewRoot() model[CustomData] {
 	gridView := grid.New(ctx,
 		grid.Item[CustomData]{
 			Xs: 12,
-			Item: box.New(ctx, box.Options[CustomData]{
+			Item: box.New(ctx, &box.Options[CustomData]{
 				Bg:    ctx.Styles.Colors.PrimaryDark,
-				Child: text.New(ctx, "I wish I could center text! Some day...").Base(),
+				Child: text.New(ctx, "I wish I could center text! Some day...", nil).Base(),
 			}).Base(),
 		},
 		grid.Item[CustomData]{
 			Xs:   6,
-			Item: box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}).Base(),
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}).Base(),
 		},
 		grid.Item[CustomData]{
 			Xs: 6,
-			Item: stack.New(ctx, stack.Options[CustomData]{
+			Item: stack.New(ctx, &stack.Options[CustomData]{
 				Children: []*app.Base[CustomData]{
-					text.New(ctx, "Background mess up if this text has foreground style.").Base(),
-					text.New(ctx, "Fix the margin to the left here. Not intentional.").Base(),
-					button.New(ctx, "BUTTON 1").Base(),
+					text.New(ctx, "Background mess up if this text has foreground style.", nil).Base(),
+					text.New(ctx, "Fix the margin to the left here. Not intentional.", nil).Base(),
+					button.New(ctx, "BUTTON 1", nil).Base(),
 				},
 			}).Base(),
 		},
 		grid.Item[CustomData]{
 			Xs:   3,
-			Item: button.New(ctx, "BUTTON 2").Base(),
+			Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}).Base(),
 		},
 		grid.Item[CustomData]{
 			Xs: 6,
-			Item: box.New(ctx, box.Options[CustomData]{
+			Item: box.New(ctx, &box.Options[CustomData]{
 				Bg: ctx.Styles.Colors.InfoDark,
-				Child: stack.New(ctx, stack.Options[CustomData]{
+				Child: stack.New(ctx, &stack.Options[CustomData]{
 					Children: []*app.Base[CustomData]{
-						text.New(ctx, "I am in a stack!").Base(),
-						loader.New(ctx, loader.Meter, loader.WithText("Text style messes up bg. Fix!"), loader.WithColor(ctx.Styles.Colors.Black)).Base(),
+						text.New(ctx, "I am in a stack!", nil).Base(),
+						loader.New(ctx, loader.Meter, &loader.Options{
+							Text:  "Text style messes up bg. Fix!",
+							Color: ctx.Styles.Colors.Black,
+						}).Base(),
 					},
 				}).Base(),
 			}).Base(),
 		},
 		grid.Item[CustomData]{
 			Xs:   3,
-			Item: box.New(ctx, box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
 		},
 	)
 

@@ -23,40 +23,6 @@ type Item[T any] struct {
 	Lg   int
 }
 
-func (c Item[T]) GetSpanForWidth(width int) int {
-	span := c.Xs
-	if span <= 0 {
-		span = 12
-	}
-
-	if c.Sm > 0 && width >= breakpointSm {
-		span = c.Sm
-	}
-	if c.Md > 0 && width >= breakpointMd {
-		span = c.Md
-	} else if width >= breakpointMd && c.Sm > 0 {
-		span = c.Sm
-	}
-
-	if c.Lg > 0 && width >= breakpointLg {
-		span = c.Lg
-	} else if width >= breakpointLg {
-		if c.Md > 0 {
-			span = c.Md
-		} else if c.Sm > 0 {
-			span = c.Sm
-		}
-	}
-
-	if span < 1 {
-		return 1
-	}
-	if span > 12 {
-		return 12
-	}
-	return span
-}
-
 type model[T any] struct {
 	base        *app.Base[T]
 	itemConfigs map[string]Item[T]
@@ -79,7 +45,7 @@ func (m model[T]) AddItems(items ...Item[T]) {
 			item.Xs = 12
 		}
 		// We need a box here for now. To ensure it has grow set to fill out the grid cell
-		itemBox := box.New(m.base.Ctx, box.Options[T]{
+		itemBox := box.New(m.base.Ctx, &box.Options[T]{
 			Child: item.Item,
 		})
 		m.base.AddChild(itemBox.Base())
@@ -335,4 +301,38 @@ func (m model[T]) View() string {
 func (m model[T]) Base() *app.Base[T] {
 	m.base.Model = m
 	return m.base
+}
+
+func (c Item[T]) GetSpanForWidth(width int) int {
+	span := c.Xs
+	if span <= 0 {
+		span = 12
+	}
+
+	if c.Sm > 0 && width >= breakpointSm {
+		span = c.Sm
+	}
+	if c.Md > 0 && width >= breakpointMd {
+		span = c.Md
+	} else if width >= breakpointMd && c.Sm > 0 {
+		span = c.Sm
+	}
+
+	if c.Lg > 0 && width >= breakpointLg {
+		span = c.Lg
+	} else if width >= breakpointLg {
+		if c.Md > 0 {
+			span = c.Md
+		} else if c.Sm > 0 {
+			span = c.Sm
+		}
+	}
+
+	if span < 1 {
+		return 1
+	}
+	if span > 12 {
+		return 12
+	}
+	return span
 }

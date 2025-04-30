@@ -19,11 +19,11 @@ func NewRoot() model[struct{}] {
 		Zone:   zone.New(),
 	}
 
-	stack := stack.New(ctx, stack.Options[struct{}]{
+	stack := stack.New(ctx, &stack.Options[struct{}]{
 		Children: []*app.Base[struct{}]{
-			text.New(ctx, "Hello World!").Base(),
+			text.New(ctx, "Hello World!", nil).Base(),
 			divider.New(ctx).Base(),
-			text.New(ctx, "Press [q] to quit.").Base(),
+			text.New(ctx, "Press [q] to quit.", nil).Base(),
 		}},
 	)
 

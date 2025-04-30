@@ -10,10 +10,10 @@ import (
 )
 
 func NewAuthModel(ctx *app.Context[CustomData]) authModel[CustomData] {
-	stack := stack.New(ctx, stack.Options[CustomData]{
+	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "You are logged in as: "+ctx.Data.UserID).Base(), // Find a way to generically have custom data in app.Context to save userID and more
-			text.New(ctx, "Press [q] to quit.\n").Base(),
+			text.New(ctx, "You are logged in as: "+ctx.Data.UserID, nil).Base(), // Find a way to generically have custom data in app.Context to save userID and more
+			text.New(ctx, "Press [q] to quit.\n", nil).Base(),
 			tickfps.New(ctx).Base(),
 		}},
 	)
