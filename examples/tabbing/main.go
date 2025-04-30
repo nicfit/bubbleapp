@@ -29,22 +29,22 @@ func NewRoot() model[CustomData] {
 
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "Tab through the buttons to see focus state!", nil).Base(),
-			addButton.Base(),
-			boxFill.Base(),
-			divider.New(ctx).Base(),
-			quitButton.Base(),
+			text.New(ctx, "Tab through the buttons to see focus state!", nil),
+			addButton,
+			boxFill,
+			divider.New(ctx),
+			quitButton,
 		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack.Base())
+	base.AddChild(stack)
 
 	return model[CustomData]{
 		base:         base,
-		containerID:  boxFill.Base().ID,
-		addButtonID:  addButton.Base().ID,
-		quitButtonID: quitButton.Base().ID,
+		containerID:  boxFill.ID,
+		addButtonID:  addButton.ID,
+		quitButtonID: quitButton.ID,
 	}
 }
 
@@ -78,7 +78,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case m.addButtonID:
 			m.base.GetChild(m.containerID).AddChild(
-				text.New(m.base.Ctx, "Button pressed", nil).Base(),
+				text.New(m.base.Ctx, "Button pressed", nil),
 			)
 			return m, nil
 		}

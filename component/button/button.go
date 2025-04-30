@@ -40,7 +40,7 @@ type ButtonPressMsg struct {
 	ID string
 }
 
-func New[T any](ctx *app.Context[T], text string, options *Options) model[T] {
+func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T] {
 
 	if options == nil {
 		options = &Options{}
@@ -114,7 +114,8 @@ func New[T any](ctx *app.Context[T], text string, options *Options) model[T] {
 				key.WithKeys("enter"),
 				key.WithHelp("enter", "submit"),
 			),
-		}}
+		},
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

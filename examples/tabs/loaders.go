@@ -10,46 +10,46 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewLoaders(ctx *app.Context[CustomData]) app.UIModel[CustomData] {
+func NewLoaders(ctx *app.Context[CustomData]) *app.Base[CustomData] {
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "Loaders share the same tick for performance", nil).Base(),
-			divider.New(ctx).Base(),
-			loader.New(ctx, loader.Dot, nil).Base(),
-			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}).Base(),
-			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}).Base(),
-			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}).Base(),
-			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}).Base(),
-			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}).Base(),
-			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}).Base(),
-			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}).Base(),
-			divider.New(ctx).Base(),
-			loader.New(ctx, loader.Dot, nil).Base(),
-			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}).Base(),
-			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}).Base(),
-			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}).Base(),
-			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}).Base(),
-			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}).Base(),
-			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}).Base(),
-			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}).Base(),
-			divider.New(ctx).Base(),
-			loader.New(ctx, loader.Dot, nil).Base(),
-			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}).Base(),
-			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}).Base(),
-			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}).Base(),
-			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}).Base(),
-			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}).Base(),
-			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}).Base(),
-			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}).Base(),
+			text.New(ctx, "Loaders share the same tick for performance", nil),
+			divider.New(ctx),
+			loader.New(ctx, loader.Dot, nil),
+			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}),
+			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}),
+			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}),
+			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}),
+			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}),
+			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}),
+			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}),
+			divider.New(ctx),
+			loader.New(ctx, loader.Dot, nil),
+			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}),
+			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}),
+			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}),
+			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}),
+			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}),
+			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}),
+			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}),
+			divider.New(ctx),
+			loader.New(ctx, loader.Dot, nil),
+			loader.New(ctx, loader.Ellipsis, &loader.Options{Color: ctx.Styles.Colors.Secondary}),
+			loader.New(ctx, loader.Jump, &loader.Options{Color: ctx.Styles.Colors.Tertiary}),
+			loader.New(ctx, loader.Line, &loader.Options{Color: ctx.Styles.Colors.Info}),
+			loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.Success}),
+			loader.New(ctx, loader.MiniDot, &loader.Options{Color: ctx.Styles.Colors.Warning}),
+			loader.New(ctx, loader.Points, &loader.Options{Color: ctx.Styles.Colors.Danger}),
+			loader.New(ctx, loader.Pulse, &loader.Options{Color: ctx.Styles.Colors.Primary, Text: "Loading..."}),
 		}},
 	)
 
 	base := app.New(ctx)
-	base.AddChild(stack.Base())
+	base.AddChild(stack)
 
 	return loadersModel[CustomData]{
 		base: base,
-	}
+	}.Base()
 }
 
 type loadersModel[T CustomData] struct {

@@ -24,7 +24,7 @@ type model[T any] struct {
 	tabContent []*app.Base[T]
 }
 
-func New[T any](ctx *app.Context[T], tabs []TabElement[T]) model[T] {
+func New[T any](ctx *app.Context[T], tabs []TabElement[T]) *app.Base[T] {
 
 	tabTitles := make([]string, len(tabs))
 	tabContent := make([]*app.Base[T], len(tabs))
@@ -44,22 +44,22 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T]) model[T] {
 	})
 	stackChild := stack.New(ctx, &stack.Options[T]{
 		Children: []*app.Base[T]{
-			tabTitlesModel.Base(),
-			contentBox.Base(),
+			tabTitlesModel,
+			contentBox,
 		},
 	})
 
-	base.AddChild(stackChild.Base())
+	base.AddChild(stackChild)
 
 	return model[T]{
 		ID: idPrefix,
 
 		tabContent: tabContent,
-		titlesID:   tabTitlesModel.Base().ID,
+		titlesID:   tabTitlesModel.ID,
 
 		base:        base,
-		activeTabID: contentBox.Base().GetChildren()[0].ID,
-	}
+		activeTabID: contentBox.GetChildren()[0].ID,
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

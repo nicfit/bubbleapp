@@ -33,32 +33,32 @@ func NewLogin() model[CustomData] {
 
 	stackView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil).Base(),
-			text.New(ctx, "Log in or fail! Up to you!", nil).Base(),
+			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil),
+			text.New(ctx, "Log in or fail! Up to you!", nil),
 			// Put a horizontal stack here once we have it perhaps
-			loginButton.Base(),
-			failButton.Base(),
-			quitButton.Base(),
+			loginButton,
+			failButton,
+			quitButton,
 		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stackView.Base())
+	base.AddChild(stackView)
 
 	loggingInView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "Please wait...", nil).Base(),
-			loader.New(ctx, loader.Meter, &loader.Options{Text: "Logging in..."}).Base(),
+			text.New(ctx, "Please wait...", nil),
+			loader.New(ctx, loader.Meter, &loader.Options{Text: "Logging in..."}),
 		}},
 	)
 
 	return model[CustomData]{
 		base:          base,
-		loggingInView: loggingInView.Base(),
-		inputView:     stackView.Base(),
-		failButtonID:  failButton.Base().ID,
-		loginButtonID: loginButton.Base().ID,
-		quitButtonID:  quitButton.Base().ID,
+		loggingInView: loggingInView,
+		inputView:     stackView,
+		failButtonID:  failButton.ID,
+		loginButtonID: loginButton.ID,
+		quitButtonID:  quitButton.ID,
 	}
 }
 
@@ -145,9 +145,9 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 
 		errorText := text.New(m.base.Ctx, msg.Error, &text.Options{Foreground: m.base.Ctx.Styles.Colors.Danger}) // Add variant to text for Error text
-		m.errorTextID = errorText.Base().ID
+		m.errorTextID = errorText.ID
 		m.base.GetChildren()[0].AddChild(
-			errorText.Base(),
+			errorText,
 		)
 	}
 

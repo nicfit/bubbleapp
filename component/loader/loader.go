@@ -27,7 +27,7 @@ type Options struct {
 	Color               color.Color
 }
 
-func New[T any](ctx *app.Context[T], variant Spinner, options *Options) model[T] {
+func New[T any](ctx *app.Context[T], variant Spinner, options *Options) *app.Base[T] {
 	if options == nil {
 		options = &Options{}
 	}
@@ -55,7 +55,7 @@ func New[T any](ctx *app.Context[T], variant Spinner, options *Options) model[T]
 		styleSpinner: styleSpinner,
 		frame:        0,
 		lastTick:     time.Now(),
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

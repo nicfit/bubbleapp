@@ -20,7 +20,7 @@ type model[T any] struct {
 	style lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], text string, options *Options) model[T] {
+func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T] {
 	if options == nil {
 		options = &Options{}
 	}
@@ -39,7 +39,7 @@ func New[T any](ctx *app.Context[T], text string, options *Options) model[T] {
 		text:  text,
 		style: style,
 		opts:  options,
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

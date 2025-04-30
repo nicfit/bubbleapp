@@ -21,14 +21,14 @@ func NewRoot() model[struct{}] {
 
 	stack := stack.New(ctx, &stack.Options[struct{}]{
 		Children: []*app.Base[struct{}]{
-			text.New(ctx, "Hello World!", nil).Base(),
-			divider.New(ctx).Base(),
-			text.New(ctx, "Press [q] to quit.", nil).Base(),
+			text.New(ctx, "Hello World!", nil),
+			divider.New(ctx),
+			text.New(ctx, "Press [q] to quit.", nil),
 		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack.Base())
+	base.AddChild(stack)
 
 	return model[struct{}]{
 		base: base,

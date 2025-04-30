@@ -13,13 +13,13 @@ type model[T any] struct {
 	style lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T]) model[T] {
+func New[T any](ctx *app.Context[T]) *app.Base[T] {
 	style := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Ghost)
 
 	return model[T]{
 		base:  app.New(ctx, app.WithFocusable(false)),
 		style: style,
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

@@ -9,24 +9,24 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewOverview(ctx *app.Context[CustomData]) app.UIModel[CustomData] {
+func NewOverview(ctx *app.Context[CustomData]) *app.Base[CustomData] {
 	quitButton := button.New(ctx, "Quit", &button.Options{Variant: button.Danger})
 
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			text.New(ctx, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n", nil).Base(),
-			text.New(ctx, "From global data: "+ctx.Data.HowCoolIsThis, nil).Base(),
-			quitButton.Base(),
+			text.New(ctx, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n", nil),
+			text.New(ctx, "From global data: "+ctx.Data.HowCoolIsThis, nil),
+			quitButton,
 		}},
 	)
 
 	base := app.New(ctx)
-	base.AddChild(stack.Base())
+	base.AddChild(stack)
 
 	return overviewModel[CustomData]{
 		base:         base,
-		quitButtonID: quitButton.Base().ID,
-	}
+		quitButtonID: quitButton.ID,
+	}.Base()
 }
 
 type overviewModel[T CustomData] struct {

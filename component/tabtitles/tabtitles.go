@@ -40,7 +40,7 @@ type model[T any] struct {
 	unusedTabStyleFocused   lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], titles []string, idPrefix string) model[T] {
+func New[T any](ctx *app.Context[T], titles []string, idPrefix string) *app.Base[T] {
 	return model[T]{
 		ID:        idPrefix,
 		base:      app.New(ctx, app.WithFocusable(true)),
@@ -52,7 +52,7 @@ func New[T any](ctx *app.Context[T], titles []string, idPrefix string) model[T] 
 		activeTabStyle:          lipgloss.NewStyle().Border(activeTabBorder, true).BorderForeground(lipgloss.Color("#0188a5")).Padding(0, 1),
 		unusedTabStyle:          lipgloss.NewStyle().Border(unusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")),
 		unusedTabStyleFocused:   lipgloss.NewStyle().Border(unusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")),
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

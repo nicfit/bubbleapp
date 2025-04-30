@@ -17,7 +17,7 @@ type model[T any] struct {
 	style lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], options *Options[T]) model[T] {
+func New[T any](ctx *app.Context[T], options *Options[T]) *app.Base[T] {
 	if options == nil {
 		options = &Options[T]{}
 	}
@@ -31,7 +31,7 @@ func New[T any](ctx *app.Context[T], options *Options[T]) model[T] {
 		base:  base,
 		opts:  options,
 		style: lipgloss.NewStyle(),
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

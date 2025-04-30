@@ -14,12 +14,12 @@ type model[T any] struct {
 	tickTimes []time.Time
 }
 
-func New[T any](ctx *app.Context[T]) model[T] {
+func New[T any](ctx *app.Context[T]) *app.Base[T] {
 	return model[T]{
 		base:      app.New(ctx),
 		msgCount:  make(map[string]int64),
 		tickTimes: make([]time.Time, 0),
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

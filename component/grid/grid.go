@@ -28,7 +28,7 @@ type model[T any] struct {
 	itemConfigs map[string]Item[T]
 }
 
-func New[T any](ctx *app.Context[T], items ...Item[T]) model[T] {
+func New[T any](ctx *app.Context[T], items ...Item[T]) *app.Base[T] {
 	m := model[T]{
 		base:        app.New(ctx, app.WithGrow(true)),
 		itemConfigs: make(map[string]Item[T]),
@@ -36,7 +36,7 @@ func New[T any](ctx *app.Context[T], items ...Item[T]) model[T] {
 
 	m.addItems(items...)
 
-	return m
+	return m.Base()
 }
 
 func (m model[T]) addItems(items ...Item[T]) {
@@ -48,8 +48,8 @@ func (m model[T]) addItems(items ...Item[T]) {
 		itemBox := box.New(m.base.Ctx, &box.Options[T]{
 			Child: item.Item,
 		})
-		m.base.AddChild(itemBox.Base())
-		m.itemConfigs[itemBox.Base().ID] = item
+		m.base.AddChild(itemBox)
+		m.itemConfigs[itemBox.ID] = item
 	}
 }
 

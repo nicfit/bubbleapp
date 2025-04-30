@@ -22,14 +22,14 @@ func NewRoot() model[CustomData] {
 
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
-			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
-			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
-			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
+			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
 		}},
 	)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack.Base())
+	base.AddChild(stack)
 
 	return model[CustomData]{
 		base: base,

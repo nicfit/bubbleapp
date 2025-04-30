@@ -12,7 +12,7 @@ type model[T any] struct {
 	glamourRenderer *glamour.TermRenderer
 }
 
-func New[T any](ctx *app.Context[T], text string) model[T] {
+func New[T any](ctx *app.Context[T], text string) *app.Base[T] {
 	r, _ := glamour.NewTermRenderer(
 		glamour.WithWordWrap(ctx.Width - 1),
 	)
@@ -21,7 +21,7 @@ func New[T any](ctx *app.Context[T], text string) model[T] {
 		base:            app.New(ctx, app.WithFocusable(false)),
 		text:            text,
 		glamourRenderer: r,
-	}
+	}.Base()
 }
 
 func (m model[T]) Init() tea.Cmd {

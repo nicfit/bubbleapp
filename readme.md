@@ -22,14 +22,14 @@ With BubbleApp you can compose models and gain things like
 ```go
 stack := stack.New(ctx, &stack.Options[struct{}]{
     Children: []*app.Base[struct{}]{
-        text.New(ctx, "Hello World!", nil).Base(),
-        divider.New(ctx).Base(),
-        text.New(ctx, "Press [q] to quit.", nil).Base(),
+        text.New(ctx, "Hello World!", nil),
+        divider.New(ctx),
+        text.New(ctx, "Press [q] to quit.", nil),
     }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack.Base())
+base.AddChild(stack)
 ```
 
 ![Hello world!](./examples/hello-world/demo.gif)
@@ -51,22 +51,22 @@ quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger
 
 stack := stack.New(ctx, &stack.Options[CustomData]{
     Children: []*app.Base[CustomData]{
-        text.New(ctx, "Tab through the buttons to see focus state!", nil).Base(),
-        addButton.Base(),
-        boxFill.Base(),
-        divider.New(ctx).Base(),
-        quitButton.Base(),
+        text.New(ctx, "Tab through the buttons to see focus state!", nil),
+        addButton,
+        boxFill,
+        divider.New(ctx),
+        quitButton,
     }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack.Base())
+base.AddChild(stack)
 
 return model[CustomData]{
     base:         base,
-    containerID:  boxFill.Base().ID,
-    addButtonID:  addButton.Base().ID,
-    quitButtonID: quitButton.Base().ID,
+    containerID:  boxFill.ID,
+    addButtonID:  addButton.ID,
+    quitButtonID: quitButton.ID,
 }
 ```
 
@@ -76,7 +76,7 @@ case button.ButtonPressMsg:
     case m.quitButtonID:
         return m, tea.Quit
     case m.addButtonID:
-        m.base.GetChild(m.containerID).Base().AddChild(
+        m.base.GetChild(m.containerID).AddChild(
             text.New(m.base.Ctx, "Button pressed"),
         )
         return m, nil
@@ -92,14 +92,14 @@ case button.ButtonPressMsg:
 ```go
 stack := stack.New(ctx, &stack.Options[CustomData]{
     Children: []*app.Base[CustomData]{
-        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
-        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
-        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}),
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
     }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack.Base())
+base.AddChild(stack)
 ```
 
 ![Stack](./examples/stack/demo.gif)
@@ -111,22 +111,16 @@ base.AddChild(stack.Base())
 ```go
 var tabsData = []tabs.TabElement[CustomData]{
 	{
-		Title: "Overview",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewOverview(ctx).Base()
-		},
+		Title:   "Overview",
+		Content: NewOverview,
 	},
 	{
-		Title: "Loaders",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewLoaders(ctx).Base()
-		},
+		Title:   "Loaders",
+		Content: NewLoaders,
 	},
 	{
-		Title: "Scolling",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewScrolling(ctx).Base()
-		},
+		Title:   "Scolling",
+		Content: NewScrolling,
 	},
 }
 ```
@@ -149,49 +143,49 @@ gridView := grid.New(ctx,
     grid.Item[CustomData]{
         Xs: 12,
         Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.PrimaryDark,
-            Child: text.New(ctx, "I wish I could center text! Some day...", nil).Base(),
-        }).Base(),
+            Child: text.New(ctx, "I wish I could center text! Some day...", nil),
+        }),
     },
     grid.Item[CustomData]{
         Xs:   6,
-        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}).Base(),
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}),
     },
     grid.Item[CustomData]{
         Xs: 6,
         Item: stack.New(ctx, &stack.Options[CustomData]{
             Children: []*app.Base[CustomData]{
-                text.New(ctx, "Background mess up if this text has foreground style.", nil).Base(),
-                text.New(ctx, "Fix the margin to the left here. Not intentional.", nil).Base(),
-                button.New(ctx, "BUTTON 1", nil).Base(),
+                text.New(ctx, "Background mess up if this text has foreground style.", nil),
+                text.New(ctx, "Fix the margin to the left here. Not intentional.", nil),
+                button.New(ctx, "BUTTON 1", nil),
             },
-        }).Base(),
+        }),
     },
     grid.Item[CustomData]{
         Xs:   3,
-        Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}).Base(),
+        Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}),
     },
     grid.Item[CustomData]{
         Xs: 6,
         Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
             Child: stack.New(ctx, &stack.Options[CustomData]{
                 Children: []*app.Base[CustomData]{
-                    text.New(ctx, "I am in a stack!", nil).Base(),
+                    text.New(ctx, "I am in a stack!", nil),
                     loader.New(ctx, loader.Meter, &loader.Options{
                         Text:  "Text style messes up bg. Fix!",
                         Color: ctx.Styles.Colors.Black,
-                    }).Base(),
+                    }),
                 },
-            }).Base(),
-        }).Base(),
+            }),
+        }),
     },
     grid.Item[CustomData]{
         Xs:   3,
-        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
     },
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(gridView.Base())
+base.AddChild(gridView)
 ```
 
 ![Grid](./examples/grid/demo.gif)

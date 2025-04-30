@@ -13,22 +13,16 @@ import (
 
 var tabsData = []tabs.TabElement[CustomData]{
 	{
-		Title: "Overview",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewOverview(ctx).Base()
-		},
+		Title:   "Overview",
+		Content: NewOverview,
 	},
 	{
-		Title: "Loaders",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewLoaders(ctx).Base()
-		},
+		Title:   "Loaders",
+		Content: NewLoaders,
 	},
 	{
-		Title: "Scolling",
-		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
-			return NewScrolling(ctx).Base()
-		},
+		Title:   "Scolling",
+		Content: NewScrolling,
 	},
 }
 
@@ -48,7 +42,7 @@ func NewRoot() model[CustomData] {
 	tabs := tabs.New(ctx, tabsData)
 
 	base := app.New(ctx, app.AsRoot())
-	base.AddChild(tabs.Base())
+	base.AddChild(tabs)
 
 	return model[CustomData]{
 		base: base,
