@@ -20,19 +20,16 @@ With BubbleApp you can compose models and gain things like
 ### [Hello World!](./examples/hello-world/main.go)
 
 ```go
-stack := stack.New(ctx)
-stack.AddChildren(
-    text.New(ctx, "Hello World!"),
-    divider.New(ctx),
-    text.New(ctx, "Press [q] to quit."),
+stack := stack.New(ctx, &stack.Options[struct{}]{
+    Children: []*app.Base[struct{}]{
+        text.New(ctx, "Hello World!", nil).Base(),
+        divider.New(ctx).Base(),
+        text.New(ctx, "Press [q] to quit.", nil).Base(),
+    }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
-
-return model{
-    base: base,
-}
+base.AddChild(stack.Base())
 ```
 
 ![Hello world!](./examples/hello-world/demo.gif)
@@ -48,27 +45,29 @@ return model{
 ### [Tabbing](./examples/tabbing/main.go)
 
 ```go
-boxFill := box.New(ctx)
+boxFill := box.New(ctx, &box.Options[CustomData]{})
+addButton := button.New(ctx, "Button 1", &button.Options{Variant: button.Primary})
+quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
 
-addButton := button.New(ctx, "Button 1",
-    button.WithVariant(button.Primary),
-)
-
-quitButton := button.New(ctx, "Quit App",
-    button.WithVariant(button.Danger),
-)
-
-stack := stack.New(ctx)
-stack.AddChildren(
-    text.New(ctx, "Tab through the buttons to see focus state!"),
-    addButton,
-    boxFill,
-    divider.New(ctx),
-    quitButton,
+stack := stack.New(ctx, &stack.Options[CustomData]{
+    Children: []*app.Base[CustomData]{
+        text.New(ctx, "Tab through the buttons to see focus state!", nil).Base(),
+        addButton.Base(),
+        boxFill.Base(),
+        divider.New(ctx).Base(),
+        quitButton.Base(),
+    }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+base.AddChild(stack.Base())
+
+return model[CustomData]{
+    base:         base,
+    containerID:  boxFill.Base().ID,
+    addButtonID:  addButton.Base().ID,
+    quitButtonID: quitButton.Base().ID,
+}
 ```
 
 ```go
@@ -91,15 +90,16 @@ case button.ButtonPressMsg:
 ### [Stack](./examples/stack/main.go)
 
 ```go
-stack := stack.New(ctx)
-stack.AddChildren(
-    box.New(ctx, box.WithBg(ctx.Styles.Colors.Danger)),
-    box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)),
-    box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)),
+stack := stack.New(ctx, &stack.Options[CustomData]{
+    Children: []*app.Base[CustomData]{
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}).Base(),
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}).Base(),
+        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+    }},
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+base.AddChild(stack.Base())
 ```
 
 ![Stack](./examples/stack/demo.gif)
@@ -109,33 +109,33 @@ base.AddChild(stack)
 ### [Tabs](./examples/tabs/main.go)
 
 ```go
-var tabsData = []tabs.TabElement{
+var tabsData = []tabs.TabElement[CustomData]{
 	{
 		Title: "Overview",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewOverview(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewOverview(ctx).Base()
 		},
 	},
 	{
 		Title: "Loaders",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewLoaders(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewLoaders(ctx).Base()
 		},
 	},
 	{
 		Title: "Scolling",
-		Content: func(ctx *app.Context) app.UIModel {
-			return NewScrolling(ctx)
+		Content: func(ctx *app.Context[CustomData]) *app.Base[CustomData] {
+			return NewScrolling(ctx).Base()
 		},
 	},
 }
 ```
 
 ```go
-	tabs := tabs.New(ctx, tabsData)
+tabs := tabs.New(ctx, tabsData)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(tabs)
+base := app.New(ctx, app.AsRoot())
+base.AddChild(tabs)
 ```
 
 ![Tabs](./examples/tabs/demo.gif)
@@ -145,26 +145,53 @@ var tabsData = []tabs.TabElement{
 ### [Grid](./examples/grid/main.go)
 
 ```go
-// This does look a bit messy. Maybe there is a better way.
-gridView := grid.New(ctx)
-gridView.AddItems(
-    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.PrimaryDark), box.WithChild(
-        text.New(ctx, "I wish I could center text! Some day...")),
-    ), grid.WithXs(12)),
-    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Warning)), grid.WithXsv(6)),
-    grid.NewItem(button.New(ctx, "BUTTON 1", button.WithVariant(button.Success)), grid.WithXs(6)),
-    grid.NewItem(button.New(ctx, "BUTTON 2"), grid.WithXs(3)),
-    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.InfoDark), box.WithChild(
-        stack.New(ctx, stack.WithChildren(
-            text.New(ctx, "I am in a stack!"),
-            loader.New(ctx, loader.Meter, loader.WithText("Text style messes up bg. Fix!"), loader.WithColor(ctx.Styles.Colors.Black))),
-        ),
-    )), grid.WithXs(6)),
-    grid.NewItem(box.New(ctx, box.WithBg(ctx.Styles.Colors.Success)), grid.WithXs(3)),
+gridView := grid.New(ctx,
+    grid.Item[CustomData]{
+        Xs: 12,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.PrimaryDark,
+            Child: text.New(ctx, "I wish I could center text! Some day...", nil).Base(),
+        }).Base(),
+    },
+    grid.Item[CustomData]{
+        Xs:   6,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}).Base(),
+    },
+    grid.Item[CustomData]{
+        Xs: 6,
+        Item: stack.New(ctx, &stack.Options[CustomData]{
+            Children: []*app.Base[CustomData]{
+                text.New(ctx, "Background mess up if this text has foreground style.", nil).Base(),
+                text.New(ctx, "Fix the margin to the left here. Not intentional.", nil).Base(),
+                button.New(ctx, "BUTTON 1", nil).Base(),
+            },
+        }).Base(),
+    },
+    grid.Item[CustomData]{
+        Xs:   3,
+        Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}).Base(),
+    },
+    grid.Item[CustomData]{
+        Xs: 6,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
+            Child: stack.New(ctx, &stack.Options[CustomData]{
+                Children: []*app.Base[CustomData]{
+                    text.New(ctx, "I am in a stack!", nil).Base(),
+                    loader.New(ctx, loader.Meter, &loader.Options{
+                        Text:  "Text style messes up bg. Fix!",
+                        Color: ctx.Styles.Colors.Black,
+                    }).Base(),
+                },
+            }).Base(),
+        }).Base(),
+    },
+    grid.Item[CustomData]{
+        Xs:   3,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}).Base(),
+    },
 )
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(gridView)
+base.AddChild(gridView.Base())
 ```
 
 ![Grid](./examples/grid/demo.gif)

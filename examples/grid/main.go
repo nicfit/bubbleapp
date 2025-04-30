@@ -27,8 +27,7 @@ func NewRoot() model[CustomData] {
 	gridView := grid.New(ctx,
 		grid.Item[CustomData]{
 			Xs: 12,
-			Item: box.New(ctx, &box.Options[CustomData]{
-				Bg:    ctx.Styles.Colors.PrimaryDark,
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.PrimaryDark,
 				Child: text.New(ctx, "I wish I could center text! Some day...", nil).Base(),
 			}).Base(),
 		},
@@ -52,8 +51,7 @@ func NewRoot() model[CustomData] {
 		},
 		grid.Item[CustomData]{
 			Xs: 6,
-			Item: box.New(ctx, &box.Options[CustomData]{
-				Bg: ctx.Styles.Colors.InfoDark,
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
 				Child: stack.New(ctx, &stack.Options[CustomData]{
 					Children: []*app.Base[CustomData]{
 						text.New(ctx, "I am in a stack!", nil).Base(),
