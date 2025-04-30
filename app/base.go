@@ -110,6 +110,13 @@ func (m *Base[T]) Init() tea.Cmd {
 		cmds = append(cmds, m.tick())
 	}
 	if m.Opts.IsRoot {
+		// This could be replaced with a RequestWindowSize when that works
+		cmds = append(cmds, func() tea.Msg {
+			return tea.WindowSizeMsg{
+				Width:  m.Ctx.Width,
+				Height: m.Ctx.Height,
+			}
+		})
 		cmds = append(cmds, m.Ctx.FocusFirstCmd(m.Children[0]))
 	}
 	return tea.Batch(cmds...)
