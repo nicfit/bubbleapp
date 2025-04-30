@@ -117,7 +117,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case m.failButtonID:
 			if m.errorTextID != "" {
-				m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
+				m.base.RemoveChild(m.errorTextID)
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
@@ -127,7 +127,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, LoginCmd(m.base.Ctx.Data, true)
 		case m.loginButtonID:
 			if m.errorTextID != "" {
-				m.base.RemoveChild(m.errorTextID) // This could be done on tea.KeyMsg as well
+				m.base.RemoveChild(m.errorTextID)
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
@@ -137,7 +137,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, LoginCmd(m.base.Ctx.Data, false)
 		}
 	case LoginSuccessMsg:
-		return NewAuthModel(m.base.Ctx), nil // Context is thrown away here. Is that what we want?
+		return NewAuthModel(m.base.Ctx), nil
 	case LoginFailedMsg:
 		m.base.ReplaceChild(
 			m.loggingInView.ID,
