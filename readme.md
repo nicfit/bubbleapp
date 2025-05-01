@@ -7,24 +7,36 @@ An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be
 
 With BubbleApp you can compose models and gain things like
 
-- **Composable Components** -
+- **Layout Components**
+  - Layout components such a Stack, Grid, Box makes it easy to create resposive layouts
+- **Widget Components**
+  - Buttons, Loaders, Tabs, Text (and more to come)
 - **Mouse support** - using [BubbleZone](https://github.com/lrstanley/bubblezone)
-  - Propagate mouse events to the right component automatically
+  - Automatic mouse handling for all components.
 - **Focus management**
-  - Tab through your entire UI tree without any code
-- **Global Ticks** that all components share (for animations like loaders)
+  - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
+- **Global Ticks**
   - Adding several Spinners from Bubbles is really slow over SSH. Each have their own Ticks.
+- **Shader**
+  - Attach shaders to components to transform their output. Dynamic Shaders listen for the Global Tick and can react in real time. The possibilities are endless.
 
 ## Examples
 
-### [Hello World!](./examples/hello-world/main.go)
+### [Shaders](./examples/hello-world/main.go)
+
+Flexible system to add shaders to components. Dynamic shaders are getting the global tick which enables them to update in real time.
 
 ```go
 stack := stack.New(ctx, &stack.Options[struct{}]{
     Children: []*app.Base[struct{}]{
-        text.New(ctx, "Hello World!", nil),
-        divider.New(ctx),
-        text.New(ctx, "Press [q] to quit.", nil),
+        text.New(ctx, "Shader examples:", nil),
+        text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
+        button.New(ctx, "blink", &button.Options{
+            Shader: shader.NewCombinatorShader(
+                shader.NewSmallCapsShader(),
+                shader.NewBlinkShader(time.Second/4),
+            ),
+        }),
     }},
 )
 
@@ -32,17 +44,21 @@ base := app.New(ctx, app.AsRoot())
 base.AddChild(stack)
 ```
 
-![Hello world!](./examples/hello-world/demo.gif)
+![Shaders](./examples/shader/demo.gif)
 
 ---
 
 ### [Multiple Views](./examples/multiple-views/main.go)
+
+An example of multiple views with some buttons. The login model is forgotten when navigating away from that view. It is easier to maintain large apps this way instead of a single root model.
 
 ![Multiple Views](./examples/multiple-views/demo.gif)
 
 ---
 
 ### [Tabbing](./examples/tabbing/main.go)
+
+Global tab management for free. All focusable components are automatically in a tab order (their order in the UI tree).
 
 ```go
 boxFill := box.New(ctx, &box.Options[CustomData]{})
@@ -89,6 +105,8 @@ case button.ButtonPressMsg:
 
 ### [Stack](./examples/stack/main.go)
 
+Stack layout vertically or horizontally. Compose as you like.
+
 ```go
 stack := stack.New(ctx, &stack.Options[CustomData]{
     Children: []*app.Base[CustomData]{
@@ -115,37 +133,9 @@ base.AddChild(stack)
 
 ---
 
-### [Tabs](./examples/tabs/main.go)
-
-```go
-var tabsData = []tabs.TabElement[CustomData]{
-	{
-		Title:   "Overview",
-		Content: NewOverview,
-	},
-	{
-		Title:   "Loaders",
-		Content: NewLoaders,
-	},
-	{
-		Title:   "Scolling",
-		Content: NewScrolling,
-	},
-}
-```
-
-```go
-tabs := tabs.New(ctx, tabsData)
-
-base := app.New(ctx, app.AsRoot())
-base.AddChild(tabs)
-```
-
-![Tabs](./examples/tabs/demo.gif)
-
----
-
 ### [Grid](./examples/grid/main.go)
+
+If you need more responsive layouts use a Grid which can span 12 unit across the width. Each item in the grid has a width for each breakpoint (the size of the terminal).
 
 ```go
 gridView := grid.New(ctx,
@@ -198,3 +188,33 @@ base.AddChild(gridView)
 ```
 
 ![Grid](./examples/grid/demo.gif)
+
+---
+
+### [Tabs](./examples/tabs/main.go)
+
+```go
+var tabsData = []tabs.TabElement[CustomData]{
+	{
+		Title:   "Overview",
+		Content: NewOverview,
+	},
+	{
+		Title:   "Loaders",
+		Content: NewLoaders,
+	},
+	{
+		Title:   "Scolling",
+		Content: NewScrolling,
+	},
+}
+```
+
+```go
+tabs := tabs.New(ctx, tabsData)
+
+base := app.New(ctx, app.AsRoot())
+base.AddChild(tabs)
+```
+
+![Tabs](./examples/tabs/demo.gif)

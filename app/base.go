@@ -184,6 +184,9 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 		}
 
 	case TickMsg:
+		if ds, ok := m.Shader.(shader.DynamicShader); ok {
+			ds.Tick()
+		}
 		if m.Opts.TickFPS > 0 {
 			cmds = append(cmds, m.tick())
 		}
