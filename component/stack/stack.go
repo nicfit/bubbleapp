@@ -54,6 +54,11 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 		growerCount := 0
 		for _, child := range m.base.Children {
+			if m.opts.Horizontal {
+				child.Height = msg.Height
+			} else {
+				child.Width = msg.Width
+			}
 			if child.Opts.GrowY {
 				growerCount++
 			}
