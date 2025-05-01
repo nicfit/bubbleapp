@@ -225,7 +225,8 @@ func (m model[T]) View() string {
 	if m.base.Hovered {
 		style = m.styleHovered
 	}
-	return style.Render(m.base.Ctx.Zone.Mark(m.base.ID, m.base.ApplyShader(m.Text)))
+	// TODO: Is there a way to have a border shader separately? Render text with 1 shader and border with another?
+	return m.base.Ctx.Zone.Mark(m.base.ID, m.base.ApplyShader(style.Render(m.Text)))
 }
 
 func (m model[T]) Base() *app.Base[T] {
