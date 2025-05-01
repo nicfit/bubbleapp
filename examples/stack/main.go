@@ -23,8 +23,17 @@ func NewRoot() model[CustomData] {
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
 			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}),
+			box.New(ctx, &box.Options[CustomData]{
+				Child: stack.New(ctx, &stack.Options[CustomData]{
+					Horizontal: true,
+					Children: []*app.Base[CustomData]{
+						box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Primary}),
+						box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Secondary}),
+						box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Tertiary}),
+					}},
+				),
+			}),
 			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
-			box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
 		}},
 	)
 

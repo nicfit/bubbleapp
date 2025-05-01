@@ -7,7 +7,7 @@ import (
 )
 
 type Options[T any] struct {
-	Horizontal bool // Implemented in the future
+	Horizontal bool
 	Children   []*app.Base[T]
 }
 
@@ -49,55 +49,87 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.base.Height = msg.Height
 		m.base.Width = msg.Width
 		m.style = m.style.Width(msg.Width).Height(msg.Height)
-		var (
-			cmds []tea.Cmd
-		)
+
+		// Determine layout direction and corresponding properties
+		totalSize := msg.Height
+		perpendicularSize := msg.Width
+		growFlag := func(o app.BaseOptions) bool { return o.GrowY }
+		measureFunc := lipgloss.Height
+		if m.opts.Horizontal {
+			totalSize = msg.Width
+			perpendicularSize = msg.Height
+			growFlag = func(o app.BaseOptions) bool { return o.GrowX }
+			measureFunc = lipgloss.Width
+		}
+
 		growerCount := 0
 		for _, child := range m.base.Children {
+			// Set the dimension perpendicular to the layout direction
 			if m.opts.Horizontal {
-				child.Height = msg.Height
+				child.Height = perpendicularSize
 			} else {
-				child.Width = msg.Width
+				child.Width = perpendicularSize
 			}
-			if child.Opts.GrowY {
+			if growFlag(child.Opts) {
 				growerCount++
 			}
 		}
 
-		nonGrowerHeight := 0
+		nonGrowerSize := 0
 		for _, child := range m.base.Children {
-			if !child.Opts.GrowY {
-				childHeight := lipgloss.Height(child.Model.View())
-				nonGrowerHeight += childHeight
+			if !growFlag(child.Opts) {
+				childSize := measureFunc(child.Model.View())
+				nonGrowerSize += childSize
 
-				newChild, cmd := child.Model.Update(tea.WindowSizeMsg{
-					Width:  msg.Width,
-					Height: childHeight,
-				})
+				childMsg := tea.WindowSizeMsg{}
+				if m.opts.Horizontal {
+					childMsg.Width = childSize
+					childMsg.Height = perpendicularSize
+				} else {
+					childMsg.Width = perpendicularSize
+					childMsg.Height = childSize
+				}
+
+				newChild, cmd := child.Model.Update(childMsg)
 				newChildTyped := newChild.(app.UIModel[T])
-				newChildTyped.Base().Model = newChildTyped // TODO: This seems fragile. Is it needed? Can it be moved to the ReplaceChild?
+				newChildTyped.Base().Model = newChildTyped
 				m.base.ReplaceChild(child.ID, newChildTyped.Base())
 				cmds = append(cmds, cmd)
 			}
 		}
 
 		if growerCount > 0 {
-			availableHeight := msg.Height - nonGrowerHeight
-			growerHeight := availableHeight / growerCount
-			remainder := availableHeight % growerCount
+			availableSize := totalSize - nonGrowerSize
+			if availableSize < 0 {
+				availableSize = 0
+			}
+			growerSize := 0
+			remainder := 0
+			if growerCount > 0 {
+				growerSize = availableSize / growerCount
+				remainder = availableSize % growerCount
+			}
+
 			for _, child := range m.base.Children {
-				if child.Opts.GrowY {
-					currentGrowerHeight := growerHeight
+				if growFlag(child.Opts) {
+					currentGrowerSize := growerSize
 					if remainder > 0 {
-						currentGrowerHeight++
+						currentGrowerSize++
 						remainder--
 					}
-					newChild, cmd := child.Model.Update(tea.WindowSizeMsg{
-						Width:  msg.Width,
-						Height: currentGrowerHeight,
-					})
+
+					childMsg := tea.WindowSizeMsg{}
+					if m.opts.Horizontal {
+						childMsg.Width = currentGrowerSize
+						childMsg.Height = perpendicularSize
+					} else {
+						childMsg.Width = perpendicularSize
+						childMsg.Height = currentGrowerSize
+					}
+
+					newChild, cmd := child.Model.Update(childMsg)
 					newChildTyped := newChild.(app.UIModel[T])
-					newChildTyped.Base().Model = newChildTyped // TODO: This seems fragile. Is it needed? Can it be moved to the ReplaceChild?
+					newChildTyped.Base().Model = newChildTyped
 					m.base.ReplaceChild(child.ID, newChildTyped.Base())
 					cmds = append(cmds, cmd)
 				}
@@ -117,6 +149,10 @@ func (m model[T]) View() string {
 	childrenViews := make([]string, 0, len(m.base.Children))
 	for _, child := range m.base.Children {
 		childrenViews = append(childrenViews, child.Model.View())
+	}
+
+	if m.opts.Horizontal {
+		return m.style.Render(lipgloss.JoinHorizontal(lipgloss.Top, childrenViews...))
 	}
 	return m.style.Render(lipgloss.JoinVertical(lipgloss.Left, childrenViews...))
 }
