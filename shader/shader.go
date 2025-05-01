@@ -2,6 +2,8 @@ package shader
 
 import (
 	"time"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 const (
@@ -9,10 +11,10 @@ const (
 )
 
 type Shader interface {
-	Render(input string) string
+	Render(input string, style *lipgloss.Style) string
 }
 
 type DynamicShader interface {
-	Render(input string) string
+	Render(input string, style *lipgloss.Style) string
 	Tick()
 }

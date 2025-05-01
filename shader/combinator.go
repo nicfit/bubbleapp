@@ -1,13 +1,15 @@
 package shader
 
+import "github.com/charmbracelet/lipgloss/v2"
+
 type CombinatorSharder struct {
 	shaders []Shader
 }
 
-func (c *CombinatorSharder) Render(input string) string {
+func (c *CombinatorSharder) Render(input string, stl *lipgloss.Style) string {
 	var output string = input
 	for _, shader := range c.shaders {
-		output = shader.Render(output)
+		output = shader.Render(output, stl)
 	}
 	return output
 }

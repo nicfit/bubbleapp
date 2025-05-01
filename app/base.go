@@ -8,6 +8,7 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/shader"
 	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/google/uuid"
 )
 
@@ -126,7 +127,7 @@ func (m *Base[T]) Init() tea.Cmd {
 				Width:  m.Ctx.Width,
 				Height: m.Ctx.Height,
 			}
-		})
+		}, tea.RequestBackgroundColor, tea.RequestForegroundColor)
 		cmds = append(cmds, m.Ctx.FocusFirstCmd(m.Children[0]))
 	}
 	return tea.Batch(cmds...)
@@ -164,7 +165,12 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 
 	case BlurAllMsg:
 		m.Focused = false
-
+	case tea.BackgroundColorMsg:
+		// Not working yet it seems
+		if m.Opts.IsRoot {
+			m.Ctx.BackgroundColor = msg.Color
+		}
+		return nil
 	case tea.WindowSizeMsg:
 		m.Height = msg.Height
 		m.Width = msg.Width
@@ -225,7 +231,13 @@ func (base *Base[T]) Render() string {
 
 func (base *Base[T]) ApplyShader(input string) string {
 	if base.Shader != nil {
-		return base.Shader.Render(input)
+		return base.Shader.Render(input, nil)
+	}
+	return input
+}
+func (base *Base[T]) ApplyShaderWithStyle(input string, style lipgloss.Style) string {
+	if base.Shader != nil {
+		return base.Shader.Render(input, &style)
 	}
 	return input
 }

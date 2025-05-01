@@ -69,7 +69,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	return m.style.Render(m.base.ApplyShader(m.text))
+	return m.base.ApplyShaderWithStyle(m.text, m.style)
 }
 
 func (m model[T]) Base() *app.Base[T] {

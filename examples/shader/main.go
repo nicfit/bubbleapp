@@ -13,6 +13,7 @@ import (
 
 	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 func NewRoot() model[struct{}] {
@@ -26,9 +27,10 @@ func NewRoot() model[struct{}] {
 			text.New(ctx, "Shader examples:", nil),
 			text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
 			button.New(ctx, "blink", &button.Options{
+				Variant: button.Danger,
 				Shader: shader.NewCombinatorShader(
 					shader.NewSmallCapsShader(),
-					shader.NewBlinkShader(time.Second/4),
+					shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Primary)),
 				),
 			}),
 		}},
@@ -69,7 +71,7 @@ func (m model[T]) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(NewRoot(), tea.WithAltScreen())
+	p := tea.NewProgram(NewRoot(), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

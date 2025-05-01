@@ -1,29 +1,29 @@
 package shader
 
 import (
-	"strings"
 	"time"
-	"unicode/utf8"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type BlinkShader struct {
-	blinkCache    string
-	lastInput     string
+	blinkStyle    lipgloss.Style
 	ticksPerState int
 	totalTicks    int
 	frame         int
 }
 
-func (b *BlinkShader) Render(input string) string {
+func (b *BlinkShader) Render(input string, stl *lipgloss.Style) string {
 	if b.frame < b.ticksPerState {
+		if stl != nil {
+			return stl.Render(input)
+		}
 		return input
 	}
-	if b.lastInput != input || b.blinkCache == "" {
-		b.lastInput = input
-		runeCount := utf8.RuneCountInString(input)
-		b.blinkCache = strings.Repeat(" ", runeCount)
+	if stl != nil {
+		return b.blinkStyle.Inherit(*stl).Render(input)
 	}
-	return b.blinkCache
+	return b.blinkStyle.Render(input)
 }
 func (b *BlinkShader) Tick() {
 	b.frame++
@@ -31,16 +31,13 @@ func (b *BlinkShader) Tick() {
 		b.frame = 0
 	}
 }
-func NewBlinkShader(fps time.Duration) Shader {
-	ticks := int(float64(fps) / float64(FPS))
-
-	if ticks < 1 {
-		ticks = 1
-	}
+func NewBlinkShader(fps time.Duration, blinkStyle lipgloss.Style) Shader {
+	ticks := max(int(float64(fps)/float64(FPS)), 1)
 
 	return &BlinkShader{
 		ticksPerState: ticks,
 		totalTicks:    ticks * 2,
 		frame:         0,
+		blinkStyle:    blinkStyle,
 	}
 }

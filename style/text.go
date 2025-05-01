@@ -1,5 +1,7 @@
 package style
 
+import "strings"
+
 var smallCapsMap = map[rune]rune{
 	'A': 'ᴀ', // U+1D00
 	'B': 'ʙ', // U+0299
@@ -31,7 +33,7 @@ var smallCapsMap = map[rune]rune{
 
 func ConvertToSmallCaps(input string) string {
 	var result []rune
-	for _, r := range input {
+	for _, r := range strings.ToUpper(input) {
 		if smallCap, ok := smallCapsMap[r]; ok {
 			result = append(result, smallCap)
 		} else {
