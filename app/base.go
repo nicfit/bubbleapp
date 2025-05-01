@@ -239,7 +239,7 @@ func (base *Base[T]) ApplyShaderWithStyle(input string, style lipgloss.Style) st
 	if base.Shader != nil {
 		return base.Shader.Render(input, &style)
 	}
-	return input
+	return style.Render(input)
 }
 
 func (base *Base[T]) AddChild(child *Base[T]) {

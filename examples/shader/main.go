@@ -25,13 +25,13 @@ func NewRoot() model[struct{}] {
 	stack := stack.New(ctx, &stack.Options[struct{}]{
 		Children: []*app.Base[struct{}]{
 			text.New(ctx, "Shader examples:", nil),
-			text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
-			button.New(ctx, "blink", &button.Options{
+			text.New(ctx, "Small Caps Shader", &text.Options{
+				Foreground: ctx.Styles.Colors.Primary,
+				Shader:     shader.NewSmallCapsShader(),
+			}),
+			button.New(ctx, " Blink ", &button.Options{
 				Variant: button.Danger,
-				Shader: shader.NewCombinatorShader(
-					shader.NewSmallCapsShader(),
-					shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Primary)),
-				),
+				Shader:  shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Success)),
 			}),
 		}},
 	)

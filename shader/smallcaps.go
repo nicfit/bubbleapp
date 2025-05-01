@@ -12,6 +12,9 @@ type SmallCapsShader struct {
 
 func (s *SmallCapsShader) Render(input string, stl *lipgloss.Style) string {
 	if s.lastInput == input {
+		if stl != nil {
+			return stl.Render(s.output)
+		}
 		return s.output
 	}
 	s.output = style.ConvertToSmallCaps(input)

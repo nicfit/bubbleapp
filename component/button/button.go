@@ -68,22 +68,21 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 		text = "[" + text + "]"
 	}
 
-	// TODO: This seems too much code. Is there a better way?
 	switch options.Variant {
 	case Primary:
-		s = s.Foreground(ctx.Styles.Colors.Primary)
+		s = s.BorderForeground(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.Primary)
 	case Secondary:
-		s = s.Foreground(ctx.Styles.Colors.Secondary)
+		s = s.BorderForeground(ctx.Styles.Colors.Secondary).Foreground(ctx.Styles.Colors.Secondary)
 	case Tertiary:
-		s = s.Foreground(ctx.Styles.Colors.Tertiary)
+		s = s.BorderForeground(ctx.Styles.Colors.Tertiary).Foreground(ctx.Styles.Colors.Tertiary)
 	case Success:
-		s = s.Foreground(ctx.Styles.Colors.Success)
+		s = s.BorderForeground(ctx.Styles.Colors.Success).Foreground(ctx.Styles.Colors.Success)
 	case Danger:
-		s = s.Foreground(ctx.Styles.Colors.Danger)
+		s = s.BorderForeground(ctx.Styles.Colors.Danger).Foreground(ctx.Styles.Colors.Danger)
 	case Warning:
-		s = s.Foreground(ctx.Styles.Colors.Warning)
+		s = s.BorderForeground(ctx.Styles.Colors.Warning).Foreground(ctx.Styles.Colors.Warning)
 	case Info:
-		s = s.Foreground(ctx.Styles.Colors.Info)
+		s = s.BorderForeground(ctx.Styles.Colors.Info).Foreground(ctx.Styles.Colors.Info)
 	}
 
 	styleFocused := s
@@ -91,19 +90,19 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 	if options.Type == Normal {
 		switch options.Variant {
 		case Primary:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.Primary)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.PrimaryLight).Foreground(ctx.Styles.Colors.White).Background(ctx.Styles.Colors.PrimaryDark)
 		case Secondary:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Secondary).Foreground(ctx.Styles.Colors.Secondary)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.SecondaryLight).Foreground(ctx.Styles.Colors.White).Background(ctx.Styles.Colors.SecondaryDark)
 		case Tertiary:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Tertiary).Foreground(ctx.Styles.Colors.Tertiary)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.TertiaryLight).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.TertiaryDark)
 		case Success:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Success).Foreground(ctx.Styles.Colors.Success)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.SuccessLight).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.SuccessDark)
 		case Danger:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Danger).Foreground(ctx.Styles.Colors.Danger)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.DangerLight).Foreground(ctx.Styles.Colors.White).Background(ctx.Styles.Colors.DangerDark)
 		case Warning:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Warning).Foreground(ctx.Styles.Colors.Warning)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.WarningLight).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.WarningDark)
 		case Info:
-			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.Info).Foreground(ctx.Styles.Colors.Info)
+			styleFocused = styleFocused.BorderForeground(ctx.Styles.Colors.InfoLight).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.InfoDark)
 		}
 	} else if options.Type == Compact {
 		switch options.Variant {
@@ -124,41 +123,41 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 		}
 	}
 
-	styleHovered := s
+	styleHovered := styleFocused
 
 	if options.Type == Normal {
 		switch options.Variant {
 		case Primary:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.PrimaryLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.PrimaryDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.PrimaryLight)
 		case Secondary:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.SecondaryLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.SecondaryDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.SecondaryLight)
 		case Tertiary:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.TertiaryLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.TertiaryDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.TertiaryLight)
 		case Success:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.SuccessLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.SuccessDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.SuccessLight)
 		case Danger:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.DangerLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.DangerDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.DangerLight)
 		case Warning:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.WarningLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.WarningDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.WarningLight)
 		case Info:
-			styleHovered = styleFocused.BorderForeground(ctx.Styles.Colors.InfoLight)
+			styleHovered = styleHovered.BorderForeground(ctx.Styles.Colors.InfoDark).Foreground(ctx.Styles.Colors.Black).Background(ctx.Styles.Colors.InfoLight)
 		}
 	} else if options.Type == Compact {
 		switch options.Variant {
 		case Primary:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.PrimaryLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.PrimaryLight)
 		case Secondary:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.SecondaryLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.SecondaryLight)
 		case Tertiary:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.TertiaryLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.TertiaryLight)
 		case Success:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.SuccessLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.SuccessLight)
 		case Danger:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.DangerLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.DangerLight)
 		case Warning:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.WarningLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.WarningLight)
 		case Info:
-			styleHovered = styleFocused.Background(ctx.Styles.Colors.InfoLight)
+			styleHovered = styleHovered.Background(ctx.Styles.Colors.InfoLight)
 		}
 	}
 
