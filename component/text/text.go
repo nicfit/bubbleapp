@@ -4,6 +4,8 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
+	"github.com/alexanderbh/bubbleapp/shader"
+	"github.com/alexanderbh/bubbleapp/style"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
@@ -11,6 +13,9 @@ import (
 type Options struct {
 	Foreground color.Color
 	Background color.Color
+	Bold       bool
+	Shader     shader.Shader
+	style.Margin
 }
 
 type model[T any] struct {
@@ -32,12 +37,17 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 		options.Background = lipgloss.NoColor{}
 	}
 
-	style := lipgloss.NewStyle().Foreground(options.Foreground).Background(options.Background)
+	s := lipgloss.NewStyle().Foreground(options.Foreground).Background(options.Background)
 
+	s = style.ApplyMargin(s, options.Margin)
+
+	if options.Bold {
+		s = s.Bold(true)
+	}
 	return model[T]{
-		base:  app.New(ctx),
+		base:  app.New(ctx, app.WithShader(options.Shader)),
 		text:  text,
-		style: style,
+		style: s,
 		opts:  options,
 	}.Base()
 }
@@ -59,7 +69,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	return m.style.Render(m.text)
+	return m.style.Render(m.base.ApplyShader(m.text))
 }
 
 func (m model[T]) Base() *app.Base[T] {

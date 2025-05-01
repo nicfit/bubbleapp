@@ -6,6 +6,7 @@ import (
 
 	"slices"
 
+	"github.com/alexanderbh/bubbleapp/shader"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/google/uuid"
 )
@@ -22,6 +23,7 @@ type Base[T any] struct {
 	ID       string
 	Focused  bool
 	Hovered  bool
+	Shader   shader.Shader
 	Model    UIModel[T]
 	Children []*Base[T]
 	Width    int
@@ -35,10 +37,12 @@ type BaseOptions struct {
 	GrowY     bool
 	Focusable bool
 	IsRoot    bool
+	Shader    shader.Shader
 }
 
 type Option func(*BaseOptions)
 
+// TODO: REWRITE THIS TO USE AN STRUCT INSTEAD OF THESE WITH FUNCTIONS. LIKE OTHER COMPONENTS
 // Make sure to only have 1 base model with Tick FPS
 func WithTick(fps time.Duration) Option {
 	return func(o *BaseOptions) {
@@ -60,6 +64,11 @@ func WithGrow(grow bool) Option {
 	return func(o *BaseOptions) {
 		o.GrowX = grow
 		o.GrowY = grow
+	}
+}
+func WithShader(shader shader.Shader) Option {
+	return func(o *BaseOptions) {
+		o.Shader = shader
 	}
 }
 
@@ -94,6 +103,7 @@ func New[T any](ctx *Context[T], opts ...Option) *Base[T] {
 		Focused:  false,
 		Opts:     options,
 		Children: []*Base[T]{},
+		Shader:   options.Shader,
 	}
 
 	return b
@@ -197,16 +207,24 @@ func (m *Base[T]) Update(msg tea.Msg) tea.Cmd {
 }
 
 func (base *Base[T]) Render() string {
-	children := []string{}
+	elements := []string{}
+
 	for _, child := range base.Children {
-		children = append(children, child.Model.View())
+		elements = append(elements, child.Model.View())
 	}
-	result := strings.Join(children, "\n")
+	result := strings.Join(elements, "\n")
 
 	if base.Opts.IsRoot {
 		return base.Ctx.Zone.Scan(result)
 	}
 	return result
+}
+
+func (base *Base[T]) ApplyShader(input string) string {
+	if base.Shader != nil {
+		return base.Shader.Render(input)
+	}
+	return input
 }
 
 func (base *Base[T]) AddChild(child *Base[T]) {

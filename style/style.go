@@ -4,10 +4,6 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-const (
-	TopHeight = 13
-)
-
 type Styles struct {
 	Colors Colors
 
