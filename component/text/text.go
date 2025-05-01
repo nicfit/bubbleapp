@@ -59,7 +59,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model[T]) View() string {
-	return m.style.UnsetWidth().Render(m.text)
+	return m.style.Render(m.text)
 }
 
 func (m model[T]) Base() *app.Base[T] {

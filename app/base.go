@@ -103,7 +103,7 @@ func (m *Base[T]) Init() tea.Cmd {
 	cmds := []tea.Cmd{}
 	if len(m.Children) > 0 {
 		for _, child := range m.Children {
-			cmds = append(cmds, child.Init())
+			cmds = append(cmds, child.Model.Init())
 		}
 	}
 	if m.Opts.TickFPS > 0 {

@@ -18,8 +18,8 @@ type model[T any] struct {
 
 	base *app.Base[T]
 
-	activeTabID string
-	titlesID    string
+	contentBoxID string
+	titlesID     string
 
 	tabContent []*app.Base[T]
 }
@@ -57,8 +57,8 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T]) *app.Base[T] {
 		tabContent: tabContent,
 		titlesID:   tabTitlesModel.ID,
 
-		base:        base,
-		activeTabID: contentBox.Children[0].ID,
+		base:         base,
+		contentBoxID: contentBox.ID,
 	}.Base()
 }
 
@@ -74,17 +74,24 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tabtitles.TabChangedMsg:
-		currentTabID := m.activeTabID
-		newTab := m.tabContent[msg.ActiveTab]
-		m.activeTabID = newTab.ID
-		m.base.Children[0].Children[1].ReplaceChild(currentTabID, newTab)
-
-		cmds = append(cmds, newTab.Model.Init(), func() tea.Msg {
-			return tea.WindowSizeMsg{
-				Width:  m.base.Width,
-				Height: m.base.Height,
-			}
+		currentContentBoxID := m.contentBoxID
+		currentContentBox := m.Base().GetChild(currentContentBoxID)
+		newTabContent := m.tabContent[msg.ActiveTab]
+		newBox := box.New(m.base.Ctx, &box.Options[T]{
+			Child: newTabContent,
 		})
+		updatedModel, _ := newBox.Model.Update(
+			tea.WindowSizeMsg{
+				Width:  currentContentBox.Width,
+				Height: currentContentBox.Height,
+			},
+		)
+		typedUpdatedModel := updatedModel.(app.UIModel[T])
+		m.contentBoxID = typedUpdatedModel.Base().ID
+		m.base.Children[0].ReplaceChild(currentContentBoxID, typedUpdatedModel.Base())
+
+		cmds = append(cmds, newBox.Model.Init())
+		return m, tea.Batch(cmds...)
 	}
 
 	cmd = m.base.Update(msg)
