@@ -9,6 +9,8 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
+// Disclaimer: The size calculations are mostly AI vibed.
+// Should look at it at some point but it just spit it out and it seems to work.
 const (
 	breakpointSm = 60
 	breakpointMd = 90
@@ -68,29 +70,37 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.base.Height = msg.Height
 		m.base.Width = msg.Width
 		containerWidth := msg.Width
+		if containerWidth <= 0 { // Handle zero/negative width
+			// Set all children to width 0 and return
+			for _, child := range m.base.Children {
+				newChild, updateCmd := child.Model.Update(tea.WindowSizeMsg{Width: 0, Height: 0})
+				if newChildTyped, ok := newChild.(app.UIModel[T]); ok {
+					newChildTyped.Base().Model = newChildTyped
+					newChildTyped.Base().Width = 0
+					newChildTyped.Base().Height = 0
+					m.base.ReplaceChild(child.ID, newChildTyped.Base())
+				}
+				if updateCmd != nil {
+					cmds = append(cmds, updateCmd)
+				}
+			}
+			return m, tea.Batch(cmds...)
+		}
 
-		// OKAY THIS CODE BELOW HERE IS PURE AI VIBING.
-		// I just wanted some pointers on how to do this, and it just blurted out this mess.
-
-		// But so far it seems to work.. I will have to read and understand it at somepoint.
-		// Still not sure it is the right approach.
-
-		// AI VIBING BELOW
+		// --- 1. Group children into rows and calculate initial layout ---
 		type rowInfo struct {
 			children       []*app.Base[T]
-			maxChildHeight int // Max height of non-growing children in this row
+			spans          []int // Store spans for width calculation
+			maxChildHeight int   // Max height of non-growing children in this row (estimate)
 			hasGrower      bool
-			totalSpan      int
 		}
 		var rows []rowInfo
 		var currentRow rowInfo
 		currentRowSpan := 0
-		widthPerSpanUnit := float64(containerWidth) / 12.0
 
 		children := m.base.Children
-		childWidths := make(map[string]int) // Store calculated widths
 
-		for i, child := range children {
+		for _, child := range children {
 			childID := child.ID
 			config, ok := m.itemConfigs[childID]
 			if !ok {
@@ -98,65 +108,92 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			childSpan := config.GetSpanForWidth(containerWidth)
 
-			// Calculate target width (similar to View logic, simplified remainder handling)
-			targetChildWidth := int(math.Round(widthPerSpanUnit * float64(childSpan)))
-			if targetChildWidth < 1 {
-				targetChildWidth = 1
-			}
-			// Ensure total width doesn't exceed container width due to rounding
-			if i == len(children)-1 && currentRowSpan+childSpan <= 12 {
-				currentTotalWidth := 0
-				for _, c := range currentRow.children {
-					currentTotalWidth += childWidths[c.ID]
-				}
-				targetChildWidth = containerWidth - currentTotalWidth
-			} else if currentRowSpan+childSpan > 12 {
-				// If adding this child exceeds 12, calculate width based on remaining space in the *next* row (which is just this child for now)
-				targetChildWidth = int(math.Round(widthPerSpanUnit * float64(childSpan)))
-				if targetChildWidth < 1 {
-					targetChildWidth = 1
-				}
-				if targetChildWidth > containerWidth {
-					targetChildWidth = containerWidth
-				}
-			}
-
-			childWidths[childID] = targetChildWidth // Store width
-
 			if currentRowSpan+childSpan > 12 && len(currentRow.children) > 0 {
-				// Finish previous row
-				currentRow.totalSpan = currentRowSpan
 				rows = append(rows, currentRow)
-				// Start new row
 				currentRow = rowInfo{}
 				currentRowSpan = 0
 			}
 
-			// Add child to current row
 			currentRow.children = append(currentRow.children, child)
+			currentRow.spans = append(currentRow.spans, childSpan) // Store span
 			currentRowSpan += childSpan
 			if child.Opts.GrowY {
 				currentRow.hasGrower = true
-			} else {
-				// Calculate natural height only for non-growers
-				childHeight := lipgloss.Height(child.Model.View()) // Get natural height
+			}
+			// Note: Calculating natural height here uses the *previous* view state.
+			// It's an estimate used for height planning before the width update.
+			if !child.Opts.GrowY {
+				childHeight := lipgloss.Height(child.Model.View())
 				if childHeight > currentRow.maxChildHeight {
 					currentRow.maxChildHeight = childHeight
 				}
 			}
 		}
-		// Add the last row
 		if len(currentRow.children) > 0 {
-			currentRow.totalSpan = currentRowSpan
 			rows = append(rows, currentRow)
 		}
 
-		// --- 2. Calculate Height Distribution ---
+		// --- Intermediate: Prepare map for final dimensions ---
+		finalChildDims := make(map[string]struct{ Width, Height int })
+
+		// --- 2. Calculate Width Distribution Per Row ---
+		widthPerSpanUnit := float64(containerWidth) / 12.0
+		for _, row := range rows {
+			totalBaseWidth := 0
+			childBaseWidths := make([]int, len(row.children))
+
+			// Calculate base widths using floor
+			for j, childSpan := range row.spans {
+				baseWidth := int(math.Floor(widthPerSpanUnit * float64(childSpan)))
+				if baseWidth < 0 {
+					baseWidth = 0
+				}
+				childBaseWidths[j] = baseWidth
+				totalBaseWidth += baseWidth
+			}
+
+			// Calculate remaining pixels for this row
+			remainingPixels := containerWidth - totalBaseWidth
+			if remainingPixels < 0 {
+				remainingPixels = 0
+			}
+
+			// Distribute remaining pixels
+			for j, child := range row.children {
+				finalWidth := childBaseWidths[j]
+				if remainingPixels > 0 {
+					finalWidth++
+					remainingPixels--
+				}
+				// Store final width for now, height comes next
+				finalChildDims[child.ID] = struct{ Width, Height int }{Width: finalWidth}
+			}
+			// Add any leftover remainder (due to rounding edge cases or very small widths) to the last child.
+			if remainingPixels > 0 && len(row.children) > 0 {
+				lastChildID := row.children[len(row.children)-1].ID
+				dims := finalChildDims[lastChildID]
+				dims.Width += remainingPixels
+				finalChildDims[lastChildID] = dims
+			}
+		}
+
+		// --- 3. Calculate Height Distribution (largely unchanged) ---
 		nonGrowerTotalHeight := 0
 		growerRowCount := 0
-		for _, row := range rows {
+		for i, row := range rows {
 			if !row.hasGrower {
-				nonGrowerTotalHeight += row.maxChildHeight
+				// Re-estimate max natural height for non-growers in this row based on current view state
+				maxNaturalHeightInRow := 0
+				for _, child := range row.children {
+					if !child.Opts.GrowY {
+						naturalHeight := lipgloss.Height(child.Model.View())
+						if naturalHeight > maxNaturalHeightInRow {
+							maxNaturalHeightInRow = naturalHeight
+						}
+					}
+				}
+				rows[i].maxChildHeight = maxNaturalHeightInRow // Update row info used below
+				nonGrowerTotalHeight += rows[i].maxChildHeight
 			} else {
 				growerRowCount++
 			}
@@ -164,46 +201,42 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		availableHeightForGrowers := msg.Height - nonGrowerTotalHeight
 		if availableHeightForGrowers < 0 {
-			availableHeightForGrowers = 0 // Avoid negative height
+			availableHeightForGrowers = 0
 		}
 
 		heightPerGrowerRow := 0
-		remainder := 0
+		remainderHeight := 0
 		if growerRowCount > 0 {
 			heightPerGrowerRow = availableHeightForGrowers / growerRowCount
-			remainder = availableHeightForGrowers % growerRowCount
+			remainderHeight = availableHeightForGrowers % growerRowCount
 		}
 
-		// --- 3. Update Children Row by Row ---
+		// --- 4. Update Children Row by Row with Final Dimensions ---
 		for _, row := range rows {
 			rowHeight := 0
 			if row.hasGrower {
 				rowHeight = heightPerGrowerRow
-				if remainder > 0 {
+				if remainderHeight > 0 {
 					rowHeight++
-					remainder--
+					remainderHeight--
 				}
 			} else {
-				rowHeight = row.maxChildHeight
+				rowHeight = row.maxChildHeight // Use the potentially re-estimated max natural height
 			}
 			if rowHeight < 0 {
 				rowHeight = 0
-			} // Ensure non-negative height
+			}
 
-			// Distribute height within the row
-			// Simple approach: Give all children in the row the calculated rowHeight.
-			// More complex: Distribute remaining height in growing rows among growing children.
-			// Let's use the simple approach for now.
 			for _, child := range row.children {
 				childID := child.ID
-				targetWidth := childWidths[childID] // Use pre-calculated width
+				dims := finalChildDims[childID] // Get calculated width
+				targetWidth := dims.Width
 
 				// Determine target height for this child
 				targetHeight := rowHeight // Default to row height
-				if !row.hasGrower && !child.Opts.GrowY {
-					// If it's a non-growing row and non-growing child, use its natural height,
-					// but capped by the row height (in case other items forced row higher).
-					naturalHeight := lipgloss.Height(child.Model.View())
+				if !child.Opts.GrowY {    // If child itself doesn't grow vertically
+					// Use its estimated natural height, capped by the row height.
+					naturalHeight := lipgloss.Height(child.Model.View()) // Still using previous view height estimate
 					if naturalHeight < targetHeight {
 						targetHeight = naturalHeight
 					}
@@ -212,12 +245,20 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					targetHeight = 0
 				}
 
+				// Store final height (optional, mainly for clarity if needed elsewhere)
+				// dims.Height = targetHeight
+				// finalChildDims[childID] = dims
+
+				// Send update message
 				newChild, updateCmd := child.Model.Update(tea.WindowSizeMsg{
 					Width:  targetWidth,
 					Height: targetHeight,
 				})
 				if newChildTyped, ok := newChild.(app.UIModel[T]); ok {
 					newChildTyped.Base().Model = newChildTyped
+					// Update the base Width/Height fields as well, as View might rely on them
+					newChildTyped.Base().Width = targetWidth
+					newChildTyped.Base().Height = targetHeight
 					m.base.ReplaceChild(childID, newChildTyped.Base())
 				} // else: handle error or unexpected type?
 				if updateCmd != nil {
@@ -227,7 +268,6 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		return m, tea.Batch(cmds...)
-		// AI VIBING END
 	}
 
 	cmd = m.base.Update(msg)
@@ -241,43 +281,35 @@ func (m model[T]) View() string {
 		return ""
 	}
 
-	containerWidth := m.base.Ctx.Width
+	containerWidth := m.base.Ctx.Width // Use context width reflecting the latest size
+	if containerWidth <= 0 {
+		return ""
+	}
 
 	var rows [][]string
 	var currentRowItems []string
 	currentRowSpan := 0
 
-	widthPerSpanUnit := float64(containerWidth) / 12.0
-	remainder := containerWidth % 12 // is this right??
-
+	// Group children into rows based on spans, needed for horizontal joining
 	for _, child := range m.base.Children {
 		childID := child.ID
-
 		config, ok := m.itemConfigs[childID]
 		if !ok {
-			config = Item[T]{Xs: 12}
+			config = Item[T]{Xs: 12} // Default fallback
 		}
-
 		childSpan := config.GetSpanForWidth(containerWidth)
 
-		targetChildWidth := int(math.Floor(widthPerSpanUnit * float64(childSpan)))
-		if remainder > 0 {
-			targetChildWidth++
-			remainder--
-		}
-		if targetChildWidth < 1 {
-			targetChildWidth = 1
-		}
-
-		child.Width = targetChildWidth // this seems like a hack. something is off on this approach
+		// Get the child's view. It should have been rendered using the
+		// dimensions calculated and passed during the Update phase.
 		childView := child.Model.View()
 
-		styledChildView := lipgloss.NewStyle().Render(childView)
+		// We don't need to apply width styles here, as the child's view
+		// should already be sized correctly based on the Width set in its Base
+		// during the Update phase. lipgloss.JoinHorizontal respects this.
+		styledChildView := childView // Use the view directly
 
-		if currentRowSpan+childSpan > 12 {
-			if len(currentRowItems) > 0 {
-				rows = append(rows, currentRowItems)
-			}
+		if currentRowSpan+childSpan > 12 && len(currentRowItems) > 0 {
+			rows = append(rows, currentRowItems)
 			currentRowItems = []string{styledChildView}
 			currentRowSpan = childSpan
 		} else {
@@ -290,12 +322,21 @@ func (m model[T]) View() string {
 		rows = append(rows, currentRowItems)
 	}
 
+	// Join rows and items
 	renderedRows := make([]string, len(rows))
 	for i, rowItems := range rows {
+		// lipgloss.JoinHorizontal arranges the views side-by-side.
+		// It respects the width of each `childView` string.
 		renderedRows[i] = lipgloss.JoinHorizontal(lipgloss.Top, rowItems...)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
+	// Join the rows vertically
+	finalView := lipgloss.JoinVertical(lipgloss.Left, renderedRows...)
+
+	// Optional: If the grid container itself needs specific dimensions or styling:
+	// finalView = lipgloss.NewStyle().Width(m.base.Width).Height(m.base.Height).Render(finalView)
+
+	return finalView
 }
 
 func (m model[T]) Base() *app.Base[T] {

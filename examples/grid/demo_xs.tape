@@ -1,8 +1,8 @@
-Output demo.gif
+Output demo_xs.gif
 
 Set FontSize 16
-Set Width 1600
-Set Height 800
+Set Width 800
+Set Height 600
 
 Hide
 Type "go run ."

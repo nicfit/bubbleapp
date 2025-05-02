@@ -25,47 +25,38 @@ func NewRoot() model[CustomData] {
 	}
 
 	gridView := grid.New(ctx,
-		grid.Item[CustomData]{
-			Xs: 12,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.PrimaryDark,
+		grid.Item[CustomData]{Xs: 6, Lg: 3,
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.DangerDark,
 				Child: text.New(ctx, "I wish I could center text! Some day...", nil),
 			}),
 		},
-		grid.Item[CustomData]{
-			Xs:   6,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}),
+		grid.Item[CustomData]{Xs: 6, Lg: 3,
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
 		},
-		grid.Item[CustomData]{
-			Xs: 6,
+		grid.Item[CustomData]{Xs: 6, Lg: 3,
 			Item: stack.New(ctx, &stack.Options[CustomData]{
 				Children: []*app.Base[CustomData]{
 					text.New(ctx, "Background mess up if this text has foreground style.", nil),
-					text.New(ctx, "Fix the margin to the left here. Not intentional.", nil),
-					button.New(ctx, "BUTTON 1", nil),
+					text.New(ctx, "Otherwise pretty nice", nil),
+					button.New(ctx, "BUTTON 1", &button.Options{Type: button.Compact}),
 				},
 			}),
 		},
-		grid.Item[CustomData]{
-			Xs:   3,
-			Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}),
+		grid.Item[CustomData]{Xs: 6, Lg: 3,
+			Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger, Type: button.Compact}),
 		},
-		grid.Item[CustomData]{
-			Xs: 6,
+		grid.Item[CustomData]{Xs: 6,
 			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
 				Child: stack.New(ctx, &stack.Options[CustomData]{
 					Children: []*app.Base[CustomData]{
 						text.New(ctx, "I am in a stack!", nil),
-						loader.New(ctx, loader.Meter, &loader.Options{
-							Text:  "Text style messes up bg. Fix!",
-							Color: ctx.Styles.Colors.Black,
-						}),
+						loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.DangerDark, Text: "Style is reset here. Fix!"}),
 					},
 				}),
 			}),
 		},
-		grid.Item[CustomData]{
-			Xs:   3,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
+		grid.Item[CustomData]{Xs: 6,
+			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
 		},
 	)
 
