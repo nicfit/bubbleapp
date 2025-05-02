@@ -166,7 +166,8 @@ base := app.New(ctx, app.AsRoot())
 base.AddChild(gridView)
 ```
 
-![Grid](./examples/grid/demo.gif)
+![Grid](./examples/grid/demo_xs.gif)
+![Grid xs](./examples/grid/demo.gif)
 
 ---
 
