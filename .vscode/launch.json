@@ -1,4 +1,5 @@
 {
+  // Could this take into account the selected folder? That would make it easier to maintain.
   "version": "0.2.0",
   "configurations": [
     {

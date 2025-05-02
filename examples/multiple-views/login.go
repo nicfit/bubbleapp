@@ -25,11 +25,11 @@ func NewLogin() model[CustomData] {
 		Data:   &CustomData{},
 	}
 
-	loginButton := button.New(ctx, "Log in", &button.Options{Variant: button.Primary})
+	loginButton := button.New(ctx, "Log in", &button.Options{Variant: button.Primary, Type: button.Compact})
 
-	failButton := button.New(ctx, "Fail log in", &button.Options{Variant: button.Warning})
+	failButton := button.New(ctx, "Fail log in", &button.Options{Variant: button.Warning, Type: button.Compact})
 
-	quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
+	quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger, Type: button.Compact})
 
 	stackView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{

@@ -65,7 +65,7 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 	if options.Type == Normal {
 		s = s.Border(lipgloss.RoundedBorder())
 	} else if options.Type == Compact {
-		text = "[" + text + "]"
+		text = "⟦" + text + "⟧"
 	}
 
 	switch options.Variant {

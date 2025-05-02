@@ -1,53 +1,31 @@
 # BubbleApp
 
 > [!WARNING]
-> This is work in progress and just exploration for now
+> This is work in progress. Help is welcome.
 
-An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be a lot of manual work. For every state of the app you need to store that state in your model and branch accordingly.
+An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be a lot of manual work for every thing shown on the screen. BubbleApp add a separate UI layer on top of the BubbleTea architecture and handles all interoperability.
 
-With BubbleApp you can compose models and gain things like
+## Components
 
-- **Layout Components**
-  - Layout components such a Stack, Grid, Box makes it easy to create resposive layouts
-- **Widget Components**
-  - Buttons, Loaders, Tabs, Text (and more to come)
+- **[Layout Components](#layout-components)**
+  - [Stack](#stack), [Grid](#grid), Box makes it easy to create responsive layouts
+- **[Widget Components](#widget-components)**
+  - Button, Loader, [Tabs](#tabs), Text, [Table](#table) (and more to come)
+
+## Features
+
 - **Mouse support** - using [BubbleZone](https://github.com/lrstanley/bubblezone)
-  - Automatic mouse handling for all components.
-- **Focus management**
+  - Automatic mouse handling and propagation for all components.
+- **[Focus Management](#focus)**
   - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
+- **Global App State**
+  - Every component and model in a BubbleApp has a reference to your global app state (or app instance if using [Wish](https://github.com/charmbracelet/wish)). Use this anywhere in your app for rendering or behavior.
 - **Global Ticks**
-  - Adding several Spinners from Bubbles is really slow over SSH. Each have their own Ticks.
-- **Shader**
+  - Adding several Spinners from Bubbles is really slow over SSH since they each start a Tick message. In BubbleTea all components use the same global tick for real time updates.
+- **[Shaders](#shaders)**
   - Attach shaders to components to transform their output. Dynamic Shaders listen for the Global Tick and can react in real time. The possibilities are endless.
 
-## Examples
-
-### [Shaders](./examples/hello-world/main.go)
-
-Flexible system to add shaders to components. Dynamic shaders are getting the global tick which enables them to update in real time.
-
-```go
-stack := stack.New(ctx, &stack.Options[struct{}]{
-    Children: []*app.Base[struct{}]{
-        text.New(ctx, "Shader examples:", nil),
-        text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
-        button.New(ctx, "blink", &button.Options{
-            Variant: button.Danger,
-            Shader: shader.NewCombinatorShader(
-                shader.NewSmallCapsShader(),
-                shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Primary)),
-            ),
-        }),
-    }},
-)
-
-base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
-```
-
-![Shaders](./examples/shader/demo.gif)
-
----
+# Examples
 
 ### [Multiple Views](./examples/multiple-views/main.go)
 
@@ -57,52 +35,61 @@ An example of multiple views with some buttons. The login model is forgotten whe
 
 ---
 
-### [Tabbing](./examples/tabbing/main.go)
+## Widget Components
 
-Global tab management for free. All focusable components are automatically in a tab order (their order in the UI tree).
+### [Tabs](./examples/tabs/main.go)
 
 ```go
-boxFill := box.New(ctx, &box.Options[CustomData]{})
-addButton := button.New(ctx, "Button 1", &button.Options{Variant: button.Primary})
-quitButton := button.New(ctx, "Quit App", &button.Options{Variant: button.Danger})
+var tabsData = []tabs.TabElement[CustomData]{
+	{Title: "Overview", Content: NewOverview},
+	{Title: "Loaders", Content: NewLoaders},
+	{Title: "Scolling", Content: NewScrolling},
+}
+```
 
-stack := stack.New(ctx, &stack.Options[CustomData]{
-    Children: []*app.Base[CustomData]{
-        text.New(ctx, "Tab through the buttons to see focus state!", nil),
-        addButton,
-        boxFill,
-        divider.New(ctx),
-        quitButton,
+```go
+tabs := tabs.New(ctx, tabsData)
+
+base := app.New(ctx, app.AsRoot())
+base.AddChild(tabs)
+```
+
+![Tabs](./examples/tabs/demo.gif)
+
+---
+
+### [Table](./examples/tables/main.go)
+
+Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
+
+```go
+stack := stack.New(ctx, &stack.Options[struct{}]{
+    Horizontal: true,
+    Children: []*app.Base[struct{}]{
+        table.New(ctx, []table.Column{
+            {Title: "Rank", Width: table.WidthInt(4)},
+            {Title: "City", Width: table.WidthGrow()},
+            {Title: "Country", Width: table.WidthGrow()},
+            {Title: "Population", Width: table.WidthGrow()},
+        }, rows, nil),
+        table.New(ctx, []table.Column{
+            {Title: "Rank", Width: table.WidthInt(4)},
+            {Title: "City", Width: table.WidthGrow()},
+            {Title: "Country", Width: table.WidthGrow()},
+            {Title: "Population", Width: table.WidthInt(10)},
+        }, rows, nil),
     }},
 )
 
 base := app.New(ctx, app.AsRoot())
 base.AddChild(stack)
-
-return model[CustomData]{
-    base:         base,
-    containerID:  boxFill.ID,
-    addButtonID:  addButton.ID,
-    quitButtonID: quitButton.ID,
-}
 ```
 
-```go
-case button.ButtonPressMsg:
-    switch msg.ID {
-    case m.quitButtonID:
-        return m, tea.Quit
-    case m.addButtonID:
-        m.base.GetChild(m.containerID).AddChild(
-            text.New(m.base.Ctx, "Button pressed"),
-        )
-        return m, nil
-    }
-```
-
-![Tabbing](./examples/tabbing/demo.gif)
+![Table](./examples/table/demo.gif)
 
 ---
+
+## Layout Components
 
 ### [Stack](./examples/stack/main.go)
 
@@ -140,47 +127,38 @@ If you need more responsive layouts use a Grid which can span 12 unit across the
 
 ```go
 gridView := grid.New(ctx,
-    grid.Item[CustomData]{
-        Xs: 12,
-        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.PrimaryDark,
+    grid.Item[CustomData]{Xs: 12,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.DangerDark,
             Child: text.New(ctx, "I wish I could center text! Some day...", nil),
         }),
     },
-    grid.Item[CustomData]{
-        Xs:   6,
-        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoLight}),
+    grid.Item[CustomData]{Xs: 6,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
     },
-    grid.Item[CustomData]{
-        Xs: 6,
+    grid.Item[CustomData]{Xs: 6,
         Item: stack.New(ctx, &stack.Options[CustomData]{
             Children: []*app.Base[CustomData]{
                 text.New(ctx, "Background mess up if this text has foreground style.", nil),
                 text.New(ctx, "Fix the margin to the left here. Not intentional.", nil),
-                button.New(ctx, "BUTTON 1", nil),
+                button.New(ctx, "BUTTON 1", &button.Options{Type: button.Compact}),
             },
         }),
     },
-    grid.Item[CustomData]{
-        Xs:   3,
-        Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger}),
+    grid.Item[CustomData]{Xs: 3,
+        Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger, Type: button.Compact}),
     },
-    grid.Item[CustomData]{
-        Xs: 6,
+    grid.Item[CustomData]{Xs: 6,
         Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
             Child: stack.New(ctx, &stack.Options[CustomData]{
                 Children: []*app.Base[CustomData]{
                     text.New(ctx, "I am in a stack!", nil),
-                    loader.New(ctx, loader.Meter, &loader.Options{
-                        Text:  "Text style messes up bg. Fix!",
-                        Color: ctx.Styles.Colors.Black,
-                    }),
+                    loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.DangerDark, Text: "Loader is loading!"}),
                 },
             }),
         }),
     },
-    grid.Item[CustomData]{
-        Xs:   3,
-        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
+    grid.Item[CustomData]{Xs: 3,
+        Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
     },
 )
 
@@ -192,30 +170,71 @@ base.AddChild(gridView)
 
 ---
 
-### [Tabs](./examples/tabs/main.go)
+## Features
+
+### [Shaders](./examples/shader/main.go)
+
+Flexible system to add shaders to components. Dynamic shaders are getting the global tick which enables them to update in real time.
+
+Could be used for easy animations or transitions in the future.
 
 ```go
-var tabsData = []tabs.TabElement[CustomData]{
-	{
-		Title:   "Overview",
-		Content: NewOverview,
-	},
-	{
-		Title:   "Loaders",
-		Content: NewLoaders,
-	},
-	{
-		Title:   "Scolling",
-		Content: NewScrolling,
-	},
-}
-```
-
-```go
-tabs := tabs.New(ctx, tabsData)
+stack := stack.New(ctx, &stack.Options[struct{}]{
+    Children: []*app.Base[struct{}]{
+        text.New(ctx, "Shader examples:", nil),
+        text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
+        button.New(ctx, "blink", &button.Options{
+            Variant: button.Danger,
+            Shader: shader.NewCombinatorShader(
+                shader.NewSmallCapsShader(),
+                shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Primary)),
+            ),
+        }),
+    }},
+)
 
 base := app.New(ctx, app.AsRoot())
-base.AddChild(tabs)
+base.AddChild(stack)
 ```
 
-![Tabs](./examples/tabs/demo.gif)
+![Shaders](./examples/shader/demo.gif)
+
+---
+
+### [Focus](./examples/focus-management/main.go)
+
+Global tab management without any extra code. All focusable components are automatically in a tab order (their order in the UI tree).
+
+```go
+stack := stack.New(ctx, &stack.Options[CustomData]{
+    Children: []*app.Base[CustomData]{
+        text.New(ctx, "Tab through the buttons to see focus state!", nil),
+        addButton,
+        boxFill,
+        divider.New(ctx),
+        quitButton,
+    }},
+)
+
+base := app.New(ctx, app.AsRoot())
+base.AddChild(stack)
+```
+
+![Tabbing](./examples/tabbing/demo.gif)
+
+---
+
+## Development
+
+Try out the examples to get a feel for how it works in the terminal.
+
+```sh
+git clone git@github.com:alexanderbh/bubbleapp.git
+cd bubbleapp/examples/multiple-views
+go run .
+```
+
+#### Shout outs
+
+- Thank you to [Charm](https://github.com/charmbracelet) for the amazing BubbleTea framework.
+- Thank you to [BubbleZone](https://github.com/lrstanley/bubblezone) for making mouse support easy.
