@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Example: hello-world",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/hello-world/.",
+      "cwd": "${workspaceFolder}/examples/hello-world",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: shader",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/shader/.",
+      "cwd": "${workspaceFolder}/examples/shader",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: grid",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/grid/.",
+      "cwd": "${workspaceFolder}/examples/grid",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: multiple-views",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/multiple-views/.",
+      "cwd": "${workspaceFolder}/examples/multiple-views",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: table",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/table/.",
+      "cwd": "${workspaceFolder}/examples/table",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: tabs",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/tabs/.",
+      "cwd": "${workspaceFolder}/examples/tabs",
+      "console": "integratedTerminal"
+    }
+  ]
+}
