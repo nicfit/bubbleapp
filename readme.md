@@ -235,7 +235,7 @@ base.AddChild(stack)
 
 ---
 
-## Development
+# Development
 
 Try out the examples to get a feel for how it works in the terminal.
 
@@ -245,7 +245,21 @@ cd bubbleapp/examples/multiple-views
 go run .
 ```
 
-#### Shout outs
+### Planned Features
+
+Here are some planned features in no particular order. Feel free to suggest something.
+
+- **Polish** - finish up the existing components and their interfaces. Align things like component options, margins, paddings, etc.
+- **Mutate Structure Polish** - land on a nice solution for replacing components when Updating
+- **Modal Component**
+- **Help Text Component**
+- **Shortcut support** - global and locally within components in focus perhaps
+- **Context Menu Component**
+- **Table DataSource** - attach a datasource to a table that can handle fetching, sorting, filtering, etc.
+- **Animation Component** - give it a list of frames and an FPS and it handles the rest
+- **More shaders** - Color fade-in/out, Typewriter effect, more...
+
+### Shout outs
 
 - Thank you to [Charm](https://github.com/charmbracelet) for the amazing BubbleTea framework.
 - Thank you to [BubbleZone](https://github.com/lrstanley/bubblezone) for making mouse support easy.
