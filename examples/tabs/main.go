@@ -12,18 +12,9 @@ import (
 )
 
 var tabsData = []tabs.TabElement[CustomData]{
-	{
-		Title:   "Overview",
-		Content: NewOverview,
-	},
-	{
-		Title:   "Loaders",
-		Content: NewLoaders,
-	},
-	{
-		Title:   "Scolling",
-		Content: NewScrolling,
-	},
+	{Title: "Overview", Content: NewOverview},
+	{Title: "Loaders", Content: NewLoaders},
+	{Title: "Scolling", Content: NewScrolling},
 }
 
 type CustomData struct {
