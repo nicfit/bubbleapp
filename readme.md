@@ -221,7 +221,7 @@ base := app.New(ctx, app.AsRoot())
 base.AddChild(stack)
 ```
 
-![Tabbing](./examples/tabbing/demo.gif)
+![Focus Tabbing](./examples/focus-management/demo.gif)
 
 ---
 
