@@ -265,13 +265,20 @@ func (base *Base[T]) RemoveChild(ID string) bool {
 	}
 	return false
 }
-func (base *Base[T]) ReplaceChild(ID string, new *Base[T]) {
+func (base *Base[T]) ReplaceChild(ID string, new *Base[T]) bool {
 	for i, c := range base.Children {
 		if c.ID == ID {
 			base.Children[i] = new
-			break
+			return true
 		}
 	}
+	for _, c := range base.Children {
+		rec := c.ReplaceChild(ID, new)
+		if rec {
+			return true
+		}
+	}
+	return false
 }
 
 func (base *Base[T]) GetChild(id string) *Base[T] {

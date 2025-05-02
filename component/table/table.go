@@ -53,7 +53,7 @@ type Options struct {
 	style.Margin
 }
 
-type model[T any] struct {
+type Model[T any] struct {
 	base       *app.Base[T]
 	table      baseTable[T]
 	opts       *Options
@@ -101,7 +101,7 @@ func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options
 		Bold(false)
 	t.SetStyles(s)
 
-	return model[T]{
+	return Model[T]{
 		base:       base,
 		table:      t,
 		opts:       options,
@@ -160,11 +160,15 @@ func columnMapping(width int, clms []Column) []column {
 	return columns
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m *Model[T]) SetRows(rows []Row) {
+	m.table.SetRows(rows)
+}
+
+func (m Model[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
@@ -211,7 +215,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model[T]) View() string {
+func (m Model[T]) View() string {
 	s := m.style
 	if m.base.Focused {
 		s = m.focusStyle
@@ -219,7 +223,7 @@ func (m model[T]) View() string {
 	return m.base.Ctx.Zone.Mark(m.base.ID, s.Render(m.table.View()))
 }
 
-func (m model[T]) Base() *app.Base[T] {
+func (m Model[T]) Base() *app.Base[T] {
 	m.base.Model = m
 	return m.base
 }

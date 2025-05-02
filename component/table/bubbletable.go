@@ -282,7 +282,7 @@ func (m baseTable[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.cursorChanged {
+	if m.cursorChanged && m.cursor >= 0 && m.cursor < len(m.rows) {
 		m.cursorChanged = false
 		cmds = append(cmds, func() tea.Msg {
 			return RowFocusMsg{

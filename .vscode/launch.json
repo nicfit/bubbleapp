@@ -56,5 +56,14 @@
       "cwd": "${workspaceFolder}/examples/tabs",
       "console": "integratedTerminal"
     }
+    {
+      "name": "Example: app-example-1",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/app-example-1/.",
+      "cwd": "${workspaceFolder}/examples/app-example-1",
+      "console": "integratedTerminal"
+    }
   ]
 }

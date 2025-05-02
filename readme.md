@@ -35,6 +35,16 @@ An example of multiple views with some buttons. The login model is forgotten whe
 
 ---
 
+### [Process list](./examples/app-processes/main.go)
+
+List all running processes in a table. This shows how to utilize the Global Data. Here a goroutine is maintaining the process list separately. Note: The API around updating components will change to something nice at some point.
+
+There is not a lot of code here for the UI. Take a look.
+
+![Process list](./examples/app-processes/demo.gif)
+
+---
+
 ## Widget Components
 
 ### [Tabs](./examples/tabs/main.go)

@@ -52,6 +52,10 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 	}.Base()
 }
 
+func (m *model[T]) SetText(text string) {
+	m.text = text
+}
+
 func (m model[T]) Init() tea.Cmd {
 	return nil
 }
