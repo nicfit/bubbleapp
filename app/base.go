@@ -87,6 +87,13 @@ func AsRoot() Option {
 	}
 }
 
+// Start as root but don't tick. External ticks needs to be provided.
+func AsRootNoTick() Option {
+	return func(o *BaseOptions) {
+		o.IsRoot = true
+	}
+}
+
 func New[T any](ctx *Context[T], opts ...Option) *Base[T] {
 	options := BaseOptions{
 		GrowX:     false,
