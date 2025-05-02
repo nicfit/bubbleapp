@@ -58,7 +58,7 @@ base.AddChild(tabs)
 
 ---
 
-### [Table](./examples/tables/main.go)
+### [Table](./examples/table/main.go)
 
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
