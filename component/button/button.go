@@ -36,6 +36,7 @@ const (
 type button[T any] struct {
 	base         *app.Base[T]
 	render       func(ctx *app.Context[T]) string
+	wrapper      func(rendered string) string
 	onClick      func(ctx *app.Context[T])
 	opts         *Options
 	style        lipgloss.Style
@@ -69,11 +70,12 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	s := lipgloss.NewStyle()
 	s = style.ApplyMargin(s, options.Margin)
 
+	wrapper := func(rendered string) string { return rendered }
 	if options.Type == Normal {
 		s = s.Border(lipgloss.RoundedBorder())
 	} else if options.Type == Compact {
-		render = func(ctx *app.Context[T]) string {
-			return "⟦" + render(ctx) + "⟧"
+		wrapper = func(rendered string) string {
+			return "⟦" + rendered + "⟧"
 		}
 	}
 
@@ -173,6 +175,7 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	return &button[T]{
 		base:         app.NewBase[T](append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
 		render:       render,
+		wrapper:      wrapper,
 		onClick:      onClick,
 		style:        s,
 		styleFocused: styleFocused,
@@ -196,7 +199,7 @@ func (m *button[T]) Render(ctx *app.Context[T]) string {
 		style = m.styleHovered
 	}
 
-	rendered := m.base.ApplyShaderWithStyle(m.render(ctx), style)
+	rendered := m.base.ApplyShaderWithStyle(m.wrapper(m.render(ctx)), style)
 
 	return app.RegisterMouse(ctx, m.base.ID, m, rendered)
 }

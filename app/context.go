@@ -17,6 +17,7 @@ type Context[T any] struct {
 	BackgroundColor color.Color
 	Width           int
 	Height          int
+	LayoutPhase     bool
 	Data            *T
 }
 

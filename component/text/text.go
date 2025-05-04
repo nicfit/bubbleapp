@@ -36,7 +36,7 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T](append([]app.BaseOption{}, baseOptions...)...)
+	base := app.NewBase[T](baseOptions...)
 
 	if options.Foreground == nil {
 		options.Foreground = lipgloss.NoColor{}
@@ -61,7 +61,16 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 }
 
 func (m *text[T]) Render(ctx *app.Context[T]) string {
-	return m.base.ApplyShaderWithStyle(m.render(ctx), m.style)
+	s := m.style
+
+	if !ctx.LayoutPhase {
+		s = s.MaxHeight(m.base.Height).
+			MaxWidth(m.base.Width).
+			Height(m.base.Height).
+			Width(m.base.Width)
+	}
+
+	return m.base.ApplyShaderWithStyle(m.render(ctx), s)
 }
 
 func (m *text[T]) Update(ctx *app.Context[T], msg tea.Msg) {

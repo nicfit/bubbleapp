@@ -35,6 +35,10 @@ func Visit[T any](node Fc[T], parent Fc[T], ctx *Context[T], visitor VisitorFunc
 }
 
 func (a *App[T]) Layout() {
+	a.ctx.LayoutPhase = true
+	defer func() {
+		a.ctx.LayoutPhase = false
+	}()
 	// TODO: Can the Zone manager be reset here? If not why? Otherwise things will live in the zone forever.
 	a.root.Base().Width = a.ctx.Width
 	a.root.Base().Height = a.ctx.Height

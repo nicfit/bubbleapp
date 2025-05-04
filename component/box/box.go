@@ -10,7 +10,8 @@ import (
 )
 
 type Options struct {
-	Bg color.Color
+	Bg            color.Color
+	DisableFollow bool
 }
 type box[T any] struct {
 	base         *app.Base[T]
@@ -21,7 +22,11 @@ type box[T any] struct {
 	child        func(ctx *app.Context[T]) app.Fc[T]
 }
 
-func New[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
+func New[T any](ctx *app.Context[T], child app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) app.Fc[T] { return child }, options, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
 	if options == nil {
 		options = &Options{}
 	}
@@ -50,12 +55,16 @@ func New[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], 
 func (m box[T]) Render(ctx *app.Context[T]) string {
 	child := m.child(ctx).Render(ctx)
 
-	if m.contentCache != child {
-		m.viewport.SetContent(child)
-	}
-	m.contentCache = child
 	m.viewport.SetWidth(m.base.Width)
 	m.viewport.SetHeight(m.base.Height)
+
+	if m.contentCache != child {
+		m.viewport.SetContent(child)
+		if !m.opts.DisableFollow {
+			m.viewport.GotoBottom()
+		}
+	}
+	m.contentCache = child
 
 	return m.style.Height(m.base.Height).Width(m.base.Width).Render(m.viewport.View())
 }
