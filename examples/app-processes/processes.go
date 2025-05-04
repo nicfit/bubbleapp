@@ -7,7 +7,7 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func monitorProcesses(ctx *AppData) {
+func monitorProcesses(state *AppState) {
 	for {
 		processes, err := process.Processes()
 		if err != nil {
@@ -47,7 +47,7 @@ func monitorProcesses(ctx *AppData) {
 			currentProcesses = append(currentProcesses, procInfo)
 		}
 
-		ctx.Processes = currentProcesses
+		state.Processes = currentProcesses
 
 		time.Sleep(time.Second / 1)
 	}

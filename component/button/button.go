@@ -52,7 +52,13 @@ type ButtonPressMsg struct {
 	ID string
 }
 
-func New[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) string, onClick func(ctx *app.Context[T]), options *Options, baseOptions ...app.BaseOption) *button[T] {
+func New[T any](ctx *app.Context[T], text string, onClick func(ctx *app.Context[T]), options *Options, baseOptions ...app.BaseOption) *button[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) string {
+		return text
+	}, onClick, options, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) string, onClick func(ctx *app.Context[T]), options *Options, baseOptions ...app.BaseOption) *button[T] {
 	if options == nil {
 		options = &Options{}
 	}

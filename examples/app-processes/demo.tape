@@ -7,8 +7,6 @@ Set Height 600
 Hide
 Type "sudo go run ."
 Enter
-Type "steingold"
-Enter
 Sleep 3s
 Tab
 Show
