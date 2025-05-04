@@ -14,9 +14,12 @@ type model[T any] struct {
 	tickTimes []time.Time
 }
 
-func New[T any](ctx *app.Context[T]) *app.Base[T] {
+func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *app.Base[T] {
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	return model[T]{
-		base:      app.New(ctx),
+		base:      app.NewBase(ctx, baseOptions...),
 		msgCount:  make(map[string]int64),
 		tickTimes: make([]time.Time, 0),
 	}.Base()

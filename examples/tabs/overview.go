@@ -20,11 +20,8 @@ func NewOverview(ctx *app.Context[CustomData]) *app.Base[CustomData] {
 		}},
 	)
 
-	base := app.New(ctx)
-	base.AddChild(stack)
-
 	return overviewModel[CustomData]{
-		base:         base,
+		base:         stack,
 		quitButtonID: quitButton.ID,
 	}.Base()
 }

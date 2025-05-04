@@ -27,9 +27,12 @@ type Options struct {
 	Color               color.Color
 }
 
-func New[T any](ctx *app.Context[T], variant Spinner, options *Options) *app.Base[T] {
+func New[T any](ctx *app.Context[T], variant Spinner, options *Options, baseOptions ...app.BaseOption) *app.Base[T] {
 	if options == nil {
 		options = &Options{}
+	}
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
 	}
 	if options.Color == nil {
 		options.Color = ctx.Styles.Colors.Info
@@ -48,7 +51,7 @@ func New[T any](ctx *app.Context[T], variant Spinner, options *Options) *app.Bas
 		styleSpinner = styleSpinner.Foreground(options.Color)
 	}
 	return model[T]{
-		base:         app.New(ctx),
+		base:         app.NewBase(ctx, baseOptions...),
 		spinner:      variant,
 		options:      options,
 		styleText:    styleText,

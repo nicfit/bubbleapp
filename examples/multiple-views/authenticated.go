@@ -9,32 +9,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewAuthModel(ctx *app.Context[CustomData]) authModel[CustomData] {
+func NewAuthModel(ctx *app.Context[CustomData]) authModel {
 	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
 			text.New(ctx, "You are logged in as: "+ctx.Data.UserID, nil), // Find a way to generically have custom data in app.Context to save userID and more
 			text.New(ctx, "Press [q] to quit.\n", nil),
 			tickfps.New(ctx),
-		}},
+		}}, app.AsRoot(),
 	)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
-
-	return authModel[CustomData]{
-		base: base,
+	return authModel{
+		base: stack,
 	}
 }
 
-type authModel[T CustomData] struct {
-	base *app.Base[T]
+type authModel struct {
+	base *app.Base[CustomData]
 }
 
-func (m authModel[T]) Init() tea.Cmd {
+func (m authModel) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m authModel[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m authModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -48,6 +45,6 @@ func (m authModel[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m authModel[T]) View() string {
+func (m authModel) View() string {
 	return m.base.Render()
 }

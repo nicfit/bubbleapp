@@ -7,62 +7,27 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/divider"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
-	"github.com/alexanderbh/bubbleapp/style"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model[struct{}] {
-	ctx := &app.Context[struct{}]{
-		Styles: style.DefaultStyles(),
-		Zone:   zone.New(),
-	}
+type CustomData struct{}
 
-	stack := stack.New(ctx, &stack.Options[struct{}]{
-		Children: []*app.Base[struct{}]{
-			text.New(ctx, "Hello World!", nil),
-			divider.New(ctx),
-			text.New(ctx, "Press [q] to quit.", nil),
-		}},
-	)
+func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
+	stack := stack.New(ctx, []app.Fc[CustomData]{
+		text.New(ctx, "Hello World!", nil),
+		divider.New(ctx),
+		text.New(ctx, "Press [ctrl-c] to quit.", nil),
+	}, nil)
 
-	return model[struct{}]{
-		base: base,
-	}
-}
-
-type model[T any] struct {
-	base *app.Base[T]
-}
-
-func (m model[T]) Init() tea.Cmd {
-	return m.base.Init()
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		}
-	}
-	cmd := m.base.Update(msg)
-
-	return m, cmd
-
-}
-
-func (m model[T]) View() string {
-	return m.base.Render()
+	return stack
 }
 
 func main() {
-	p := tea.NewProgram(NewRoot(), tea.WithAltScreen())
+	ctx := app.NewContext(&CustomData{})
+
+	p := tea.NewProgram(app.NewApp(ctx, NewRoot(ctx)), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

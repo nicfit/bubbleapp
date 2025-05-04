@@ -18,7 +18,7 @@ type CustomData struct {
 	UserID string
 }
 
-func NewLogin() model[CustomData] {
+func NewLogin() model {
 	ctx := &app.Context[CustomData]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
@@ -35,15 +35,11 @@ func NewLogin() model[CustomData] {
 		Children: []*app.Base[CustomData]{
 			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil),
 			text.New(ctx, "Log in or fail! Up to you!", nil),
-			// Put a horizontal stack here once we have it perhaps
 			loginButton,
 			failButton,
 			quitButton,
-		}},
+		}}, app.AsRoot(),
 	)
-
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stackView)
 
 	loggingInView := stack.New(ctx, &stack.Options[CustomData]{
 		Children: []*app.Base[CustomData]{
@@ -52,21 +48,19 @@ func NewLogin() model[CustomData] {
 		}},
 	)
 
-	return model[CustomData]{
-		base:          base,
+	return model{
+		base:          stackView,
 		loggingInView: loggingInView,
-		inputView:     stackView,
 		failButtonID:  failButton.ID,
 		loginButtonID: loginButton.ID,
 		quitButtonID:  quitButton.ID,
 	}
 }
 
-type model[T CustomData] struct {
+type model struct {
 	base *app.Base[CustomData]
 
 	loggingInView *app.Base[CustomData]
-	inputView     *app.Base[CustomData]
 
 	errorTextID   string
 	failButtonID  string
@@ -95,11 +89,11 @@ func LoginCmd(data *CustomData, fail bool) tea.Cmd {
 	}
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd tea.Cmd
 	)
@@ -121,7 +115,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
-				m.inputView.ID,
+				m.base.ID,
 				m.loggingInView,
 			)
 			return m, LoginCmd(m.base.Ctx.Data, true)
@@ -131,7 +125,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.errorTextID = ""
 			}
 			m.base.ReplaceChild(
-				m.inputView.ID,
+				m.base.ID,
 				m.loggingInView,
 			)
 			return m, LoginCmd(m.base.Ctx.Data, false)
@@ -141,7 +135,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LoginFailedMsg:
 		m.base.ReplaceChild(
 			m.loggingInView.ID,
-			m.inputView,
+			m.base,
 		)
 
 		errorText := text.New(m.base.Ctx, msg.Error, &text.Options{Foreground: m.base.Ctx.Styles.Colors.Danger}) // Add variant to text for Error text
@@ -157,6 +151,6 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }

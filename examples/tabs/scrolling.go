@@ -31,11 +31,8 @@ It is a long established fact that a reader will be distracted by the readable c
 		},
 	})
 
-	base := app.New(ctx)
-	base.AddChild(stackView)
-
 	return markdownModel[CustomData]{
-		base: base,
+		base: stackView,
 	}.Base()
 }
 

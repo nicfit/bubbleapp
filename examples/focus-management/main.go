@@ -17,7 +17,7 @@ import (
 
 type CustomData struct{}
 
-func NewRoot() model[CustomData] {
+func NewRoot() model {
 	ctx := &app.Context[CustomData]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
@@ -34,33 +34,30 @@ func NewRoot() model[CustomData] {
 			boxFill,
 			divider.New(ctx),
 			quitButton,
-		}},
+		}}, app.AsRoot(),
 	)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
-
-	return model[CustomData]{
-		base:         base,
+	return model{
+		base:         stack,
 		containerID:  boxFill.ID,
 		addButtonID:  addButton.ID,
 		quitButtonID: quitButton.ID,
 	}
 }
 
-type model[T CustomData] struct {
-	base *app.Base[T]
+type model struct {
+	base *app.Base[CustomData]
 
 	containerID  string
 	addButtonID  string
 	quitButtonID string
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd tea.Cmd
 	)
@@ -90,7 +87,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }
 

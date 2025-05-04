@@ -16,7 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-func NewRoot() model[struct{}] {
+func NewRoot() model {
 	ctx := &app.Context[struct{}]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
@@ -27,32 +27,27 @@ func NewRoot() model[struct{}] {
 			text.New(ctx, "Shader examples:", nil),
 			text.New(ctx, "Small Caps Shader", &text.Options{
 				Foreground: ctx.Styles.Colors.Primary,
-				Shader:     shader.NewSmallCapsShader(),
-			}),
+			}, app.WithShader(shader.NewSmallCapsShader())),
 			button.New(ctx, " Blink ", &button.Options{
 				Variant: button.Danger,
-				Shader:  shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Success)),
-			}),
-		}},
-	)
+			}, app.WithShader(shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Success)))),
+		},
+	}, app.AsRoot())
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
-
-	return model[struct{}]{
-		base: base,
+	return model{
+		base: stack,
 	}
 }
 
-type model[T any] struct {
-	base *app.Base[T]
+type model struct {
+	base *app.Base[struct{}]
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -66,7 +61,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }
 

@@ -2,7 +2,6 @@ package button
 
 import (
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/shader"
 	"github.com/alexanderbh/bubbleapp/style"
 	"github.com/charmbracelet/bubbles/v2/key"
 	tea "github.com/charmbracelet/bubbletea/v2"
@@ -12,7 +11,6 @@ import (
 type Options struct {
 	Variant ButtonVariant
 	Type    ButtonType
-	Shader  shader.Shader
 	style.Margin
 }
 
@@ -35,9 +33,10 @@ const (
 	Warning
 )
 
-type model[T any] struct {
+type button[T any] struct {
 	base         *app.Base[T]
-	Text         string
+	render       func(ctx *app.Context[T]) string
+	onClick      func(ctx *app.Context[T])
 	opts         *Options
 	style        lipgloss.Style
 	styleFocused lipgloss.Style
@@ -53,10 +52,12 @@ type ButtonPressMsg struct {
 	ID string
 }
 
-func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T] {
-
+func New[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) string, onClick func(ctx *app.Context[T]), options *Options, baseOptions ...app.BaseOption) *button[T] {
 	if options == nil {
 		options = &Options{}
+	}
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
 	}
 
 	s := lipgloss.NewStyle()
@@ -65,7 +66,9 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 	if options.Type == Normal {
 		s = s.Border(lipgloss.RoundedBorder())
 	} else if options.Type == Compact {
-		text = "⟦" + text + "⟧"
+		render = func(ctx *app.Context[T]) string {
+			return "⟦" + render(ctx) + "⟧"
+		}
 	}
 
 	switch options.Variant {
@@ -161,9 +164,10 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 		}
 	}
 
-	return model[T]{
-		base:         app.New(ctx, app.WithFocusable(true), app.WithShader(options.Shader)),
-		Text:         text,
+	return &button[T]{
+		base:         app.NewBase[T](append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
+		render:       render,
+		onClick:      onClick,
 		style:        s,
 		styleFocused: styleFocused,
 		styleHovered: styleHovered,
@@ -174,61 +178,35 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 				key.WithHelp("enter", "submit"),
 			),
 		},
-	}.Base()
-}
-
-func (m model[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-
-	if m.base.Focused {
-		switch msg := msg.(type) {
-		case tea.KeyMsg:
-			switch {
-			case key.Matches(msg, m.KeyMap.Submit):
-				return m, func() tea.Msg {
-					return ButtonPressMsg{ID: m.base.ID}
-				}
-			}
-		}
 	}
-
-	switch msg := msg.(type) {
-	case tea.MouseClickMsg:
-		if msg.Button == tea.MouseLeft {
-			if m.base.Ctx.Zone.Get(m.Base().ID).InBounds(msg) {
-				return m, func() tea.Msg {
-					return ButtonPressMsg{ID: m.base.ID}
-				}
-			}
-		}
-	}
-
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
-
-	return m, tea.Batch(cmds...)
 }
 
-func (m model[T]) View() string {
+func (m *button[T]) Render(ctx *app.Context[T]) string {
 	style := m.style
-	if m.base.Focused {
+	if ctx.Focused == m {
 		style = m.styleFocused
 	}
 	if m.base.Hovered {
 		style = m.styleHovered
 	}
 
-	return m.base.Ctx.Zone.Mark(m.base.ID, m.base.ApplyShaderWithStyle(m.Text, style))
+	rendered := m.base.ApplyShaderWithStyle(m.render(ctx), style)
+
+	return app.RegisterMouse(ctx, m.base.ID, m, rendered)
 }
 
-func (m model[T]) Base() *app.Base[T] {
-	m.base.Model = m
+func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+	switch msg := msg.(type) {
+	case tea.MouseClickMsg:
+		if msg.Button == tea.MouseLeft {
+			m.onClick(ctx)
+		}
+	}
+}
+
+func (m *button[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+func (m *button[T]) Base() *app.Base[T] {
 	return m.base
 }

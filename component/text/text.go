@@ -4,7 +4,6 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/shader"
 	"github.com/alexanderbh/bubbleapp/style"
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
@@ -14,21 +13,30 @@ type Options struct {
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
-	Shader     shader.Shader
 	style.Margin
 }
 
-type model[T any] struct {
-	base  *app.Base[T]
-	text  string
-	opts  *Options
-	style lipgloss.Style
+type text[T any] struct {
+	base   *app.Base[T]
+	render func(ctx *app.Context[T]) string
+	opts   *Options
+	style  lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T] {
+func New[T any](ctx *app.Context[T], text string, options *Options, baseOptions ...app.BaseOption) *text[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) string {
+		return text
+	}, options, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) string, options *Options, baseOptions ...app.BaseOption) *text[T] {
 	if options == nil {
 		options = &Options{}
 	}
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
+	base := app.NewBase[T](append([]app.BaseOption{}, baseOptions...)...)
 
 	if options.Foreground == nil {
 		options.Foreground = lipgloss.NoColor{}
@@ -44,39 +52,26 @@ func New[T any](ctx *app.Context[T], text string, options *Options) *app.Base[T]
 	if options.Bold {
 		s = s.Bold(true)
 	}
-	return model[T]{
-		base:  app.New(ctx, app.WithShader(options.Shader)),
-		text:  text,
-		style: s,
-		opts:  options,
-	}.Base()
+	return &text[T]{
+		base:   base,
+		render: render,
+		style:  s,
+		opts:   options,
+	}
 }
 
-func (m *model[T]) SetText(text string) {
-	m.text = text
+func (m *text[T]) Render(ctx *app.Context[T]) string {
+	return m.base.ApplyShaderWithStyle(m.render(ctx), m.style)
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m *text[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+
+}
+
+func (m *text[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return nil
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
-
-	return m, tea.Batch(cmds...)
-}
-
-func (m model[T]) View() string {
-	return m.base.ApplyShaderWithStyle(m.text, m.style)
-}
-
-func (m model[T]) Base() *app.Base[T] {
-	m.base.Model = m
+func (m *text[T]) Base() *app.Base[T] {
 	return m.base
 }

@@ -53,21 +53,23 @@ type Options struct {
 	style.Margin
 }
 
-type Model[T any] struct {
+type table[T any] struct {
 	base       *app.Base[T]
-	table      baseTable[T]
+	table      *baseTable[T]
 	opts       *Options
 	style      lipgloss.Style
 	focusStyle lipgloss.Style
-	columns    []Column
 }
 
-func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options) *app.Base[T] {
+func New[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms []Column, rows []Row), options *Options, baseOptions ...app.BaseOption) *table[T] {
 	if options == nil {
 		options = &Options{}
 	}
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 
-	base := app.New(ctx, app.WithFocusable(true), app.WithGrow(true))
+	base := app.NewBase[T](append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
 
 	baseStyle := lipgloss.NewStyle().
 		BorderStyle(lipgloss.NormalBorder()).
@@ -76,11 +78,9 @@ func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options
 
 	baseStyle = style.ApplyMargin(baseStyle, options.Margin)
 
-	t := newBaseTable(ctx, base.ID,
-		withColumns[T](columnMapping(20, clms)),
-		withRows[T](rows),
+	t := newBaseTable(ctx, base,
+		withData(data),
 		withFocused[T](true),
-		withHeight[T](7),
 	)
 
 	s := defaultStyles(ctx)
@@ -101,14 +101,13 @@ func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options
 		Bold(false)
 	t.SetStyles(s)
 
-	return Model[T]{
+	return &table[T]{
 		base:       base,
 		table:      t,
 		opts:       options,
 		style:      baseStyle,
 		focusStyle: focusStyle,
-		columns:    clms,
-	}.Base()
+	}
 }
 
 func columnMapping(width int, clms []Column) []column {
@@ -160,27 +159,15 @@ func columnMapping(width int, clms []Column) []column {
 	return columns
 }
 
-func (m *Model[T]) SetRows(rows []Row) {
-	m.table.SetRows(rows)
-}
-
-func (m Model[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-	var cmds []tea.Cmd
+func (m table[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+	//var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.MouseMsg:
-		if !m.base.Ctx.Zone.Get(m.base.ID).InBounds(msg) {
+		if !ctx.Zone.Get(m.base.ID).InBounds(msg) {
 			m.table.clearHover()
-			return m, nil
+			return
 		}
-	case tea.WindowSizeMsg:
-		m.base.Height = msg.Height
-		m.base.Width = msg.Width
 	case app.FocusComponentMsg:
 		if msg.TargetID == m.base.ID {
 			m.table.setFocus()
@@ -188,42 +175,34 @@ func (m Model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.table.blur()
 		}
 	case tea.KeyMsg:
-		if m.base.Focused && m.table.getCursor() >= 0 {
-			cmds = append(cmds, func() tea.Msg {
-				return RowActionMsg{
-					Key:     msg,
-					TableID: m.base.ID,
-					Row:     m.table.getCursor(),
-					RowID:   m.table.rows[m.table.getCursor()][0], // Column 0 is the ID for now
-				}
-			})
-		}
+		// TODO: Make this an option on the table for row actions
+		// if m.base.Focused && m.table.getCursor() >= 0 {
+		// 	cmds = append(cmds, func() tea.Msg {
+		// 		return RowActionMsg{
+		// 			Key:     msg,
+		// 			TableID: m.base.ID,
+		// 			Row:     m.table.getCursor(),
+		// 			RowID:   m.table.rows[m.table.getCursor()][0], // Column 0 is the ID for now
+		// 		}
+		// 	})
+		// }
 	}
 
-	m.table.setHeight(max(0, m.base.Height-m.style.GetVerticalFrameSize()-2))
-	m.table.setWidth(max(0, m.base.Width-m.style.GetHorizontalFrameSize()-2))
-	m.table.setColumns(columnMapping(max(0, m.base.Width-len(m.columns)*2)-2, m.columns))
-	newTable, cmd := m.table.Update(msg)
-	newTableTyped := newTable.(baseTable[T])
-	m.table = newTableTyped
+	m.table.Update(ctx, msg)
 
-	cmds = append(cmds, cmd)
-
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
-
-	return m, tea.Batch(cmds...)
 }
 
-func (m Model[T]) View() string {
+func (m *table[T]) Render(ctx *app.Context[T]) string {
 	s := m.style
 	if m.base.Focused {
 		s = m.focusStyle
 	}
-	return m.base.Ctx.Zone.Mark(m.base.ID, s.Render(m.table.View()))
+	return app.RegisterMouse(ctx, m.base.ID, m, s.Render(m.table.Render(ctx)))
 }
 
-func (m Model[T]) Base() *app.Base[T] {
-	m.base.Model = m
+func (m *table[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+func (m *table[T]) Base() *app.Base[T] {
 	return m.base
 }

@@ -40,10 +40,13 @@ type model[T any] struct {
 	unusedTabStyleFocused   lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], titles []string, idPrefix string) *app.Base[T] {
+func New[T any](ctx *app.Context[T], titles []string, idPrefix string, baseOptions ...app.BaseOption) *app.Base[T] {
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	return model[T]{
 		ID:        idPrefix,
-		base:      app.New(ctx, app.WithFocusable(true)),
+		base:      app.NewBase(ctx, append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
 		titles:    titles,
 		activeTab: 0,
 

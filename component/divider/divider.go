@@ -8,44 +8,39 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type model[T any] struct {
+type divider[T any] struct {
 	base  *app.Base[T]
 	style lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T]) *app.Base[T] {
+func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *divider[T] {
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	style := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Ghost)
 
-	return model[T]{
-		base:  app.New(ctx, app.WithFocusable(false)),
+	return &divider[T]{
+		// TODO: Support GrowY/Vertical divider
+		base:  app.NewBase[T](append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...),
 		style: style,
-	}.Base()
+	}
 }
 
-func (m model[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
-
-	return m, tea.Batch(cmds...)
-}
-
-func (m model[T]) View() string {
+func (m *divider[T]) Render(ctx *app.Context[T]) string {
 	if m.base.Width == 0 {
 		return ""
 	}
 	return m.style.Render(strings.Repeat("─", m.base.Width-1))
 }
 
-func (m model[T]) Base() *app.Base[T] {
-	m.base.Model = m
+func (m *divider[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+
+}
+
+func (m *divider[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+
+func (m *divider[T]) Base() *app.Base[T] {
 	return m.base
 }

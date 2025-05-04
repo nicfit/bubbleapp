@@ -17,6 +17,10 @@ const (
 	breakpointLg = 120
 )
 
+type Options[T any] struct {
+	Items []Item[T]
+}
+
 type Item[T any] struct {
 	Item *app.Base[T]
 	Xs   int
@@ -30,13 +34,21 @@ type model[T any] struct {
 	itemConfigs map[string]Item[T]
 }
 
-func New[T any](ctx *app.Context[T], items ...Item[T]) *app.Base[T] {
+func New[T any](ctx *app.Context[T], options *Options[T], baseOptions ...app.BaseOption) *app.Base[T] {
+	if options == nil {
+		options = &Options[T]{}
+	}
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	m := model[T]{
-		base:        app.New(ctx, app.WithGrow(true)),
+		base:        app.NewBase(ctx, append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...),
 		itemConfigs: make(map[string]Item[T]),
 	}
 
-	m.addItems(items...)
+	if options.Items != nil {
+		m.addItems(options.Items...)
+	}
 
 	return m.Base()
 }

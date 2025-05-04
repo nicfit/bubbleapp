@@ -39,13 +39,11 @@ func NewRoot(appData *AppData) model {
 			pTable,
 			text.New(ctx, "Press [q] to quit.", nil),
 		}},
+		app.AsRoot(),
 	)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
-
 	return model{
-		base:                base,
+		base:                stack,
 		frame:               0,
 		processNumberTextID: processNumberText.ID,
 		pTableID:            pTable.ID,
@@ -64,6 +62,10 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		cmds []tea.Cmd
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -100,9 +102,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.frame++
 	}
-	cmd := m.base.Update(msg)
+	nM, cmd := m.base.Model.Update(msg)
+	typedM := nM.(app.UIModel[AppData])
+	m.base.Model = typedM
+	cmds = append(cmds, cmd)
 
-	return m, cmd
+	return m, tea.Batch(cmds...)
 
 }
 

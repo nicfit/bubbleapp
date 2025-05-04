@@ -8,8 +8,8 @@ import (
 
 type TickMsg time.Time
 
-func (m *Base[T]) tick() tea.Cmd {
-	return tea.Tick(m.Opts.TickFPS, func(t time.Time) tea.Msg {
+func tickCommand(duration time.Duration) tea.Cmd {
+	return tea.Tick(duration, func(t time.Time) tea.Msg {
 		return TickMsg(t)
 	})
 }

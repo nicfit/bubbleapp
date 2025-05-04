@@ -13,24 +13,22 @@ func sendFocusMsg(targetID string) tea.Cmd {
 	}
 }
 
-func (fm *Context[T]) getAllFocusable(root *Base[T]) []*Base[T] {
-	focusableItems := []*Base[T]{}
+func (fm *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
+	focusableItems := []Fc[T]{}
 
-	var traverse func(*Base[T])
-	traverse = func(node *Base[T]) {
+	var traverse func(Fc[T])
+	traverse = func(node Fc[T]) {
 		if node == nil {
 			return
 		}
 
-		if node.Opts.Focusable {
+		if node.Base().Opts.Focusable {
 			focusableItems = append(focusableItems, node)
 		}
-
-		if node.Children != nil {
-			for _, child := range node.Children {
-				traverse(child)
-			}
+		for _, child := range node.Children(fm) {
+			traverse(child)
 		}
+
 	}
 
 	traverse(root)
@@ -38,31 +36,35 @@ func (fm *Context[T]) getAllFocusable(root *Base[T]) []*Base[T] {
 	return focusableItems
 }
 
-func (fm *Context[T]) FocusFirstCmd(root *Base[T]) tea.Cmd {
+func (fm *Context[T]) FocusFirstCmd(root Fc[T]) {
 
 	focusableItems := fm.getAllFocusable(root)
 	if len(focusableItems) == 0 {
-		return sendFocusMsg("")
+		return
 	}
-	firstID := focusableItems[0].ID
-	fm.FocusedID = firstID
-	return sendFocusMsg(firstID)
+	fm.Focused = focusableItems[0]
 }
 
-func (fm *Context[T]) FocusNextCmd(root *Base[T]) tea.Cmd {
+func (fm *Context[T]) FocusNextCmd(root Fc[T]) {
 
 	focusableItems := fm.getAllFocusable(root)
 	if len(focusableItems) == 0 {
-		return sendFocusMsg("")
+		fm.Focused = nil
+		return
 	}
 	if len(focusableItems) == 1 {
-		return sendFocusMsg(focusableItems[0].ID)
+		if fm.Focused == focusableItems[0] {
+			fm.Focused = nil
+			return
+		}
+		fm.Focused = focusableItems[0]
+		return
 	}
 
 	currentIndex := -1
-	if fm.FocusedID != "" {
+	if fm.Focused != nil {
 		for i, item := range focusableItems {
-			if item.ID == fm.FocusedID {
+			if item == fm.Focused {
 				currentIndex = i
 				break
 			}
@@ -70,30 +72,31 @@ func (fm *Context[T]) FocusNextCmd(root *Base[T]) tea.Cmd {
 	}
 
 	if currentIndex == -1 {
-		return sendFocusMsg(focusableItems[0].ID)
+		fm.Focused = focusableItems[0]
+		return
 	}
 
 	nextIndex := (currentIndex + 1) % len(focusableItems)
-	nextID := focusableItems[nextIndex].ID
 
-	fm.FocusedID = nextID
-	return sendFocusMsg(nextID)
+	fm.Focused = focusableItems[nextIndex]
 }
 
-func (fm *Context[T]) FocusPrevCmd(root *Base[T]) tea.Cmd {
+func (fm *Context[T]) FocusPrevCmd(root Fc[T]) {
 
 	focusableItems := fm.getAllFocusable(root)
 	if len(focusableItems) == 0 {
-		return sendFocusMsg("")
+		fm.Focused = nil
+		return
 	}
 	if len(focusableItems) == 1 {
-		return sendFocusMsg(focusableItems[0].ID)
+		fm.Focused = focusableItems[0]
+		return
 	}
 
 	currentIndex := -1
-	if fm.FocusedID != "" {
+	if fm.Focused != nil {
 		for i, item := range focusableItems {
-			if item.ID == fm.FocusedID {
+			if item == fm.Focused {
 				currentIndex = i
 				break
 			}
@@ -101,12 +104,11 @@ func (fm *Context[T]) FocusPrevCmd(root *Base[T]) tea.Cmd {
 	}
 
 	if currentIndex == -1 {
-		return sendFocusMsg(focusableItems[len(focusableItems)-1].ID)
+		fm.Focused = focusableItems[len(focusableItems)-1]
+		return
 	}
 
 	prevIndex := (currentIndex - 1 + len(focusableItems)) % len(focusableItems)
-	prevID := focusableItems[prevIndex].ID
 
-	fm.FocusedID = prevID
-	return sendFocusMsg(prevID)
+	fm.Focused = focusableItems[prevIndex]
 }

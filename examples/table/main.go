@@ -12,15 +12,17 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot() model[struct{}] {
-	ctx := &app.Context[struct{}]{
+type CustomData struct{}
+
+func NewRoot() model {
+	ctx := &app.Context[CustomData]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
 	}
 
-	stack := stack.New(ctx, &stack.Options[struct{}]{
+	stack := stack.New(ctx, &stack.Options[CustomData]{
 		Horizontal: true,
-		Children: []*app.Base[struct{}]{
+		Children: []*app.Base[CustomData]{
 			table.New(ctx, []table.Column{
 				{Title: "Rank", Width: table.WidthInt(4)},
 				{Title: "City", Width: table.WidthGrow()},
@@ -33,26 +35,23 @@ func NewRoot() model[struct{}] {
 				{Title: "Country", Width: table.WidthGrow()},
 				{Title: "Population", Width: table.WidthInt(10)},
 			}, rows, nil),
-		}},
+		}}, app.AsRoot(),
 	)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(stack)
-
-	return model[struct{}]{
-		base: base,
+	return model{
+		base: stack,
 	}
 }
 
-type model[T any] struct {
-	base *app.Base[T]
+type model struct {
+	base *app.Base[CustomData]
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -66,7 +65,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }
 

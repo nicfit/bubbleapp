@@ -18,65 +18,65 @@ import (
 
 type CustomData struct{}
 
-func NewRoot() model[CustomData] {
+func NewRoot() model {
 	ctx := &app.Context[CustomData]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
 	}
 
-	gridView := grid.New(ctx,
-		grid.Item[CustomData]{Xs: 6, Lg: 3,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.DangerDark,
-				Child: text.New(ctx, "I wish I could center text! Some day...", nil),
-			}),
-		},
-		grid.Item[CustomData]{Xs: 6, Lg: 3,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
-		},
-		grid.Item[CustomData]{Xs: 6, Lg: 3,
-			Item: stack.New(ctx, &stack.Options[CustomData]{
-				Children: []*app.Base[CustomData]{
-					text.New(ctx, "Background mess up if this text has foreground style.", nil),
-					text.New(ctx, "Otherwise pretty nice", nil),
-					button.New(ctx, "BUTTON 1", &button.Options{Type: button.Compact}),
-				},
-			}),
-		},
-		grid.Item[CustomData]{Xs: 6, Lg: 3,
-			Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger, Type: button.Compact}),
-		},
-		grid.Item[CustomData]{Xs: 6,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
-				Child: stack.New(ctx, &stack.Options[CustomData]{
+	gridView := grid.New(ctx, &grid.Options[CustomData]{
+		Items: []grid.Item[CustomData]{
+			{Xs: 6, Lg: 3,
+				Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.DangerDark,
+					Child: text.New(ctx, "I wish I could center text! Some day...", nil),
+				}),
+			},
+			{Xs: 6, Lg: 3,
+				Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Success}),
+			},
+			{Xs: 6, Lg: 3,
+				Item: stack.New(ctx, &stack.Options[CustomData]{
 					Children: []*app.Base[CustomData]{
-						text.New(ctx, "I am in a stack!", nil),
-						loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.DangerDark, Text: "Style is reset here. Fix!"}),
+						text.New(ctx, "Background mess up if this text has foreground style.", nil),
+						text.New(ctx, "Otherwise pretty nice", nil),
+						button.New(ctx, "BUTTON 1", &button.Options{Type: button.Compact}),
 					},
 				}),
-			}),
-		},
-		grid.Item[CustomData]{Xs: 6,
-			Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
-		},
+			},
+			{Xs: 6, Lg: 3,
+				Item: button.New(ctx, "BUTTON 2", &button.Options{Variant: button.Danger, Type: button.Compact}),
+			},
+			{Xs: 6,
+				Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.InfoDark,
+					Child: stack.New(ctx, &stack.Options[CustomData]{
+						Children: []*app.Base[CustomData]{
+							text.New(ctx, "I am in a stack!", nil),
+							loader.New(ctx, loader.Meter, &loader.Options{Color: ctx.Styles.Colors.DangerDark, Text: "Style is reset here. Fix!"}),
+						},
+					}),
+				}),
+			},
+			{Xs: 6,
+				Item: box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
+			},
+		}},
+		app.AsRoot(),
 	)
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(gridView)
-
-	return model[CustomData]{
-		base: base,
+	return model{
+		base: gridView,
 	}
 }
 
-type model[T CustomData] struct {
-	base *app.Base[T]
+type model struct {
+	base *app.Base[CustomData]
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -90,7 +90,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }
 

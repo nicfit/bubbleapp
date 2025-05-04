@@ -12,13 +12,16 @@ type model[T any] struct {
 	glamourRenderer *glamour.TermRenderer
 }
 
-func New[T any](ctx *app.Context[T], text string) *app.Base[T] {
+func New[T any](ctx *app.Context[T], text string, baseOptions ...app.BaseOption) *app.Base[T] {
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	r, _ := glamour.NewTermRenderer(
 		glamour.WithWordWrap(ctx.Width - 1),
 	)
 
 	return model[T]{
-		base:            app.New(ctx, app.WithFocusable(false)),
+		base:            app.NewBase(ctx, baseOptions...),
 		text:            text,
 		glamourRenderer: r,
 	}.Base()

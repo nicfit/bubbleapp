@@ -55,14 +55,32 @@
       "program": "${workspaceFolder}/examples/tabs/.",
       "cwd": "${workspaceFolder}/examples/tabs",
       "console": "integratedTerminal"
-    }
+    },
     {
       "name": "Example: app-example-1",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/examples/app-example-1/.",
-      "cwd": "${workspaceFolder}/examples/app-example-1",
+      "program": "${workspaceFolder}/examples/app-processes/.",
+      "cwd": "${workspaceFolder}/examples/app-processes",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: stack",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/stack/.",
+      "cwd": "${workspaceFolder}/examples/stack",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: FC",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/fc/.",
+      "cwd": "${workspaceFolder}/examples/fc",
       "console": "integratedTerminal"
     }
   ]

@@ -44,11 +44,8 @@ func NewLoaders(ctx *app.Context[CustomData]) *app.Base[CustomData] {
 		}},
 	)
 
-	base := app.New(ctx)
-	base.AddChild(stack)
-
 	return loadersModel[CustomData]{
-		base: base,
+		base: stack,
 	}.Base()
 }
 

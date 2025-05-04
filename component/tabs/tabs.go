@@ -24,8 +24,10 @@ type model[T any] struct {
 	tabContent []*app.Base[T]
 }
 
-func New[T any](ctx *app.Context[T], tabs []TabElement[T]) *app.Base[T] {
-
+func New[T any](ctx *app.Context[T], tabs []TabElement[T], baseOptions ...app.BaseOption) *app.Base[T] {
+	if baseOptions == nil {
+		baseOptions = []app.BaseOption{}
+	}
 	tabTitles := make([]string, len(tabs))
 	tabContent := make([]*app.Base[T], len(tabs))
 
@@ -37,7 +39,7 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T]) *app.Base[T] {
 	idPrefix := ctx.Zone.NewPrefix()
 	tabTitlesModel := tabtitles.New(ctx, tabTitles, idPrefix+"-titles")
 
-	base := app.New(ctx, app.WithGrow(true))
+	base := app.NewBase(ctx, append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
 
 	contentBox := box.New(ctx, &box.Options[T]{
 		Child: tabContent[0],

@@ -21,7 +21,7 @@ type CustomData struct {
 	HowCoolIsThis string
 }
 
-func NewRoot() model[CustomData] {
+func NewRoot() model {
 	ctx := &app.Context[CustomData]{
 		Styles: style.DefaultStyles(),
 		Zone:   zone.New(),
@@ -30,30 +30,27 @@ func NewRoot() model[CustomData] {
 		},
 	}
 
-	tabs := tabs.New(ctx, tabsData)
+	tabs := tabs.New(ctx, tabsData, app.AsRoot())
 
-	base := app.New(ctx, app.AsRoot())
-	base.AddChild(tabs)
-
-	return model[CustomData]{
-		base: base,
+	return model{
+		base: tabs,
 	}
 }
 
-type model[T CustomData] struct {
-	base *app.Base[T]
+type model struct {
+	base *app.Base[CustomData]
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m model) Init() tea.Cmd {
 	return m.base.Init()
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmd := m.base.Update(msg)
 	return m, cmd
 }
 
-func (m model[T]) View() string {
+func (m model) View() string {
 	return m.base.Render()
 }
 
