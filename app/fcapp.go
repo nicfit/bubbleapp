@@ -81,6 +81,7 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// These are global keys. Is this what we want?
 		switch msg.String() {
 		case "ctrl+c":
 			return a, tea.Quit
@@ -90,6 +91,10 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "shift+tab":
 			a.ctx.FocusPrevCmd(a.root)
 			return a, nil
+		}
+		// Propagate key msg to the focused component
+		if a.ctx.Focused != nil {
+			a.ctx.Focused.Update(a.ctx, msg)
 		}
 	case tea.WindowSizeMsg:
 		a.root.Base().Width = msg.Width

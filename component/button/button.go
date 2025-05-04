@@ -210,6 +210,11 @@ func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 		if msg.Button == tea.MouseLeft {
 			m.onClick(ctx)
 		}
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.KeyMap.Submit):
+			m.onClick(ctx)
+		}
 	}
 }
 
