@@ -146,7 +146,13 @@ func defaultStyles[T any](ctx *app.Context[T]) Styles {
 
 type Option[T any] func(*baseTable[T])
 
-func New[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms []Column, rows []Row), options *Options, baseOptions ...app.BaseOption) *baseTable[T] {
+func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options, baseOptions ...app.BaseOption) *baseTable[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) ([]Column, []Row) {
+		return clms, rows
+	}, options, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms []Column, rows []Row), options *Options, baseOptions ...app.BaseOption) *baseTable[T] {
 	if options == nil {
 		options = &Options{}
 	}

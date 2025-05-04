@@ -6,71 +6,33 @@ import (
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/table"
-	"github.com/alexanderbh/bubbleapp/style"
 
-	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+var clms = []table.Column{
+	{Title: "Rank", Width: table.WidthInt(4)},
+	{Title: "City", Width: table.WidthGrow()},
+	{Title: "Country", Width: table.WidthGrow()},
+	{Title: "Population", Width: table.WidthGrow()},
+}
+
 type CustomData struct{}
 
-func NewRoot() model {
-	ctx := &app.Context[CustomData]{
-		Styles: style.DefaultStyles(),
-		Zone:   zone.New(),
-	}
+func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	stack := stack.New(ctx, &stack.Options[CustomData]{
-		Horizontal: true,
-		Children: []*app.Base[CustomData]{
-			table.New(ctx, []table.Column{
-				{Title: "Rank", Width: table.WidthInt(4)},
-				{Title: "City", Width: table.WidthGrow()},
-				{Title: "Country", Width: table.WidthGrow()},
-				{Title: "Population", Width: table.WidthGrow()},
-			}, rows, nil),
-			table.New(ctx, []table.Column{
-				{Title: "Rank", Width: table.WidthInt(4)},
-				{Title: "City", Width: table.WidthGrow()},
-				{Title: "Country", Width: table.WidthGrow()},
-				{Title: "Population", Width: table.WidthInt(10)},
-			}, rows, nil),
-		}}, app.AsRoot(),
-	)
+	stack := stack.New(ctx, []app.Fc[CustomData]{
+		table.New(ctx, clms, rows, nil),
+		table.New(ctx, clms, rows, nil),
+	}, &stack.Options{Horizontal: true})
 
-	return model{
-		base: stack,
-	}
-}
-
-type model struct {
-	base *app.Base[CustomData]
-}
-
-func (m model) Init() tea.Cmd {
-	return m.base.Init()
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		}
-	}
-	cmd := m.base.Update(msg)
-
-	return m, cmd
-
-}
-
-func (m model) View() string {
-	return m.base.Render()
+	return stack
 }
 
 func main() {
-	p := tea.NewProgram(NewRoot(), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	ctx := app.NewContext(&CustomData{})
+
+	p := tea.NewProgram(app.NewApp(ctx, NewRoot(ctx)), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

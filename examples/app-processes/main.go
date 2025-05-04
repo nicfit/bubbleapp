@@ -31,7 +31,7 @@ func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
 		text.NewDynamic(ctx, func(ctx *app.Context[AppState]) string {
 			return "# Processes: " + strconv.Itoa(len(ctx.Data.Processes))
 		}, nil),
-		table.New(ctx, func(ctx *app.Context[AppState]) ([]table.Column, []table.Row) {
+		table.NewDynamic(ctx, func(ctx *app.Context[AppState]) ([]table.Column, []table.Row) {
 			rows := generateRowsOfProcesses(ctx.Data)
 			return clms, rows
 		}, nil),
