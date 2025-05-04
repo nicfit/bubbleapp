@@ -116,8 +116,3 @@ func (a *App[T]) View() string {
 	a.Layout()
 	return a.ctx.Zone.Scan(a.root.Render(a.ctx))
 }
-
-func RegisterMouse[T any](ctx *Context[T], ID string, node Fc[T], content string) string {
-	ctx.ZoneMap[ID] = node
-	return ctx.Zone.Mark(ID, content)
-}
