@@ -50,7 +50,6 @@ type baseTable[T any] struct {
 	data          func(*app.Context[T]) (clms []Column, rows []Row)
 	cursor        int
 	cursorChanged bool
-	focus         bool
 	rowHover      int
 	styles        Styles
 
@@ -163,8 +162,8 @@ func New[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms []Colu
 
 	m := baseTable[T]{
 		base:     base,
-		data:     data,
 		ctx:      ctx,
+		data:     data,
 		cursor:   -1,
 		rowHover: -1,
 		viewport: viewport.New(),
@@ -226,7 +225,7 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	// 		}
 	// 	}
 	case tea.KeyPressMsg:
-		if m.focus {
+		if m.ctx.Focused == m {
 			switch {
 			case key.Matches(msg, m.KeyMap.LineUp):
 				m.MoveUp(1)
@@ -261,43 +260,32 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 
 }
 
-// Focus focuses the table, allowing the user to move around the rows and
-// interact.
-func (m *baseTable[T]) setFocus() {
-	m.focus = true
-	if m.cursor < 0 {
-		m.setCursor(0)
+// view renders the component.
+func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
+	s := m.getBaseStyle(ctx)
+	if m.data != nil {
+		var rawCols []Column
+		rawCols, m.rows = m.data(ctx)
+		m.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
+	}
+	if ctx.Focused == m {
+		if m.cursor < 0 {
+			m.setCursor(0)
+		}
 	}
 	if m.cursor >= len(m.rows) {
 		m.setCursor(len(m.rows) - 1)
-	}
-	m.updateViewport()
-}
-
-// blur blurs the table, preventing selection or movement.
-func (m *baseTable[T]) blur() {
-	m.focus = false
-	m.updateViewport()
-}
-
-// view renders the component.
-func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
-	s := m.getBaseStyle()
-	if m.data != nil {
-		var rawCols []Column
-		rawCols, m.rows = m.data(m.ctx)
-		m.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 	}
 	m.updateViewport()
 	headersView := m.headersView()
 	m.viewport.SetHeight(m.base.Height - lipgloss.Height(headersView) - s.GetVerticalFrameSize())
 	m.viewport.SetWidth(m.base.Width - s.GetHorizontalFrameSize())
 
-	return s.Render(headersView + "\n" + app.RegisterMouse(m.ctx, m.base.ID+"_body", m, m.viewport.View()))
+	return s.Render(headersView + "\n" + app.RegisterMouse(ctx, m.base.ID+"_body", m, m.viewport.View()))
 }
 
-func (m *baseTable[T]) getBaseStyle() lipgloss.Style {
-	if m.base.Focused {
+func (m *baseTable[T]) getBaseStyle(ctx *app.Context[T]) lipgloss.Style {
+	if ctx.Focused == m {
 		return m.styles.BaseFocus
 	}
 	return m.styles.Base
@@ -342,28 +330,6 @@ func (m baseTable[T]) selectedRow() Row {
 	}
 
 	return m.rows[m.cursor]
-}
-
-// SetWidth sets the width of the viewport of the table.
-func (m *baseTable[T]) setWidth(w int) {
-	m.viewport.SetWidth(w)
-	m.updateViewport()
-}
-
-// SetHeight sets the height of the viewport of the table.
-func (m *baseTable[T]) setHeight(h int) {
-	m.viewport.SetHeight(h - lipgloss.Height(m.headersView()))
-	m.updateViewport()
-}
-
-// Height returns the viewport height of the table.
-func (m baseTable[T]) height() int {
-	return m.viewport.Height()
-}
-
-// Width returns the viewport width of the table.
-func (m baseTable[T]) width() int {
-	return m.viewport.Width()
 }
 
 // Cursor returns the index of the selected row.

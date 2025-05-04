@@ -10,8 +10,6 @@ type Base[T any] struct {
 	ID              string
 	Parent          Fc[T]
 	LayoutDirection LayoutDirection
-	Focused         bool
-	Hovered         bool
 	Shader          shader.Shader
 	Width           int
 	Height          int
@@ -87,7 +85,6 @@ func NewBase[T any](opts ...BaseOption) *Base[T] {
 
 	b := &Base[T]{
 		ID:              uuid.New().String(),
-		Focused:         false,
 		Opts:            options,
 		Shader:          options.Shader,
 		LayoutDirection: options.LayoutDirection,

@@ -195,7 +195,7 @@ func (m *button[T]) Render(ctx *app.Context[T]) string {
 	if ctx.Focused == m {
 		style = m.styleFocused
 	}
-	if m.base.Hovered {
+	if ctx.Hovered == m {
 		style = m.styleHovered
 	}
 

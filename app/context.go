@@ -14,6 +14,7 @@ type Context[T any] struct {
 	Cmds            *[]tea.Cmd
 	Styles          *style.Styles
 	Focused         Fc[T]
+	Hovered         Fc[T]
 	BackgroundColor color.Color
 	Width           int
 	Height          int
