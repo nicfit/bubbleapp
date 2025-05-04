@@ -27,8 +27,6 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 		ctx.Data.presses++
 	}, &button.Options{Variant: button.Primary, Type: button.Compact})
 
-	quitButton := button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact})
-
 	logMessages := box.New(ctx,
 		text.NewDynamic(ctx, func(ctx *app.Context[CustomData]) (log string) {
 			return strings.Join(ctx.Data.log, "\n")
@@ -40,7 +38,7 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 		divider.New(ctx),
 		logMessages,
 		divider.New(ctx),
-		quitButton,
+		button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
 	}, nil)
 
 	return stack

@@ -73,26 +73,10 @@ base.AddChild(tabs)
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
 ```go
-stack := stack.New(ctx, &stack.Options[struct{}]{
-    Horizontal: true,
-    Children: []*app.Base[struct{}]{
-        table.New(ctx, []table.Column{
-            {Title: "Rank", Width: table.WidthInt(4)},
-            {Title: "City", Width: table.WidthGrow()},
-            {Title: "Country", Width: table.WidthGrow()},
-            {Title: "Population", Width: table.WidthGrow()},
-        }, rows, nil),
-        table.New(ctx, []table.Column{
-            {Title: "Rank", Width: table.WidthInt(4)},
-            {Title: "City", Width: table.WidthGrow()},
-            {Title: "Country", Width: table.WidthGrow()},
-            {Title: "Population", Width: table.WidthInt(10)},
-        }, rows, nil),
-    }},
-)
-
-base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+stack := stack.New(ctx, []app.Fc[CustomData]{
+    table.New(ctx, clms, rows, nil),
+    table.New(ctx, clms, rows, nil),
+}, &stack.Options{Horizontal: true})
 ```
 
 ![Table](./examples/table/demo.gif)
@@ -217,18 +201,24 @@ base.AddChild(stack)
 Global tab management without any extra code. All focusable components are automatically in a tab order (their order in the UI tree).
 
 ```go
-stack := stack.New(ctx, &stack.Options[CustomData]{
-    Children: []*app.Base[CustomData]{
-        text.New(ctx, "Tab through the buttons to see focus state!", nil),
-        addButton,
-        boxFill,
-        divider.New(ctx),
-        quitButton,
-    }},
-)
+addButton := button.New(ctx, "Button 1", func(ctx *app.Context[CustomData]) {
+    ctx.Data.log = append(ctx.Data.log, "["+strconv.Itoa(ctx.Data.presses)+"] "+"Button 1 pressed")
+    ctx.Data.presses++
+}, &button.Options{Variant: button.Primary, Type: button.Compact})
 
-base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+logMessages := box.New(ctx,
+    text.NewDynamic(ctx, func(ctx *app.Context[CustomData]) (log string) {
+        return strings.Join(ctx.Data.log, "\n")
+    }, nil), nil)
+
+stack := stack.New(ctx, []app.Fc[CustomData]{
+    text.New(ctx, "Tab through the buttons to see focus state!", nil),
+    addButton,
+    divider.New(ctx),
+    logMessages,
+    divider.New(ctx),
+    button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
+}, nil)
 ```
 
 ![Focus Tabbing](./examples/focus-management/demo.gif)
@@ -250,7 +240,6 @@ go run .
 Here are some planned features in no particular order. Feel free to suggest something.
 
 - **Polish** - finish up the existing components and their interfaces. Align things like component options, margins, paddings, etc.
-- **Mutate Structure Polish** - land on a nice solution for replacing components when Updating
 - **Modal Component**
 - **Help Text Component**
 - **Shortcut support** - global and locally within components in focus perhaps
