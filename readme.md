@@ -254,7 +254,8 @@ go run .
 
 Here are some planned features in no particular order. Feel free to suggest something.
 
-- **Polish** - finish up the existing components and their interfaces. Align things like component options, margins, paddings, etc.
+- **Border and title on Box** - Add borders and titles to Box component
+- **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
 - **Modal Component**
 - **Help Text Component**
 - **Shortcut support** - global and locally within components in focus perhaps
