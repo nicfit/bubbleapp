@@ -10,7 +10,7 @@ An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be
 - **[Layout Components](#layout-components)**
   - [Stack](#stack), [Grid](#grid), Box makes it easy to create responsive layouts
 - **[Widget Components](#widget-components)**
-  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Table](#table) (and more to come)
+  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), and more to come...
 
 ## Features
 
@@ -90,6 +90,24 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 ```
 
 ![Table](./examples/table/demo.gif)
+
+---
+
+### [Markdown](./examples/markdown/main.go)
+
+Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering.
+
+```go
+stack := stack.New(ctx, []app.Fc[CustomData]{
+    text.New(ctx, "Markdown example!", nil),
+    divider.New(ctx),
+    box.New(ctx, markdown.New(ctx, mdContent), &box.Options{DisableFollow: true}),
+    divider.New(ctx),
+    text.New(ctx, "Press [ctrl-c] to quit.", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
+}, nil)
+```
+
+![Markdown](./examples/markdown/demo.gif)
 
 ---
 
