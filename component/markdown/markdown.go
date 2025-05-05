@@ -8,6 +8,13 @@ import (
 
 // TODO:
 //   - Add support for styles and custom styles
+//   - Fix wordwrapping
+
+// This cannot be created every time as it is too slow
+// but out here we cannot manage it
+var r, _ = glamour.NewTermRenderer(
+	glamour.WithAutoStyle(),
+)
 
 type markdown[T any] struct {
 	base            *app.Base
@@ -25,10 +32,6 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	r, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
-		glamour.WithWordWrap(ctx.Width-1),
-	)
 
 	base, cleanup := app.NewBase(ctx, "markdown", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
 	defer cleanup()
