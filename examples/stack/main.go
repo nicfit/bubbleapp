@@ -30,7 +30,7 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 func main() {
 	ctx := app.NewContext(&CustomData{})
 
-	p := tea.NewProgram(app.NewApp(ctx, NewRoot(ctx)), tea.WithAltScreen())
+	p := tea.NewProgram(app.NewApp(ctx, NewRoot), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}
