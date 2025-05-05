@@ -34,7 +34,7 @@ const (
 )
 
 type button[T any] struct {
-	base         *app.Base[T]
+	base         *app.Base
 	render       func(ctx *app.Context[T]) string
 	wrapper      func(rendered string) string
 	onClick      func(ctx *app.Context[T])
@@ -221,6 +221,6 @@ func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 func (m *button[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return nil
 }
-func (m *button[T]) Base() *app.Base[T] {
+func (m *button[T]) Base() *app.Base {
 	return m.base
 }

@@ -82,6 +82,15 @@
       "program": "${workspaceFolder}/examples/focus-management/.",
       "cwd": "${workspaceFolder}/examples/focus-management",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: loader",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/loader/.",
+      "cwd": "${workspaceFolder}/examples/loader",
+      "console": "integratedTerminal"
     }
   ]
 }

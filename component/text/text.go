@@ -17,7 +17,7 @@ type Options struct {
 }
 
 type text[T any] struct {
-	base   *app.Base[T]
+	base   *app.Base
 	render func(ctx *app.Context[T]) string
 	opts   *Options
 	style  lipgloss.Style
@@ -81,6 +81,6 @@ func (m *text[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return nil
 }
 
-func (m *text[T]) Base() *app.Base[T] {
+func (m *text[T]) Base() *app.Base {
 	return m.base
 }

@@ -40,7 +40,7 @@ func WidthInt(i int) ColumnWidth {
 }
 
 type baseTable[T any] struct {
-	base   *app.Base[T]
+	base   *app.Base
 	ctx    *app.Context[T]
 	KeyMap KeyMap
 	Help   help.Model
@@ -483,6 +483,6 @@ func clamp(v, low, high int) int {
 func (m *baseTable[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return nil
 }
-func (m *baseTable[T]) Base() *app.Base[T] {
+func (m *baseTable[T]) Base() *app.Base {
 	return m.base
 }

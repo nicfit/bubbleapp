@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Base[T any] struct {
+type Base struct {
 	ID              string
 	LayoutDirection LayoutDirection
 	Shader          Shader
@@ -65,7 +65,7 @@ func WithLayoutDirection(direction LayoutDirection) BaseOption {
 	}
 }
 
-func NewBase[T any](opts ...BaseOption) *Base[T] {
+func NewBase[T any](opts ...BaseOption) *Base {
 	if opts == nil {
 		opts = []BaseOption{}
 	}
@@ -81,7 +81,7 @@ func NewBase[T any](opts ...BaseOption) *Base[T] {
 		opt(&options)
 	}
 
-	b := &Base[T]{
+	b := &Base{
 		ID:              uuid.New().String(),
 		Opts:            options,
 		Shader:          options.Shader,
@@ -91,20 +91,20 @@ func NewBase[T any](opts ...BaseOption) *Base[T] {
 	return b
 }
 
-func (base *Base[T]) ApplyShader(input string) string {
+func (base *Base) ApplyShader(input string) string {
 	if base.Shader != nil {
 		return base.Shader.Render(input, nil)
 	}
 	return input
 }
-func (base *Base[T]) ApplyShaderWithStyle(input string, style lipgloss.Style) string {
+func (base *Base) ApplyShaderWithStyle(input string, style lipgloss.Style) string {
 	if base.Shader != nil {
 		return base.Shader.Render(input, &style)
 	}
 	return style.Render(input)
 }
-func (base *Base[T]) Tick() {
-	if ds, ok := base.Shader.(DynamicShader[T]); ok && ds != nil {
+func (base *Base) Tick() {
+	if ds, ok := base.Shader.(DynamicShader); ok && ds != nil {
 		ds.Tick()
 	}
 }

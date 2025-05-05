@@ -27,7 +27,7 @@ func NewOverview(ctx *app.Context[CustomData]) *app.Base[CustomData] {
 }
 
 type overviewModel[T CustomData] struct {
-	base         *app.Base[T]
+	base         *app.Base
 	quitButtonID string
 }
 
@@ -57,7 +57,7 @@ func (m overviewModel[T]) View() string {
 	return m.base.Render()
 }
 
-func (m overviewModel[T]) Base() *app.Base[T] {
+func (m overviewModel[T]) Base() *app.Base {
 	m.base.Model = m
 	return m.base
 }

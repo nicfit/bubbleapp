@@ -16,7 +16,7 @@ const (
 type Fc[T any] interface {
 	Render(ctx *Context[T]) string
 	Update(ctx *Context[T], msg tea.Msg)
-	Base() *Base[T]
+	Base() *Base
 	Children(ctx *Context[T]) []Fc[T]
 }
 

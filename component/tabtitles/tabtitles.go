@@ -29,7 +29,7 @@ var (
 
 type model[T any] struct {
 	ID        string
-	base      *app.Base[T]
+	base      *app.Base
 	titles    []string
 	activeTab int
 
@@ -40,7 +40,7 @@ type model[T any] struct {
 	unusedTabStyleFocused   lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], titles []string, idPrefix string, baseOptions ...app.BaseOption) *app.Base[T] {
+func New[T any](ctx *app.Context[T], titles []string, idPrefix string, baseOptions ...app.BaseOption) *app.Base {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
@@ -148,7 +148,7 @@ func (m model[T]) View() string {
 	return doc.String()
 }
 
-func (m model[T]) Base() *app.Base[T] {
+func (m model[T]) Base() *app.Base {
 	m.base.Model = m
 	return m.base
 }

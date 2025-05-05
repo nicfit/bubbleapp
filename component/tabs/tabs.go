@@ -10,26 +10,26 @@ import (
 
 type TabElement[T any] struct {
 	Title   string
-	Content func(ctx *app.Context[T]) *app.Base[T]
+	Content func(ctx *app.Context[T]) *app.Base
 }
 
 type model[T any] struct {
 	ID string
 
-	base *app.Base[T]
+	base *app.Base
 
 	contentBoxID string
 	titlesID     string
 
-	tabContent []*app.Base[T]
+	tabContent []*app.Base
 }
 
-func New[T any](ctx *app.Context[T], tabs []TabElement[T], baseOptions ...app.BaseOption) *app.Base[T] {
+func New[T any](ctx *app.Context[T], tabs []TabElement[T], baseOptions ...app.BaseOption) *app.Base {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
 	tabTitles := make([]string, len(tabs))
-	tabContent := make([]*app.Base[T], len(tabs))
+	tabContent := make([]*app.Base, len(tabs))
 
 	for i, tab := range tabs {
 		tabTitles[i] = tab.Title
@@ -45,7 +45,7 @@ func New[T any](ctx *app.Context[T], tabs []TabElement[T], baseOptions ...app.Ba
 		Child: tabContent[0],
 	})
 	stackChild := stack.New(ctx, &stack.Options[T]{
-		Children: []*app.Base[T]{
+		Children: []*app.Base{
 			tabTitlesModel,
 			contentBox,
 		},
@@ -106,7 +106,7 @@ func (m model[T]) View() string {
 	return m.base.Render()
 }
 
-func (m model[T]) Base() *app.Base[T] {
+func (m model[T]) Base() *app.Base {
 	m.base.Model = m
 	return m.base
 }

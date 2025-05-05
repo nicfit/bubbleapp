@@ -22,7 +22,7 @@ type Options[T any] struct {
 }
 
 type Item[T any] struct {
-	Item *app.Base[T]
+	Item *app.Base
 	Xs   int
 	Sm   int
 	Md   int
@@ -30,11 +30,11 @@ type Item[T any] struct {
 }
 
 type model[T any] struct {
-	base        *app.Base[T]
+	base        *app.Base
 	itemConfigs map[string]Item[T]
 }
 
-func New[T any](ctx *app.Context[T], options *Options[T], baseOptions ...app.BaseOption) *app.Base[T] {
+func New[T any](ctx *app.Context[T], options *Options[T], baseOptions ...app.BaseOption) *app.Base {
 	if options == nil {
 		options = &Options[T]{}
 	}
@@ -101,7 +101,7 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// --- 1. Group children into rows and calculate initial layout ---
 		type rowInfo struct {
-			children       []*app.Base[T]
+			children       []*app.Base
 			spans          []int // Store spans for width calculation
 			maxChildHeight int   // Max height of non-growing children in this row (estimate)
 			hasGrower      bool
@@ -351,7 +351,7 @@ func (m model[T]) View() string {
 	return finalView
 }
 
-func (m model[T]) Base() *app.Base[T] {
+func (m model[T]) Base() *app.Base {
 	m.base.Model = m
 	return m.base
 }

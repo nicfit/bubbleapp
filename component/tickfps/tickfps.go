@@ -9,12 +9,12 @@ import (
 )
 
 type model[T any] struct {
-	base      *app.Base[T]
+	base      *app.Base
 	msgCount  map[string]int64
 	tickTimes []time.Time
 }
 
-func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *app.Base[T] {
+func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *app.Base {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
@@ -61,7 +61,7 @@ func (m model[T]) View() string {
 	return fmt.Sprintf("Tick FPS: %.2f", fps)
 }
 
-func (m model[T]) Base() *app.Base[T] {
+func (m model[T]) Base() *app.Base {
 	m.base.Model = m
 	return m.base
 }

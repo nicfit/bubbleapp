@@ -1,7 +1,7 @@
 package stack
 
 import (
-	"log"
+	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	tea "github.com/charmbracelet/bubbletea/v2"
@@ -10,10 +10,11 @@ import (
 
 type Options struct {
 	Horizontal bool
+	RowGap     int
 }
 
 type stack[T any] struct {
-	base     *app.Base[T]
+	base     *app.Base
 	opts     Options
 	style    lipgloss.Style
 	children func(ctx *app.Context[T]) []app.Fc[T]
@@ -50,7 +51,14 @@ func (m *stack[T]) Render(ctx *app.Context[T]) string {
 	children := m.children(ctx)
 	childrenViews := make([]string, 0, len(children))
 	for _, child := range children {
-		childrenViews = append(childrenViews, child.Render(ctx))
+		childRender := child.Render(ctx)
+		if m.opts.Horizontal {
+
+		} else {
+			childRender = childRender + strings.Repeat("\n", m.opts.RowGap)
+		}
+		childrenViews = append(childrenViews, childRender)
+
 	}
 
 	if m.opts.Horizontal {
@@ -60,7 +68,6 @@ func (m *stack[T]) Render(ctx *app.Context[T]) string {
 }
 
 func (m *stack[T]) Update(ctx *app.Context[T], msg tea.Msg) {
-	log.Println("stack update")
 }
 
 func (m *stack[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
@@ -68,7 +75,7 @@ func (m *stack[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return children
 }
 
-func (m *stack[T]) Base() *app.Base[T] {
+func (m *stack[T]) Base() *app.Base {
 	return m.base
 }
 

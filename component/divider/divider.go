@@ -9,7 +9,7 @@ import (
 )
 
 type divider[T any] struct {
-	base  *app.Base[T]
+	base  *app.Base
 	style lipgloss.Style
 }
 
@@ -41,6 +41,6 @@ func (m *divider[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 	return nil
 }
 
-func (m *divider[T]) Base() *app.Base[T] {
+func (m *divider[T]) Base() *app.Base {
 	return m.base
 }

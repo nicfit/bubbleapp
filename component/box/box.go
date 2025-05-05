@@ -14,7 +14,7 @@ type Options struct {
 	DisableFollow bool
 }
 type box[T any] struct {
-	base         *app.Base[T]
+	base         *app.Base
 	opts         *Options
 	style        lipgloss.Style
 	viewport     viewport.Model
@@ -89,6 +89,6 @@ func (m *box[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 
 }
 
-func (m *box[T]) Base() *app.Base[T] {
+func (m *box[T]) Base() *app.Base {
 	return m.base
 }

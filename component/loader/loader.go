@@ -10,8 +10,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type model[T any] struct {
-	base         *app.Base[T]
+type loader[T any] struct {
+	base         *app.Base
+	render       func(ctx *app.Context[T]) string
 	options      *Options
 	styleSpinner lipgloss.Style
 	styleText    lipgloss.Style
@@ -21,13 +22,24 @@ type model[T any] struct {
 }
 
 type Options struct {
-	Text                string
 	TextColor           color.Color
 	TextBackgroundColor color.Color
 	Color               color.Color
 }
 
-func New[T any](ctx *app.Context[T], variant Spinner, options *Options, baseOptions ...app.BaseOption) *app.Base[T] {
+func New[T any](ctx *app.Context[T], variant Spinner, text string, options *Options, baseOptions ...app.BaseOption) *loader[T] {
+	return NewDynamic(ctx, variant, func(ctx *app.Context[T]) string {
+		return text
+	}, options, baseOptions...)
+}
+
+func NewWithoutText[T any](ctx *app.Context[T], variant Spinner, options *Options, baseOptions ...app.BaseOption) *loader[T] {
+	return NewDynamic(ctx, variant, func(ctx *app.Context[T]) string {
+		return ""
+	}, options, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], variant Spinner, render func(ctx *app.Context[T]) string, options *Options, baseOptions ...app.BaseOption) *loader[T] {
 	if options == nil {
 		options = &Options{}
 	}
@@ -35,10 +47,10 @@ func New[T any](ctx *app.Context[T], variant Spinner, options *Options, baseOpti
 		baseOptions = []app.BaseOption{}
 	}
 	if options.Color == nil {
-		options.Color = ctx.Styles.Colors.Info
+		options.Color = ctx.Styles.Colors.WarningLight
 	}
 
-	styleText := lipgloss.NewStyle()
+	styleText := lipgloss.NewStyle().Padding(0, 0, 0, 1) // Padding left 1
 	styleSpinner := lipgloss.NewStyle()
 
 	if options.TextColor != nil {
@@ -50,93 +62,45 @@ func New[T any](ctx *app.Context[T], variant Spinner, options *Options, baseOpti
 	if options.Color != nil {
 		styleSpinner = styleSpinner.Foreground(options.Color)
 	}
-	return model[T]{
-		base:         app.NewBase(ctx, baseOptions...),
+	return &loader[T]{
+		base:         app.NewBase[T](baseOptions...),
+		render:       render,
 		spinner:      variant,
 		options:      options,
 		styleText:    styleText,
 		styleSpinner: styleSpinner,
 		frame:        0,
 		lastTick:     time.Now(),
-	}.Base()
+	}
 }
 
-func (m model[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	switch msg.(type) {
 	case app.TickMsg:
 		// Only update frame if enough time has passed according to spinner FPS
+		// Not sure if this logic is correct.
 		now := time.Now()
-		if now.Sub(m.lastTick) >= m.spinner.FPS {
+		if now.Sub(m.lastTick) >= m.spinner.Interval {
 			m.frame++
 			if m.frame >= len(m.spinner.Frames) {
 				m.frame = 0
 			}
 			m.lastTick = now
 		}
-		return m, nil
+		return
 	default:
-		return m, nil
+		return
 	}
 }
 
-func (m model[T]) View() string {
-	text := m.options.Text
-	if text != "" {
-		text = " " + text
-	}
+func (m *loader[T]) Render(ctx *app.Context[T]) string {
+	text := m.render(ctx)
 	return m.styleSpinner.Render(m.spinner.Frames[m.frame]) + m.styleText.Render(text)
 }
 
-func (m model[T]) Base() *app.Base[T] {
-	m.base.Model = m
+func (m *loader[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+func (m *loader[T]) Base() *app.Base {
 	return m.base
 }
-
-type Spinner struct {
-	Frames []string
-	FPS    time.Duration
-}
-
-var (
-	Line = Spinner{
-		Frames: []string{"|", "/", "-", "\\"},
-		FPS:    time.Second / 6, //nolint:mnd
-	}
-	Dot = Spinner{
-		Frames: []string{"⣾ ", "⣽ ", "⣻ ", "⢿ ", "⡿ ", "⣟ ", "⣯ ", "⣷ "},
-		FPS:    time.Second / 12, //nolint:mnd
-	}
-	MiniDot = Spinner{
-		Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-		FPS:    time.Second / 12, //nolint:mnd
-	}
-	Jump = Spinner{
-		Frames: []string{"⢄", "⢂", "⢁", "⡁", "⡈", "⡐", "⡠"},
-		FPS:    time.Second / 12, //nolint:mnd
-	}
-	Pulse = Spinner{
-		Frames: []string{"█", "▓", "▒", "░"},
-		FPS:    time.Second / 6, //nolint:mnd
-	}
-	Points = Spinner{
-		Frames: []string{"∙∙∙", "●∙∙", "∙●∙", "∙∙●"},
-		FPS:    time.Second / 6, //nolint:mnd
-	}
-	Meter = Spinner{
-		Frames: []string{
-			"▰▱▱",
-			"▱▰▱",
-			"▱▱▰",
-			"▱▰▱",
-		},
-		FPS: time.Second / 6, //nolint:mnd
-	}
-	Ellipsis = Spinner{
-		Frames: []string{"", ".", "..", "..."},
-		FPS:    time.Second / 3, //nolint:mnd
-	}
-)

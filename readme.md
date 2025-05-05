@@ -10,7 +10,7 @@ An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be
 - **[Layout Components](#layout-components)**
   - [Stack](#stack), [Grid](#grid), Box makes it easy to create responsive layouts
 - **[Widget Components](#widget-components)**
-  - Button, Loader, [Tabs](#tabs), Text, [Table](#table) (and more to come)
+  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Table](#table) (and more to come)
 
 ## Features
 
@@ -65,6 +65,16 @@ base.AddChild(tabs)
 ```
 
 ![Tabs](./examples/tabs/demo.gif)
+
+---
+
+### [Loader](./examples/loader/main.go)
+
+```go
+loader.New(ctx, loader.Dots, "Loading...", nil),
+```
+
+![Loaders](./examples/loader/demo.gif)
 
 ---
 

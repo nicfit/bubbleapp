@@ -12,7 +12,7 @@ type Shader interface {
 	Render(input string, style *lipgloss.Style) string
 }
 
-type DynamicShader[T any] interface {
+type DynamicShader interface {
 	Render(input string, style *lipgloss.Style) string
 	Tick()
 }
