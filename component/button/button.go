@@ -173,7 +173,7 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	}
 
 	return &button[T]{
-		base:         app.NewBase[T](append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
+		base:         app.NewBase[T]("button", append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
 		render:       render,
 		wrapper:      wrapper,
 		onClick:      onClick,
@@ -192,10 +192,10 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 
 func (m *button[T]) Render(ctx *app.Context[T]) string {
 	style := m.style
-	if ctx.Focused == m {
+	if ctx.UIState.Focused == m.base.ID {
 		style = m.styleFocused
 	}
-	if ctx.Hovered == m {
+	if ctx.UIState.Hovered == m.base.ID {
 		style = m.styleHovered
 	}
 

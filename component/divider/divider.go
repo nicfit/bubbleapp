@@ -21,7 +21,7 @@ func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *divider[T] 
 
 	return &divider[T]{
 		// TODO: Support GrowY/Vertical divider
-		base:  app.NewBase[T](append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...),
+		base:  app.NewBase[T]("divider", append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...),
 		style: style,
 	}
 }

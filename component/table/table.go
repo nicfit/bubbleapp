@@ -159,7 +159,7 @@ func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T](append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
+	base := app.NewBase[T]("table", append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
 
 	s := defaultStyles(ctx)
 
@@ -231,7 +231,7 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	// 		}
 	// 	}
 	case tea.KeyPressMsg:
-		if m.ctx.Focused == m {
+		if m.ctx.UIState.Focused == m.base.ID {
 			switch {
 			case key.Matches(msg, m.KeyMap.LineUp):
 				m.MoveUp(1)
@@ -274,7 +274,7 @@ func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
 		rawCols, m.rows = m.data(ctx)
 		m.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 	}
-	if ctx.Focused == m {
+	if ctx.UIState.Focused == m.base.ID {
 		if m.cursor < 0 {
 			m.setCursor(0)
 		}
@@ -291,7 +291,7 @@ func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
 }
 
 func (m *baseTable[T]) getBaseStyle(ctx *app.Context[T]) lipgloss.Style {
-	if ctx.Focused == m {
+	if ctx.UIState.Focused == m.base.ID {
 		return m.styles.BaseFocus
 	}
 	return m.styles.Base

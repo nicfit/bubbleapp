@@ -10,6 +10,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+type uiState struct {
+	frame    int
+	lastTick time.Time
+}
+
 type loader[T any] struct {
 	base         *app.Base
 	render       func(ctx *app.Context[T]) string
@@ -17,8 +22,6 @@ type loader[T any] struct {
 	styleSpinner lipgloss.Style
 	styleText    lipgloss.Style
 	spinner      Spinner
-	frame        int
-	lastTick     time.Time // Track last frame update
 }
 
 type Options struct {
@@ -62,16 +65,27 @@ func NewDynamic[T any](ctx *app.Context[T], variant Spinner, render func(ctx *ap
 	if options.Color != nil {
 		styleSpinner = styleSpinner.Foreground(options.Color)
 	}
+
 	return &loader[T]{
-		base:         app.NewBase[T](baseOptions...),
+		base:         app.NewBase[T]("loader", baseOptions...),
 		render:       render,
 		spinner:      variant,
 		options:      options,
 		styleText:    styleText,
 		styleSpinner: styleSpinner,
-		frame:        0,
-		lastTick:     time.Now(),
 	}
+}
+
+func (m *loader[T]) getState(ctx *app.Context[T]) *uiState {
+	state := app.GetUIState[T, uiState](ctx, m.base.ID)
+	if state == nil {
+		state = &uiState{
+			frame:    0,
+			lastTick: time.Now(),
+		}
+		app.SetUIState(ctx, m.base.ID, state)
+	}
+	return state
 }
 
 func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
@@ -80,12 +94,13 @@ func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 		// Only update frame if enough time has passed according to spinner FPS
 		// Not sure if this logic is correct.
 		now := time.Now()
-		if now.Sub(m.lastTick) >= m.spinner.Interval {
-			m.frame++
-			if m.frame >= len(m.spinner.Frames) {
-				m.frame = 0
+		uiState := m.getState(ctx)
+		if now.Sub(uiState.lastTick) >= m.spinner.Interval {
+			uiState.frame++
+			if uiState.frame >= len(m.spinner.Frames) {
+				uiState.frame = 0
 			}
-			m.lastTick = now
+			uiState.lastTick = now
 		}
 		return
 	default:
@@ -95,7 +110,7 @@ func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 
 func (m *loader[T]) Render(ctx *app.Context[T]) string {
 	text := m.render(ctx)
-	return m.styleSpinner.Render(m.spinner.Frames[m.frame]) + m.styleText.Render(text)
+	return m.styleSpinner.Render(m.spinner.Frames[m.getState(ctx).frame]) + m.styleText.Render(text)
 }
 
 func (m *loader[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

@@ -36,7 +36,7 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T](baseOptions...)
+	base := app.NewBase[T]("text", baseOptions...)
 
 	if options.Foreground == nil {
 		options.Foreground = lipgloss.NoColor{}

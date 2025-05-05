@@ -44,7 +44,7 @@ func main() {
 
 	go monitorProcesses(ctx.Data)
 
-	p := tea.NewProgram(app.NewApp(ctx, NewRoot(ctx)), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	p := tea.NewProgram(app.NewApp(ctx, NewRoot), tea.WithAltScreen(), tea.WithMouseAllMotion())
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

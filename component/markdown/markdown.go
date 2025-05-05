@@ -31,7 +31,7 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 	)
 
 	return &markdown[T]{
-		base:            app.NewBase[T](append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...),
+		base:            app.NewBase[T]("markdown", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...),
 		render:          render,
 		glamourRenderer: r,
 	}

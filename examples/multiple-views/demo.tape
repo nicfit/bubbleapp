@@ -12,13 +12,13 @@ Show
 
 Sleep 1s
 
-Tab 1
+Tab@200ms 2
 
-Sleep 3s
+Sleep 2s
 
 Enter
 
-Sleep 3s
+Sleep 5s
 
 Shift+Tab
 

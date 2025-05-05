@@ -37,7 +37,7 @@ func NewDynamic[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T](append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+	base := app.NewBase[T]("box", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
 
 	viewport := viewport.New()
 

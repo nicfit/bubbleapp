@@ -14,7 +14,7 @@ func tickCommand(duration time.Duration) tea.Cmd {
 	})
 }
 
-func tickVisitor[T any](node Fc[T], _ Fc[T], ctx *Context[T]) {
+func tickVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Context[T]) {
 	if node == nil {
 		return
 	}

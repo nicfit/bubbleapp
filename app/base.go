@@ -2,12 +2,13 @@ package app
 
 import (
 	"github.com/charmbracelet/lipgloss/v2"
-	"github.com/google/uuid"
 )
 
 type Base struct {
 	ID              string
+	TypeID          string
 	LayoutDirection LayoutDirection
+	Focused         bool
 	Shader          Shader
 	Width           int
 	Height          int
@@ -65,7 +66,7 @@ func WithLayoutDirection(direction LayoutDirection) BaseOption {
 	}
 }
 
-func NewBase[T any](opts ...BaseOption) *Base {
+func NewBase[T any](typeID string, opts ...BaseOption) *Base {
 	if opts == nil {
 		opts = []BaseOption{}
 	}
@@ -82,7 +83,7 @@ func NewBase[T any](opts ...BaseOption) *Base {
 	}
 
 	b := &Base{
-		ID:              uuid.New().String(),
+		TypeID:          typeID,
 		Opts:            options,
 		Shader:          options.Shader,
 		LayoutDirection: options.LayoutDirection,

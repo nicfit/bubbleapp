@@ -37,7 +37,7 @@ func NewDynamic[T any](ctx *app.Context[T], children func(ctx *app.Context[T]) [
 	if options.Horizontal {
 		dir = app.Horizontal
 	}
-	base := app.NewBase[T](append([]app.BaseOption{app.WithGrow(true), app.WithLayoutDirection(dir)}, baseOptions...)...)
+	base := app.NewBase[T]("stack", append([]app.BaseOption{app.WithGrow(true), app.WithLayoutDirection(dir)}, baseOptions...)...)
 
 	return &stack[T]{
 		base:     base,

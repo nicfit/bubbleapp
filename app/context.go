@@ -9,12 +9,14 @@ import (
 )
 
 type Context[T any] struct {
+	root            Fc[T]
+	IDMap           map[string]Fc[T]
+	ids             []string
+	UIState         *StateStore
 	Zone            *zone.Manager
 	ZoneMap         map[string]Fc[T]
 	Cmds            *[]tea.Cmd
 	Styles          *style.Styles
-	Focused         Fc[T]
-	Hovered         Fc[T]
 	BackgroundColor color.Color
 	Width           int
 	Height          int
@@ -26,6 +28,9 @@ func NewContext[T any](data *T) *Context[T] {
 	return &Context[T]{
 		Zone:    zone.New(),
 		ZoneMap: make(map[string]Fc[T]),
+		IDMap:   make(map[string]Fc[T]),
+		ids:     []string{},
+		UIState: NewStateStore(),
 		Cmds:    &[]tea.Cmd{},
 		Styles:  style.DefaultStyles(),
 		Data:    data,

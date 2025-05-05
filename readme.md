@@ -255,8 +255,10 @@ go run .
 Here are some planned features in no particular order. Feel free to suggest something.
 
 - **Border and title on Box** - Add borders and titles to Box component
+- **Proper theming** - Default themes (or BYOT, bring your own theme)
 - **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
 - **Modal Component**
+- **Confirm Component** - Using modal but is an ok, cancel modal with text
 - **Help Text Component**
 - **Shortcut support** - global and locally within components in focus perhaps
 - **Context Menu Component**

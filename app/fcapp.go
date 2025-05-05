@@ -32,12 +32,12 @@ func WithTickFPS(fps time.Duration) AppOption {
 }
 
 type App[T any] struct {
-	root    Fc[T]
+	render  func(ctx *Context[T]) Fc[T]
 	ctx     *Context[T]
 	tickFPS time.Duration
 }
 
-func NewApp[T any](ctx *Context[T], root Fc[T], options ...AppOption) *App[T] {
+func NewApp[T any](ctx *Context[T], render func(ctx *Context[T]) Fc[T], options ...AppOption) *App[T] {
 	if options == nil {
 		options = []AppOption{}
 	}
@@ -59,7 +59,7 @@ func NewApp[T any](ctx *Context[T], root Fc[T], options ...AppOption) *App[T] {
 	}
 
 	return &App[T]{
-		root:    root,
+		render:  render,
 		ctx:     ctx,
 		tickFPS: opts.TickFPS,
 	}
@@ -91,19 +91,22 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return a, tea.Quit
 		case "tab":
-			a.ctx.FocusNextCmd(a.root)
+			a.ctx.FocusNextCmd(a.ctx.root)
 			return a, nil
 		case "shift+tab":
-			a.ctx.FocusPrevCmd(a.root)
+			a.ctx.FocusPrevCmd(a.ctx.root)
 			return a, nil
 		}
 		// Propagate key msg to the focused component
-		if a.ctx.Focused != nil {
-			a.ctx.Focused.Update(a.ctx, msg)
+		if a.ctx.UIState.Focused != "" {
+			focused := a.ctx.IDMap[a.ctx.UIState.Focused]
+			if focused != nil {
+				focused.Update(a.ctx, msg)
+			}
 		}
 	case tea.WindowSizeMsg:
-		a.root.Base().Width = msg.Width
-		a.root.Base().Height = msg.Height
+		a.ctx.root.Base().Width = msg.Width
+		a.ctx.root.Base().Height = msg.Height
 		a.ctx.Width = msg.Width
 		a.ctx.Height = msg.Height
 	case tea.MouseMsg:
@@ -115,7 +118,7 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case TickMsg:
 		// Propagate tick to all components (used for Dynamic Shaders for now)
-		Visit(a.root, nil, a.ctx, tickVisitor, PreOrder)
+		Visit(a.ctx.root, 0, nil, a.ctx, tickVisitor, PreOrder)
 		if a.tickFPS > 0 {
 			cmds = append(cmds, tickCommand(a.tickFPS))
 		}
@@ -125,6 +128,8 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (a *App[T]) View() string {
+	rendered := a.render(a.ctx)
+	a.ctx.root = rendered
 	a.Layout()
-	return a.ctx.Zone.Scan(a.root.Render(a.ctx))
+	return a.ctx.Zone.Scan(rendered.Render(a.ctx))
 }

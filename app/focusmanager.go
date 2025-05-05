@@ -1,19 +1,6 @@
 package app
 
-import tea "github.com/charmbracelet/bubbletea/v2"
-
-type FocusComponentMsg struct {
-	TargetID string
-}
-type BlurAllMsg struct{}
-
-func sendFocusMsg(targetID string) tea.Cmd {
-	return func() tea.Msg {
-		return FocusComponentMsg{TargetID: targetID}
-	}
-}
-
-func (fm *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
+func (ctx *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
 	focusableItems := []Fc[T]{}
 
 	var traverse func(Fc[T])
@@ -25,7 +12,7 @@ func (fm *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
 		if node.Base().Opts.Focusable {
 			focusableItems = append(focusableItems, node)
 		}
-		for _, child := range node.Children(fm) {
+		for _, child := range node.Children(ctx) {
 			traverse(child)
 		}
 
@@ -36,35 +23,35 @@ func (fm *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
 	return focusableItems
 }
 
-func (fm *Context[T]) FocusFirstCmd(root Fc[T]) {
+func (ctx *Context[T]) FocusFirstCmd(root Fc[T]) {
 
-	focusableItems := fm.getAllFocusable(root)
+	focusableItems := ctx.getAllFocusable(root)
 	if len(focusableItems) == 0 {
 		return
 	}
-	fm.Focused = focusableItems[0]
+	ctx.UIState.Focused = focusableItems[0].Base().ID
 }
 
-func (fm *Context[T]) FocusNextCmd(root Fc[T]) {
+func (ctx *Context[T]) FocusNextCmd(root Fc[T]) {
 
-	focusableItems := fm.getAllFocusable(root)
+	focusableItems := ctx.getAllFocusable(root)
 	if len(focusableItems) == 0 {
-		fm.Focused = nil
+		ctx.UIState.Focused = ""
 		return
 	}
 	if len(focusableItems) == 1 {
-		if fm.Focused == focusableItems[0] {
-			fm.Focused = nil
+		if ctx.UIState.Focused == focusableItems[0].Base().ID {
+			ctx.UIState.Focused = ""
 			return
 		}
-		fm.Focused = focusableItems[0]
+		ctx.UIState.Focused = focusableItems[0].Base().ID
 		return
 	}
 
 	currentIndex := -1
-	if fm.Focused != nil {
+	if ctx.UIState.Focused != "" {
 		for i, item := range focusableItems {
-			if item == fm.Focused {
+			if item.Base().ID == ctx.UIState.Focused {
 				currentIndex = i
 				break
 			}
@@ -72,31 +59,31 @@ func (fm *Context[T]) FocusNextCmd(root Fc[T]) {
 	}
 
 	if currentIndex == -1 {
-		fm.Focused = focusableItems[0]
+		ctx.UIState.Focused = focusableItems[0].Base().ID
 		return
 	}
 
 	nextIndex := (currentIndex + 1) % len(focusableItems)
 
-	fm.Focused = focusableItems[nextIndex]
+	ctx.UIState.Focused = focusableItems[nextIndex].Base().ID
 }
 
-func (fm *Context[T]) FocusPrevCmd(root Fc[T]) {
+func (ctx *Context[T]) FocusPrevCmd(root Fc[T]) {
 
-	focusableItems := fm.getAllFocusable(root)
+	focusableItems := ctx.getAllFocusable(root)
 	if len(focusableItems) == 0 {
-		fm.Focused = nil
+		ctx.UIState.Focused = ""
 		return
 	}
 	if len(focusableItems) == 1 {
-		fm.Focused = focusableItems[0]
+		ctx.UIState.Focused = focusableItems[0].Base().ID
 		return
 	}
 
 	currentIndex := -1
-	if fm.Focused != nil {
+	if ctx.UIState.Focused != "" {
 		for i, item := range focusableItems {
-			if item == fm.Focused {
+			if item.Base().ID == ctx.UIState.Focused {
 				currentIndex = i
 				break
 			}
@@ -104,11 +91,11 @@ func (fm *Context[T]) FocusPrevCmd(root Fc[T]) {
 	}
 
 	if currentIndex == -1 {
-		fm.Focused = focusableItems[len(focusableItems)-1]
+		ctx.UIState.Focused = focusableItems[len(focusableItems)-1].Base().ID
 		return
 	}
 
 	prevIndex := (currentIndex - 1 + len(focusableItems)) % len(focusableItems)
 
-	fm.Focused = focusableItems[prevIndex]
+	ctx.UIState.Focused = focusableItems[prevIndex].Base().ID
 }
