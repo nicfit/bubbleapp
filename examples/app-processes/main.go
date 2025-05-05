@@ -26,7 +26,6 @@ type AppState struct {
 }
 
 func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
-
 	return stack.New(ctx, []app.Fc[AppState]{
 		text.NewDynamic(ctx, func(ctx *app.Context[AppState]) string {
 			return "# Processes: " + strconv.Itoa(len(ctx.Data.Processes))

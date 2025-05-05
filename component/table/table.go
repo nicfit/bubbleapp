@@ -39,23 +39,26 @@ func WidthInt(i int) ColumnWidth {
 	return ColumnWidth{Int: i}
 }
 
+type uiState struct {
+	cols     []column
+	rows     []Row
+	cursor   int
+	rowHover int
+	start    int
+	end      int
+}
+
 type baseTable[T any] struct {
 	base   *app.Base
 	ctx    *app.Context[T]
 	KeyMap KeyMap
 	Help   help.Model
 
-	cols          []column
-	rows          []Row
-	data          func(*app.Context[T]) (clms []Column, rows []Row)
-	cursor        int
-	cursorChanged bool
-	rowHover      int
-	styles        Styles
+	data func(*app.Context[T]) (clms []Column, rows []Row)
+
+	styles Styles
 
 	viewport viewport.Model
-	start    int
-	end      int
 }
 
 type column struct {
@@ -167,11 +170,10 @@ func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms
 	s.BaseFocus = style.ApplyMargin(s.BaseFocus, options.Margin)
 
 	m := baseTable[T]{
-		base:     base,
-		ctx:      ctx,
-		data:     data,
-		cursor:   -1,
-		rowHover: -1,
+		base: base,
+		ctx:  ctx,
+		data: data,
+
 		viewport: viewport.New(),
 
 		KeyMap: defaultKeyMap(),
@@ -184,15 +186,27 @@ func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms
 	return &m
 }
 
+func (m *baseTable[T]) getState() *uiState {
+	state := app.GetUIState[T, uiState](m.ctx, m.base.ID)
+	if state == nil {
+		state = &uiState{
+			cursor:   -1,
+			rowHover: -1,
+		}
+		app.SetUIState(m.ctx, m.base.ID, state)
+	}
+	return state
+}
+
 func (m *baseTable[T]) setHover(n int) {
-	if m.rowHover != n {
-		m.rowHover = n
+	if m.getState().rowHover != n {
+		m.getState().rowHover = n
 		m.updateViewport()
 	}
 }
 func (m *baseTable[T]) clearHover() {
-	if m.rowHover != -1 {
-		m.rowHover = -1
+	if m.getState().rowHover != -1 {
+		m.getState().rowHover = -1
 		m.updateViewport()
 	}
 }
@@ -268,24 +282,25 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 
 // view renders the component.
 func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
+	uiState := m.getState()
 	s := m.getBaseStyle(ctx)
 	if m.data != nil {
 		var rawCols []Column
-		rawCols, m.rows = m.data(ctx)
-		m.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
+		rawCols, uiState.rows = m.data(ctx)
+		uiState.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 	}
 	if ctx.UIState.Focused == m.base.ID {
-		if m.cursor < 0 {
+		if uiState.cursor < 0 {
 			m.setCursor(0)
 		}
 	}
-	if m.cursor >= len(m.rows) {
-		m.setCursor(len(m.rows) - 1)
+	if uiState.cursor >= len(uiState.rows) {
+		m.setCursor(len(uiState.rows) - 1)
 	}
-	m.updateViewport()
 	headersView := m.headersView()
 	m.viewport.SetHeight(m.base.Height - lipgloss.Height(headersView) - s.GetVerticalFrameSize())
 	m.viewport.SetWidth(m.base.Width - s.GetHorizontalFrameSize())
+	m.updateViewport()
 
 	return s.Render(headersView + "\n" + app.RegisterMouse(ctx, m.base.ID+"_body", m, m.viewport.View()))
 }
@@ -307,19 +322,19 @@ func (m baseTable[T]) helpView() string {
 // updateViewport updates the list content based on the previously defined
 // columns and rows.
 func (m *baseTable[T]) updateViewport() {
-
-	renderedRows := make([]string, 0, len(m.rows))
+	uiState := m.getState()
+	renderedRows := make([]string, 0, len(uiState.rows))
 
 	// Render only rows from: m.cursor-m.viewport.Height to: m.cursor+m.viewport.Height
 	// Constant runtime, independent of number of rows in a table.
 	// Limits the number of renderedRows to a maximum of 2*m.viewport.Height
-	if m.cursor >= 0 {
-		m.start = clamp(m.cursor-m.viewport.Height(), 0, m.cursor)
+	if uiState.cursor >= 0 {
+		uiState.start = clamp(uiState.cursor-m.viewport.Height(), 0, uiState.cursor)
 	} else {
-		m.start = 0
+		uiState.start = 0
 	}
-	m.end = clamp(max(0, m.cursor)+m.viewport.Height(), m.cursor, len(m.rows))
-	for i := m.start; i < m.end; i++ {
+	uiState.end = clamp(max(0, uiState.cursor)+m.viewport.Height(), uiState.cursor, len(uiState.rows))
+	for i := uiState.start; i < uiState.end; i++ {
 		renderedRows = append(renderedRows, m.renderRow(i))
 	}
 
@@ -331,33 +346,33 @@ func (m *baseTable[T]) updateViewport() {
 // selectedRow returns the selected row.
 // You can cast it to your own implementation.
 func (m baseTable[T]) selectedRow() Row {
-	if m.cursor < 0 || m.cursor >= len(m.rows) {
+	uiState := m.getState()
+	if uiState.cursor < 0 || uiState.cursor >= len(uiState.rows) {
 		return nil
 	}
 
-	return m.rows[m.cursor]
+	return uiState.rows[uiState.cursor]
 }
 
 // Cursor returns the index of the selected row.
 func (m baseTable[T]) getCursor() int {
-	return m.cursor
+	return m.getState().cursor
 }
 
 // SetCursor sets the cursor position in the table.
 func (m *baseTable[T]) setCursor(n int) {
-	m.cursor = clamp(n, 0, len(m.rows)-1)
-	m.cursorChanged = true
+	m.getState().cursor = clamp(n, 0, len(m.getState().rows)-1)
 }
 
 // MoveUp moves the selection up by any number of rows.
 // It can not go above the first row.
 func (m *baseTable[T]) MoveUp(n int) {
-	m.setCursor(m.cursor - n)
+	m.setCursor(m.getState().cursor - n)
 	switch {
-	case m.start == 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset, 0, m.cursor))
-	case m.start < m.viewport.Height():
-		m.viewport.YOffset = (clamp(clamp(m.viewport.YOffset+n, 0, m.cursor), 0, m.viewport.Height()))
+	case m.getState().start == 0:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset, 0, m.getState().cursor))
+	case m.getState().start < m.viewport.Height():
+		m.viewport.YOffset = (clamp(clamp(m.viewport.YOffset+n, 0, m.getState().cursor), 0, m.viewport.Height()))
 	case m.viewport.YOffset >= 1:
 		m.viewport.YOffset = clamp(m.viewport.YOffset+n, 1, m.viewport.Height())
 	}
@@ -367,33 +382,33 @@ func (m *baseTable[T]) MoveUp(n int) {
 // MoveDown moves the selection down by any number of rows.
 // It can not go below the last row.
 func (m *baseTable[T]) MoveDown(n int) {
-	m.setCursor(m.cursor + n)
+	m.setCursor(m.getState().cursor + n)
 	m.updateViewport()
 
 	switch {
-	case m.end == len(m.rows) && m.viewport.YOffset > 0:
+	case m.getState().end == len(m.getState().rows) && m.viewport.YOffset > 0:
 		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.viewport.Height()))
-	case m.cursor > (m.end-m.start)/2 && m.viewport.YOffset > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.cursor))
+	case m.getState().cursor > (m.getState().end-m.getState().start)/2 && m.viewport.YOffset > 0:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.getState().cursor))
 	case m.viewport.YOffset > 1:
-	case m.cursor > m.viewport.YOffset+m.viewport.Height()-1:
+	case m.getState().cursor > m.viewport.YOffset+m.viewport.Height()-1:
 		m.viewport.SetYOffset(clamp(m.viewport.YOffset+1, 0, 1))
 	}
 }
 
 // GotoTop moves the selection to the first row.
 func (m *baseTable[T]) GotoTop() {
-	m.MoveUp(m.cursor)
+	m.MoveUp(m.getState().cursor)
 }
 
 // GotoBottom moves the selection to the last row.
 func (m *baseTable[T]) GotoBottom() {
-	m.MoveDown(len(m.rows))
+	m.MoveDown(len(m.getState().rows))
 }
 
 func (m baseTable[T]) headersView() string {
-	s := make([]string, 0, len(m.cols))
-	for _, col := range m.cols {
+	s := make([]string, 0, len(m.getState().cols))
+	for _, col := range m.getState().cols {
 		if col.Width <= 0 {
 			continue
 		}
@@ -405,22 +420,23 @@ func (m baseTable[T]) headersView() string {
 }
 
 func (m *baseTable[T]) renderRow(r int) string {
-	s := make([]string, 0, len(m.cols))
-	for i, value := range m.rows[r] {
-		if m.cols[i].Width <= 0 {
+	uiState := m.getState()
+	s := make([]string, 0, len(uiState.cols))
+	for i, value := range uiState.rows[r] {
+		if uiState.cols[i].Width <= 0 {
 			continue
 		}
-		style := lipgloss.NewStyle().Width(m.cols[i].Width).MaxWidth(m.cols[i].Width).Inline(true)
-		renderedCell := m.styles.Cell.Render(style.Render(runewidth.Truncate(value, m.cols[i].Width, "…")))
+		style := lipgloss.NewStyle().Width(uiState.cols[i].Width).MaxWidth(uiState.cols[i].Width).Inline(true)
+		renderedCell := m.styles.Cell.Render(style.Render(runewidth.Truncate(value, uiState.cols[i].Width, "…")))
 		s = append(s, renderedCell)
 	}
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, s...)
 
-	if r == m.cursor {
+	if r == uiState.cursor {
 		return app.RegisterMouse(m.ctx, m.base.ID+"_"+strconv.Itoa(r), m, m.styles.Selected.Render(row))
 	}
-	if r == m.rowHover {
+	if r == uiState.rowHover {
 		return app.RegisterMouse(m.ctx, m.base.ID+"_"+strconv.Itoa(r), m, m.styles.Hovered.Render(row))
 	}
 
