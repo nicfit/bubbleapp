@@ -10,6 +10,8 @@ Enter
 Sleep 3s
 Show
 
+Tab
+
 Sleep 3s
 
 Tab
@@ -39,5 +41,3 @@ Sleep 1s
 Tab
 
 Sleep 1s
-
-Enter

@@ -12,6 +12,10 @@ Show
 
 Sleep 1s
 
+Tab
+
+Sleep 300ms
+
 Down@200ms 4
 
 Sleep 1s

@@ -22,9 +22,11 @@ func NewLoginRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 	}
 
 	if ctx.Data.LoginingIn {
-		return stack.New(ctx, []app.Fc[CustomData]{
-			text.New(ctx, "Please wait...", nil),
-			loader.New(ctx, loader.Binary, "Logging in...", nil),
+		return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+			return []app.Fc[CustomData]{
+				text.New(ctx, "Please wait...", nil),
+				loader.New(ctx, loader.Binary, "Logging in...", nil),
+			}
 		}, nil)
 	}
 
@@ -38,18 +40,19 @@ func NewLoginRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
 	quitButton := button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact})
 
-	views := []app.Fc[CustomData]{
-		text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil),
-		text.New(ctx, "Log in or fail! Up to you!", nil),
-		loginButton,
-		failButton,
-		quitButton,
-	}
-	if ctx.Data.LoginFailed != "" {
-		views = append(views, text.New(ctx, "\n"+ctx.Data.LoginFailed, &text.Options{Foreground: ctx.Styles.Colors.Danger}))
-	}
-
-	root := stack.New(ctx, views, nil)
+	root := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		views := []app.Fc[CustomData]{
+			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil),
+			text.New(ctx, "Log in or fail! Up to you!", nil),
+			loginButton,
+			failButton,
+			quitButton,
+		}
+		if ctx.Data.LoginFailed != "" {
+			views = append(views, text.New(ctx, "\n"+ctx.Data.LoginFailed, &text.Options{Foreground: ctx.Styles.Colors.Danger}))
+		}
+		return views
+	}, nil)
 
 	return root
 }

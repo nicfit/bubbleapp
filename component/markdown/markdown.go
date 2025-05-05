@@ -11,7 +11,7 @@ import (
 //   - Fix wordwrapping
 
 // This cannot be created every time as it is too slow
-// but out here we cannot manage it
+// but out here we cannot manage it. Maybe put in UIState?
 var r, _ = glamour.NewTermRenderer(
 	glamour.WithAutoStyle(),
 )
