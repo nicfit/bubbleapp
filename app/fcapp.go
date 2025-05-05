@@ -105,8 +105,6 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.WindowSizeMsg:
-		a.ctx.root.Base().Width = msg.Width
-		a.ctx.root.Base().Height = msg.Height
 		a.ctx.Width = msg.Width
 		a.ctx.Height = msg.Height
 	case tea.MouseMsg:
@@ -128,6 +126,9 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (a *App[T]) View() string {
+	a.ctx.idPath = []string{"root"}
+	a.ctx.idPathCount = make(map[string]int)
+
 	rendered := a.render(a.ctx)
 	a.ctx.root = rendered
 	a.Layout()

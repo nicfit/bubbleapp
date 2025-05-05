@@ -28,15 +28,17 @@ type AppState struct {
 }
 
 func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
-	return stack.New(ctx, []app.Fc[AppState]{
-		text.NewDynamic(ctx, func(ctx *app.Context[AppState]) string {
-			return "# Processes: " + strconv.Itoa(len(ctx.Data.Processes))
-		}, nil),
-		table.NewDynamic(ctx, func(ctx *app.Context[AppState]) ([]table.Column, []table.Row) {
-			rows := generateRowsOfProcesses(ctx.Data)
-			return clms, rows
-		}, nil),
-		button.New(ctx, "Quit", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
+	return stack.New(ctx, func(ctx *app.Context[AppState]) []app.Fc[AppState] {
+		return []app.Fc[AppState]{
+			text.NewDynamic(ctx, func(ctx *app.Context[AppState]) string {
+				return "# Processes: " + strconv.Itoa(len(ctx.Data.Processes))
+			}, nil),
+			table.NewDynamic(ctx, func(ctx *app.Context[AppState]) ([]table.Column, []table.Row) {
+				rows := generateRowsOfProcesses(ctx.Data)
+				return clms, rows
+			}, nil),
+			button.New(ctx, "Quit", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
+		}
 	}, nil)
 }
 

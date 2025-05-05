@@ -2,12 +2,18 @@ package app
 
 type StateStore struct {
 	data    map[string]any
+	heights map[string]int
+	widths  map[string]int
 	Focused string
 	Hovered string
 }
 
 func NewStateStore() *StateStore {
-	return &StateStore{data: make(map[string]any)}
+	return &StateStore{
+		data:    make(map[string]any),
+		heights: make(map[string]int),
+		widths:  make(map[string]int),
+	}
 }
 
 func GetUIState[T any, UIState any](ctx *Context[T], id string) *UIState {
@@ -25,6 +31,27 @@ func SetUIState[T any, UIState any](ctx *Context[T], id string, value *UIState) 
 		return
 	}
 	ctx.UIState.set(id, value)
+}
+
+func (s *StateStore) GetHeight(id string) int {
+	v, ok := s.heights[id]
+	if !ok {
+		return 0
+	}
+	return v
+}
+func (s *StateStore) setHeight(id string, value int) {
+	s.heights[id] = value
+}
+func (s *StateStore) GetWidth(id string) int {
+	v, ok := s.widths[id]
+	if !ok {
+		return 0
+	}
+	return v
+}
+func (s *StateStore) setWidth(id string, value int) {
+	s.widths[id] = value
 }
 
 func (s *StateStore) get(id string) (v any) {
@@ -45,7 +72,16 @@ func (s *StateStore) cleanup(existingIDs []string) {
 			delete(s.data, id)
 		}
 	}
-
+	for id := range s.heights {
+		if !contains(existingIDs, id) {
+			delete(s.heights, id)
+		}
+	}
+	for id := range s.widths {
+		if !contains(existingIDs, id) {
+			delete(s.widths, id)
+		}
+	}
 }
 
 // contains checks if a slice of strings contains a specific string.

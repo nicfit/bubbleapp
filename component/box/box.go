@@ -19,25 +19,23 @@ type box[T any] struct {
 	style        lipgloss.Style
 	viewport     viewport.Model
 	contentCache string
-	child        func(ctx *app.Context[T]) app.Fc[T]
+	child        app.Fc[T]
 }
 
 func NewEmpty[T any](ctx *app.Context[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
-	return NewDynamic(ctx, func(ctx *app.Context[T]) app.Fc[T] { return nil }, options, baseOptions...)
+	return New(ctx, func(ctx *app.Context[T]) app.Fc[T] { return nil }, options, baseOptions...)
 }
 
-func New[T any](ctx *app.Context[T], child app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
-	return NewDynamic(ctx, func(ctx *app.Context[T]) app.Fc[T] { return child }, options, baseOptions...)
-}
-
-func NewDynamic[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
+func New[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
 	if options == nil {
 		options = &Options{}
 	}
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T]("box", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+
+	base, cleanup := app.NewBase(ctx, "box", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+	defer cleanup()
 
 	viewport := viewport.New()
 
@@ -46,22 +44,24 @@ func NewDynamic[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.
 		style = style.Background(options.Bg)
 	}
 
+	c := child(ctx)
+
 	return &box[T]{
 		base:         base,
 		opts:         options,
 		style:        style,
 		viewport:     viewport,
 		contentCache: "",
-		child:        child,
+		child:        c,
 	}
 }
 
 func (m box[T]) Render(ctx *app.Context[T]) string {
 
-	m.viewport.SetWidth(m.base.Width)
-	m.viewport.SetHeight(m.base.Height)
+	m.viewport.SetWidth(ctx.UIState.GetWidth(m.base.ID))
+	m.viewport.SetHeight(ctx.UIState.GetHeight(m.base.ID))
 
-	childFc := m.child(ctx)
+	childFc := m.child
 	if childFc != nil {
 		child := childFc.Render(ctx)
 		if m.contentCache != child {
@@ -73,11 +73,12 @@ func (m box[T]) Render(ctx *app.Context[T]) string {
 		m.contentCache = child
 	}
 
-	return m.style.Height(m.base.Height).Width(m.base.Width).Render(m.viewport.View())
+	// This does not work when not Grow. Needs to not limit on LayoutPhase. Fix.
+	return m.style.Height(ctx.UIState.GetHeight(m.base.ID)).Width(ctx.UIState.GetWidth(m.base.ID)).Render(m.viewport.View())
 }
 
 func (m *box[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	child := m.child(ctx)
+	child := m.child
 	if child != nil {
 		return []app.Fc[T]{child}
 	}

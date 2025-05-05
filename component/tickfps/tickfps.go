@@ -8,60 +8,76 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type model[T any] struct {
-	base      *app.Base
+type uiState struct {
 	msgCount  map[string]int64
 	tickTimes []time.Time
 }
 
-func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *app.Base {
+type tickfps[T any] struct {
+	base *app.Base
+}
+
+func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *tickfps[T] {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	return model[T]{
-		base:      app.NewBase(ctx, baseOptions...),
-		msgCount:  make(map[string]int64),
-		tickTimes: make([]time.Time, 0),
-	}.Base()
+	base, cleanup := app.NewBase(ctx, "tickfps", baseOptions...)
+	defer cleanup()
+
+	return &tickfps[T]{
+		base: base,
+	}
 }
 
-func (m model[T]) Init() tea.Cmd {
-	return nil
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *tickfps[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+	state := m.getState(ctx)
 	switch msgType := msg.(type) {
 	case app.TickMsg:
-		m.tickTimes = append(m.tickTimes, time.Now())
+		state.tickTimes = append(state.tickTimes, time.Now())
 		cutoff := time.Now().Add(-10 * time.Second)
 		idx := 0
-		for i, t := range m.tickTimes {
+		for i, t := range state.tickTimes {
 			if t.After(cutoff) {
 				idx = i
 				break
 			}
 		}
-		m.tickTimes = m.tickTimes[idx:]
-		m.msgCount["components.TickMsg"]++
+		state.tickTimes = state.tickTimes[idx:]
+		state.msgCount["components.TickMsg"]++
 	default:
-		m.msgCount[fmt.Sprintf("%T", msgType)]++
+		state.msgCount[fmt.Sprintf("%T", msgType)]++
 	}
-	return m, nil
+
 }
 
-func (m model[T]) View() string {
-	if len(m.tickTimes) < 2 {
+func (m *tickfps[T]) Render(ctx *app.Context[T]) string {
+	state := m.getState(ctx)
+	if len(state.tickTimes) < 2 {
 		return "Tick FPS: 0.00"
 	}
-	delta := m.tickTimes[len(m.tickTimes)-1].Sub(m.tickTimes[0]).Seconds()
+	delta := state.tickTimes[len(state.tickTimes)-1].Sub(state.tickTimes[0]).Seconds()
 	if delta == 0 {
 		return "Tick FPS: 0.00"
 	}
-	fps := float64(len(m.tickTimes)-1) / delta
+	fps := float64(len(state.tickTimes)-1) / delta
 	return fmt.Sprintf("Tick FPS: %.2f", fps)
 }
 
-func (m model[T]) Base() *app.Base {
-	m.base.Model = m
+func (m *tickfps[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+func (m *tickfps[T]) Base() *app.Base {
 	return m.base
+}
+
+func (m *tickfps[T]) getState(ctx *app.Context[T]) *uiState {
+	state := app.GetUIState[T, uiState](ctx, m.base.ID)
+	if state == nil {
+		state = &uiState{
+			msgCount:  make(map[string]int64),
+			tickTimes: make([]time.Time, 0),
+		}
+		app.SetUIState(ctx, m.base.ID, state)
+	}
+	return state
 }

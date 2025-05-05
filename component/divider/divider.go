@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
+// TODO: Support GrowY/Vertical divider
 type divider[T any] struct {
 	base  *app.Base
 	style lipgloss.Style
@@ -18,19 +19,21 @@ func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *divider[T] 
 		baseOptions = []app.BaseOption{}
 	}
 	style := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Ghost)
+	base, cleanup := app.NewBase(ctx, "divider", append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...)
+	defer cleanup()
 
 	return &divider[T]{
-		// TODO: Support GrowY/Vertical divider
-		base:  app.NewBase[T]("divider", append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...),
+		base:  base,
 		style: style,
 	}
 }
 
 func (m *divider[T]) Render(ctx *app.Context[T]) string {
-	if m.base.Width == 0 {
+	if ctx.UIState.GetWidth(m.base.ID) == 0 {
 		return ""
 	}
-	return m.style.Render(strings.Repeat("─", m.base.Width-1))
+	// Why -1 here? Check if this is required and so why
+	return m.style.Render(strings.Repeat("─", ctx.UIState.GetWidth(m.base.ID)-1))
 }
 
 func (m *divider[T]) Update(ctx *app.Context[T], msg tea.Msg) {

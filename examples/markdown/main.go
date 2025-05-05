@@ -17,12 +17,14 @@ type CustomData struct{}
 
 func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		text.New(ctx, "Markdown example!", nil),
-		divider.New(ctx),
-		box.New(ctx, markdown.New(ctx, mdContent), &box.Options{DisableFollow: true}),
-		divider.New(ctx),
-		text.New(ctx, "Press [ctrl-c] to quit.", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			text.New(ctx, "Markdown example!", nil),
+			divider.New(ctx),
+			box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] { return markdown.New(ctx, mdContent) }, &box.Options{DisableFollow: true}),
+			divider.New(ctx),
+			text.New(ctx, "Press [ctrl-c] to quit.", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
+		}
 	}, nil)
 
 	return stack

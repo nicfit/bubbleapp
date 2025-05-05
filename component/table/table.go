@@ -162,7 +162,8 @@ func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	base := app.NewBase[T]("table", append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
+	base, cleanup := app.NewBase(ctx, "table", append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
+	defer cleanup()
 
 	s := defaultStyles(ctx)
 
@@ -284,10 +285,13 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
 	uiState := m.getState()
 	s := m.getBaseStyle(ctx)
+	width := ctx.UIState.GetWidth(m.base.ID)
+	height := ctx.UIState.GetHeight(m.base.ID)
+
 	if m.data != nil {
 		var rawCols []Column
 		rawCols, uiState.rows = m.data(ctx)
-		uiState.cols = columnMapping(m.base.Width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
+		uiState.cols = columnMapping(width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 	}
 	if ctx.UIState.Focused == m.base.ID {
 		if uiState.cursor < 0 {
@@ -298,8 +302,8 @@ func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
 		m.setCursor(len(uiState.rows) - 1)
 	}
 	headersView := m.headersView()
-	m.viewport.SetHeight(m.base.Height - lipgloss.Height(headersView) - s.GetVerticalFrameSize())
-	m.viewport.SetWidth(m.base.Width - s.GetHorizontalFrameSize())
+	m.viewport.SetHeight(height - lipgloss.Height(headersView) - s.GetVerticalFrameSize())
+	m.viewport.SetWidth(width - s.GetHorizontalFrameSize())
 	m.updateViewport()
 
 	return s.Render(headersView + "\n" + app.RegisterMouse(ctx, m.base.ID+"_body", m, m.viewport.View()))

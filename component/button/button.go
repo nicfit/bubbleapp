@@ -172,8 +172,11 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 		}
 	}
 
+	base, cleanup := app.NewBase(ctx, "button", append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...)
+	defer cleanup()
+
 	return &button[T]{
-		base:         app.NewBase[T]("button", append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
+		base:         base,
 		render:       render,
 		wrapper:      wrapper,
 		onClick:      onClick,

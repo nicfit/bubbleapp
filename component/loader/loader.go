@@ -66,26 +66,17 @@ func NewDynamic[T any](ctx *app.Context[T], variant Spinner, render func(ctx *ap
 		styleSpinner = styleSpinner.Foreground(options.Color)
 	}
 
+	base, cleanup := app.NewBase(ctx, "loader", baseOptions...)
+	defer cleanup()
+
 	return &loader[T]{
-		base:         app.NewBase[T]("loader", baseOptions...),
+		base:         base,
 		render:       render,
 		spinner:      variant,
 		options:      options,
 		styleText:    styleText,
 		styleSpinner: styleSpinner,
 	}
-}
-
-func (m *loader[T]) getState(ctx *app.Context[T]) *uiState {
-	state := app.GetUIState[T, uiState](ctx, m.base.ID)
-	if state == nil {
-		state = &uiState{
-			frame:    0,
-			lastTick: time.Now(),
-		}
-		app.SetUIState(ctx, m.base.ID, state)
-	}
-	return state
 }
 
 func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
@@ -103,8 +94,6 @@ func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 			uiState.lastTick = now
 		}
 		return
-	default:
-		return
 	}
 }
 
@@ -118,4 +107,16 @@ func (m *loader[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 }
 func (m *loader[T]) Base() *app.Base {
 	return m.base
+}
+
+func (m *loader[T]) getState(ctx *app.Context[T]) *uiState {
+	state := app.GetUIState[T, uiState](ctx, m.base.ID)
+	if state == nil {
+		state = &uiState{
+			frame:    0,
+			lastTick: time.Now(),
+		}
+		app.SetUIState(ctx, m.base.ID, state)
+	}
+	return state
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type TabChangedMsg struct {
-	ActiveTab int
+type uiState struct {
+	activeTab int
 }
 
 func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
@@ -27,11 +27,10 @@ var (
 	unusedTabBorder   = tabBorderWithBottom("┘", "─", " ")
 )
 
-type model[T any] struct {
-	ID        string
-	base      *app.Base
-	titles    []string
-	activeTab int
+type tabtitles[T any] struct {
+	base       *app.Base
+	titles     func(ctx *app.Context[T]) []string
+	tabChanged func(activeTab int)
 
 	inactiveTabStyle        lipgloss.Style
 	inactiveTabStyleFocused lipgloss.Style
@@ -40,60 +39,70 @@ type model[T any] struct {
 	unusedTabStyleFocused   lipgloss.Style
 }
 
-func New[T any](ctx *app.Context[T], titles []string, idPrefix string, baseOptions ...app.BaseOption) *app.Base {
+func New[T any](ctx *app.Context[T], titles []string, tabChanged func(activeTab int), baseOptions ...app.BaseOption) *tabtitles[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) []string {
+		return titles
+	}, tabChanged, baseOptions...)
+}
+
+func NewDynamic[T any](ctx *app.Context[T], titles func(ctx *app.Context[T]) []string, tabChanged func(activeTab int), baseOptions ...app.BaseOption) *tabtitles[T] {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	return model[T]{
-		ID:        idPrefix,
-		base:      app.NewBase(ctx, append([]app.BaseOption{app.WithFocusable(true)}, baseOptions...)...),
-		titles:    titles,
-		activeTab: 0,
+
+	base, cleanup := app.NewBase(ctx, "tabtitles", append([]app.BaseOption{app.WithFocusable(true), app.WithGrowX(true)}, baseOptions...)...)
+	defer cleanup()
+
+	return &tabtitles[T]{
+		base:       base,
+		titles:     titles,
+		tabChanged: tabChanged,
 
 		inactiveTabStyle:        lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")).Padding(0, 1),
 		inactiveTabStyleFocused: lipgloss.NewStyle().Border(inactiveTabBorder, true).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")).Padding(0, 1),
 		activeTabStyle:          lipgloss.NewStyle().Border(activeTabBorder, true).BorderForeground(lipgloss.Color("#0188a5")).Padding(0, 1),
 		unusedTabStyle:          lipgloss.NewStyle().Border(unusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")),
 		unusedTabStyleFocused:   lipgloss.NewStyle().Border(unusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")),
-	}.Base()
+	}
 }
 
-func (m model[T]) Init() tea.Cmd {
+func (m tabtitles[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-
+func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	switch msg := msg.(type) {
-
 	case tea.KeyMsg:
-		if m.base.Focused {
+		uiState := m.getState(ctx)
+		titles := m.titles(ctx)
+		if ctx.UIState.Focused == m.base.ID {
 			switch keypress := msg.String(); keypress {
 			case "right":
-				newTab := min(m.activeTab+1, len(m.titles)-1)
-				if newTab != m.activeTab {
-					m.activeTab = newTab
-					return m, func() tea.Msg { return TabChangedMsg{ActiveTab: m.activeTab} }
+				newTab := min(uiState.activeTab+1, len(titles)-1)
+				if newTab != uiState.activeTab {
+					uiState.activeTab = newTab
+					m.tabChanged(uiState.activeTab)
+					return
 				}
 			case "left":
-				newTab := max(m.activeTab-1, 0)
-				if newTab != m.activeTab {
-					m.activeTab = newTab
-					return m, func() tea.Msg { return TabChangedMsg{ActiveTab: m.activeTab} }
+				newTab := max(uiState.activeTab-1, 0)
+				if newTab != uiState.activeTab {
+					uiState.activeTab = newTab
+					m.tabChanged(uiState.activeTab)
+					return
 				}
 			}
 		}
 	case tea.MouseClickMsg:
+		uiState := m.getState(ctx)
+		titles := m.titles(ctx) // too expensive for hover state?
 		if msg.Button == tea.MouseLeft {
-			for i := range m.titles {
-				if m.base.Ctx.Zone.Get(m.ID + strconv.Itoa(i)).InBounds(msg) {
-					if i != m.activeTab {
-						m.activeTab = i
-						return m, func() tea.Msg { return TabChangedMsg{ActiveTab: m.activeTab} }
+			for i := range titles {
+				if ctx.Zone.Get(m.base.ID + strconv.Itoa(i)).InBounds(msg) {
+					if i != uiState.activeTab {
+						uiState.activeTab = i
+						m.tabChanged(uiState.activeTab)
+						return
 					}
 					break
 				}
@@ -101,23 +110,20 @@ func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
-
-	return m, tea.Batch(cmds...)
 }
 
-func (m model[T]) View() string {
+func (m *tabtitles[T]) Render(ctx *app.Context[T]) string {
 	doc := strings.Builder{}
 	var renderedTabs []string
+	width := ctx.UIState.GetWidth(m.base.ID)
 
-	for i, t := range m.titles {
+	for i, t := range m.titles(ctx) {
 		var style lipgloss.Style
-		isActive := i == m.activeTab
+		isActive := i == m.getState(ctx).activeTab
 		if isActive {
 			style = m.activeTabStyle
 		} else {
-			if m.base.Focused {
+			if ctx.UIState.Focused == m.base.ID {
 				style = m.inactiveTabStyleFocused
 			} else {
 				style = m.inactiveTabStyle
@@ -125,8 +131,8 @@ func (m model[T]) View() string {
 		}
 		currentRow := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 
-		renderedTab := m.base.Ctx.Zone.Mark(m.ID+strconv.Itoa(i), style.Render(t))
-		if lipgloss.Width(currentRow)+lipgloss.Width(renderedTab) > m.base.Width {
+		renderedTab := app.RegisterMouse(ctx, m.base.ID+strconv.Itoa(i), m, style.Render(t))
+		if !ctx.LayoutPhase && lipgloss.Width(currentRow)+lipgloss.Width(renderedTab) > width {
 			doc.WriteString(currentRow + "\n")
 			renderedTabs = []string{}
 		}
@@ -134,21 +140,34 @@ func (m model[T]) View() string {
 	}
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
-	if lipgloss.Width(row) < m.base.Width {
+	if lipgloss.Width(row) < width {
 		var style lipgloss.Style
-		if m.base.Focused {
+		if ctx.UIState.Focused == m.base.ID {
 			style = m.unusedTabStyleFocused
 		} else {
 			style = m.unusedTabStyle
 		}
-		row = lipgloss.JoinHorizontal(lipgloss.Center, row, style.Render(strings.Repeat(" ", m.base.Width-lipgloss.Width(row))))
+		row = lipgloss.JoinHorizontal(lipgloss.Center, row, style.Render(strings.Repeat(" ", width-lipgloss.Width(row))))
 	}
 
 	doc.WriteString(row)
 	return doc.String()
 }
 
-func (m model[T]) Base() *app.Base {
-	m.base.Model = m
+func (m *tabtitles[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return nil
+}
+func (m *tabtitles[T]) Base() *app.Base {
 	return m.base
+}
+
+func (m *tabtitles[T]) getState(ctx *app.Context[T]) *uiState {
+	state := app.GetUIState[T, uiState](ctx, m.base.ID)
+	if state == nil {
+		state = &uiState{
+			activeTab: 0,
+		}
+		app.SetUIState(ctx, m.base.ID, state)
+	}
+	return state
 }

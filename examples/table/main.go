@@ -21,9 +21,11 @@ type CustomData struct{}
 
 func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		table.New(ctx, clms, rows, nil),
-		table.New(ctx, clms, rows, nil),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			table.New(ctx, clms, rows, nil),
+			table.New(ctx, clms, rows, nil),
+		}
 	}, &stack.Options{Horizontal: true})
 
 	return stack

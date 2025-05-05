@@ -41,8 +41,11 @@ func New[T any](ctx *app.Context[T], options *Options[T], baseOptions ...app.Bas
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
+	base, cleanup := app.NewBase(ctx, "grid", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+	defer cleanup()
+
 	m := model[T]{
-		base:        app.NewBase(ctx, append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...),
+		base:        base,
 		itemConfigs: make(map[string]Item[T]),
 	}
 

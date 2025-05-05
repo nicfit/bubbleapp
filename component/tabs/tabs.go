@@ -10,103 +10,102 @@ import (
 
 type TabElement[T any] struct {
 	Title   string
-	Content func(ctx *app.Context[T]) *app.Base
+	Content func(ctx *app.Context[T]) app.Fc[T]
 }
 
-type model[T any] struct {
-	ID string
+type uiState struct {
+	activeTab int
+}
 
+type tabs[T any] struct {
 	base *app.Base
 
-	contentBoxID string
-	titlesID     string
+	tabs []TabElement[T]
 
-	tabContent []*app.Base
+	root app.Fc[T]
 }
 
-func New[T any](ctx *app.Context[T], tabs []TabElement[T], baseOptions ...app.BaseOption) *app.Base {
+func New[T any](ctx *app.Context[T], ts []TabElement[T], baseOptions ...app.BaseOption) *tabs[T] {
 	if baseOptions == nil {
 		baseOptions = []app.BaseOption{}
 	}
-	tabTitles := make([]string, len(tabs))
-	tabContent := make([]*app.Base, len(tabs))
 
-	for i, tab := range tabs {
+	base, cleanup := app.NewBase(ctx, "tabs", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+	defer cleanup()
+
+	tabTitles := make([]string, len(ts))
+
+	for i, tab := range ts {
 		tabTitles[i] = tab.Title
-		tabContent[i] = tab.Content(ctx)
 	}
 
-	idPrefix := ctx.Zone.NewPrefix()
-	tabTitlesModel := tabtitles.New(ctx, tabTitles, idPrefix+"-titles")
-
-	base := app.NewBase(ctx, append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
-
-	contentBox := box.New(ctx, &box.Options[T]{
-		Child: tabContent[0],
-	})
-	stackChild := stack.New(ctx, &stack.Options[T]{
-		Children: []*app.Base{
-			tabTitlesModel,
-			contentBox,
-		},
-	})
-
-	base.AddChild(stackChild)
-
-	return model[T]{
-		ID: idPrefix,
-
-		tabContent: tabContent,
-		titlesID:   tabTitlesModel.ID,
-
-		base:         base,
-		contentBoxID: contentBox.ID,
-	}.Base()
-}
-
-func (m model[T]) Init() tea.Cmd {
-	return m.base.Init()
-}
-
-func (m model[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var (
-		cmd  tea.Cmd
-		cmds []tea.Cmd
-	)
-
-	switch msg := msg.(type) {
-	case tabtitles.TabChangedMsg:
-		currentContentBoxID := m.contentBoxID
-		currentContentBox := m.Base().GetChild(currentContentBoxID)
-		newTabContent := m.tabContent[msg.ActiveTab]
-		newBox := box.New(m.base.Ctx, &box.Options[T]{
-			Child: newTabContent,
-		})
-		updatedModel, _ := newBox.Model.Update(
-			tea.WindowSizeMsg{
-				Width:  currentContentBox.Width,
-				Height: currentContentBox.Height,
-			},
-		)
-		typedUpdatedModel := updatedModel.(app.UIModel[T])
-		m.contentBoxID = typedUpdatedModel.Base().ID
-		m.base.Children[0].ReplaceChild(currentContentBoxID, typedUpdatedModel.Base())
-
-		cmds = append(cmds, newBox.Model.Init())
-		return m, tea.Batch(cmds...)
+	state := app.GetUIState[T, uiState](ctx, base.ID)
+	if state == nil {
+		state = &uiState{
+			activeTab: 0,
+		}
+		app.SetUIState(ctx, base.ID, state)
 	}
 
-	cmd = m.base.Update(msg)
-	cmds = append(cmds, cmd)
+	stackChild := stack.New(ctx, func(ctx *app.Context[T]) []app.Fc[T] {
+		return []app.Fc[T]{
+			tabtitles.New(ctx, tabTitles, func(activeTab int) {
+				state.activeTab = activeTab
+			}),
+			box.New(ctx, func(ctx *app.Context[T]) app.Fc[T] {
+				return ts[state.activeTab].Content(ctx)
+			}, nil),
+		}
+	}, nil)
 
-	return m, tea.Batch(cmds...)
+	return &tabs[T]{
+		base: base,
+		tabs: ts,
+		root: stackChild,
+	}
+}
+func (m *tabs[T]) Render(ctx *app.Context[T]) string {
+
+	return m.root.Render(ctx)
 }
 
-func (m model[T]) View() string {
-	return m.base.Render()
+func (m *tabs[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+	// 	var (
+	// 		cmd  tea.Cmd
+	// 		cmds []tea.Cmd
+	// 	)
+
+	// 	switch msg := msg.(type) {
+	// 	case tabtitles.TabChangedMsg:
+	// 		currentContentBoxID := m.contentBoxID
+	// 		currentContentBox := m.Base().GetChild(currentContentBoxID)
+	// 		newTabContent := m.tabContent[msg.ActiveTab]
+	// 		newBox := box.New(m.base.Ctx, &box.Options[T]{
+	// 			Child: newTabContent,
+	// 		})
+	// 		updatedModel, _ := newBox.Model.Update(
+	// 			tea.WindowSizeMsg{
+	// 				Width:  currentContentBox.Width,
+	// 				Height: currentContentBox.Height,
+	// 			},
+	// 		)
+	// 		typedUpdatedModel := updatedModel.(app.UIModel[T])
+	// 		m.contentBoxID = typedUpdatedModel.Base().ID
+	// 		m.base.Children[0].ReplaceChild(currentContentBoxID, typedUpdatedModel.Base())
+
+	// 		cmds = append(cmds, newBox.Model.Init())
+	// 		return m, tea.Batch(cmds...)
+	// 	}
+
+	// 	cmd = m.base.Update(msg)
+	// 	cmds = append(cmds, cmd)
+
+	// 	return m, tea.Batch(cmds...)
 }
 
-func (m model[T]) Base() *app.Base {
-	m.base.Model = m
+func (m *tabs[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
+	return []app.Fc[T]{m.root}
+}
+func (m *tabs[T]) Base() *app.Base {
 	return m.base
 }

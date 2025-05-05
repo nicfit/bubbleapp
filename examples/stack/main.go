@@ -14,14 +14,20 @@ type CustomData struct{}
 
 func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Danger}),
-		box.New(ctx, stack.New(ctx, []app.Fc[CustomData]{
-			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Primary}),
-			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Secondary}),
-			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Tertiary}),
-		}, &stack.Options{Horizontal: true}), nil),
-		box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Warning}),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Danger}),
+			box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+				return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+					return []app.Fc[CustomData]{
+						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Primary}),
+						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Secondary}),
+						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Tertiary}),
+					}
+				}, &stack.Options{Horizontal: true})
+			}, nil),
+			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Warning}),
+		}
 	}, nil)
 
 	return stack

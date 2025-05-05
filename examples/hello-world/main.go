@@ -15,10 +15,12 @@ type CustomData struct{}
 
 func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		text.New(ctx, "Hello World!", nil),
-		divider.New(ctx),
-		text.New(ctx, "Press [ctrl-c] to quit.", nil),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			text.New(ctx, "Hello World!", nil),
+			divider.New(ctx),
+			text.New(ctx, "Press [ctrl-c] to quit.", nil),
+		}
 	}, nil)
 
 	return stack

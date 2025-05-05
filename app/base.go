@@ -6,12 +6,8 @@ import (
 
 type Base struct {
 	ID              string
-	TypeID          string
 	LayoutDirection LayoutDirection
-	Focused         bool
 	Shader          Shader
-	Width           int
-	Height          int
 	Opts            BaseOptions
 }
 
@@ -66,7 +62,8 @@ func WithLayoutDirection(direction LayoutDirection) BaseOption {
 	}
 }
 
-func NewBase[T any](typeID string, opts ...BaseOption) *Base {
+// Creates a new base which includes the ID. Returns a cleanup function that must be deferred.
+func NewBase[T any](ctx *Context[T], name string, opts ...BaseOption) (*Base, func()) {
 	if opts == nil {
 		opts = []BaseOption{}
 	}
@@ -79,17 +76,22 @@ func NewBase[T any](typeID string, opts ...BaseOption) *Base {
 	}
 
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		opt(&options)
 	}
 
 	b := &Base{
-		TypeID:          typeID,
+		ID:              ctx.PushID(name),
 		Opts:            options,
 		Shader:          options.Shader,
 		LayoutDirection: options.LayoutDirection,
 	}
 
-	return b
+	return b, func() {
+		ctx.PopID()
+	}
 }
 
 func (base *Base) ApplyShader(input string) string {

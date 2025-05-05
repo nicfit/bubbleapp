@@ -27,18 +27,21 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 		ctx.Data.presses++
 	}, &button.Options{Variant: button.Primary, Type: button.Compact})
 
-	logMessages := box.New(ctx,
-		text.NewDynamic(ctx, func(ctx *app.Context[CustomData]) (log string) {
+	logMessages := box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+		return text.NewDynamic(ctx, func(ctx *app.Context[CustomData]) (log string) {
 			return strings.Join(ctx.Data.log, "\n")
-		}, nil), nil)
+		}, nil)
+	}, nil)
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		text.New(ctx, "Tab through the buttons to see focus state!", nil),
-		addButton,
-		divider.New(ctx),
-		logMessages,
-		divider.New(ctx),
-		button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			text.New(ctx, "Tab through the buttons to see focus state!", nil),
+			addButton,
+			divider.New(ctx),
+			logMessages,
+			divider.New(ctx),
+			button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
+		}
 	}, nil)
 
 	return stack

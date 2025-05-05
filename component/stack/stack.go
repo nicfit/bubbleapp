@@ -17,16 +17,10 @@ type stack[T any] struct {
 	base     *app.Base
 	opts     Options
 	style    lipgloss.Style
-	children func(ctx *app.Context[T]) []app.Fc[T]
+	children []app.Fc[T]
 }
 
-func New[T any](ctx *app.Context[T], children []app.Fc[T], options *Options, baseOptions ...app.BaseOption) *stack[T] {
-	return NewDynamic(ctx, func(ctx *app.Context[T]) []app.Fc[T] {
-		return children
-	}, options, baseOptions...)
-}
-
-func NewDynamic[T any](ctx *app.Context[T], children func(ctx *app.Context[T]) []app.Fc[T], options *Options, baseOptions ...app.BaseOption) *stack[T] {
+func New[T any](ctx *app.Context[T], children func(ctx *app.Context[T]) []app.Fc[T], options *Options, baseOptions ...app.BaseOption) *stack[T] {
 	if options == nil {
 		options = &Options{}
 	}
@@ -37,20 +31,23 @@ func NewDynamic[T any](ctx *app.Context[T], children func(ctx *app.Context[T]) [
 	if options.Horizontal {
 		dir = app.Horizontal
 	}
-	base := app.NewBase[T]("stack", append([]app.BaseOption{app.WithGrow(true), app.WithLayoutDirection(dir)}, baseOptions...)...)
+
+	base, cleanup := app.NewBase(ctx, "stack", append([]app.BaseOption{app.WithGrow(true), app.WithLayoutDirection(dir)}, baseOptions...)...)
+	defer cleanup()
+
+	cs := children(ctx)
 
 	return &stack[T]{
 		base:     base,
 		opts:     *options,
 		style:    lipgloss.NewStyle(),
-		children: children,
+		children: cs,
 	}
 }
 
 func (m *stack[T]) Render(ctx *app.Context[T]) string {
-	children := m.children(ctx)
-	childrenViews := make([]string, 0, len(children))
-	for _, child := range children {
+	childrenViews := make([]string, 0, len(m.children))
+	for _, child := range m.children {
 		childRender := child.Render(ctx)
 		if m.opts.Horizontal {
 
@@ -71,8 +68,7 @@ func (m *stack[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 }
 
 func (m *stack[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	children := m.children(ctx)
-	return children
+	return m.children
 }
 
 func (m *stack[T]) Base() *app.Base {

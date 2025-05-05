@@ -14,11 +14,11 @@ func (a *App[T]) Layout() {
 	}()
 
 	// TODO: Can the Zone manager be reset here? If not why? Otherwise things will live in the zone forever.
-	a.ctx.root.Base().Width = a.ctx.Width
-	a.ctx.root.Base().Height = a.ctx.Height
+	a.ctx.UIState.setWidth(a.ctx.root.Base().ID, a.ctx.Width)
+	a.ctx.UIState.setHeight(a.ctx.root.Base().ID, a.ctx.Height)
 
-	// --- Pass 0: Generate IDs (Top-Down) ---
-	Visit(a.ctx.root, 0, nil, a.ctx, generateIdsVisitor, PreOrder)
+	// --- Pass 0: Collect IDs (Top-Down) ---
+	Visit(a.ctx.root, 0, nil, a.ctx, collectIdsVisitor, PreOrder)
 
 	// --- Pass 0.5: Clean up state ---
 	a.ctx.UIState.cleanup(a.ctx.ids)
@@ -72,7 +72,8 @@ func calculateIntrinsicWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Cont
 	}
 	if !node.Base().Opts.GrowX {
 		renderResult := node.Render(ctx)
-		node.Base().Width = lipgloss.Width(renderResult)
+		width := lipgloss.Width(renderResult)
+		ctx.UIState.setWidth(node.Base().ID, width)
 	}
 }
 
@@ -82,7 +83,8 @@ func calculateIntrinsicHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Con
 	}
 	if !node.Base().Opts.GrowY {
 		renderResult := node.Render(ctx)
-		node.Base().Height = lipgloss.Height(renderResult)
+		height := lipgloss.Height(renderResult)
+		ctx.UIState.setHeight(node.Base().ID, height)
 	}
 }
 
@@ -95,13 +97,13 @@ func distributeAvailableWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Con
 		return
 	}
 
-	availableWidth := node.Base().Width
+	availableWidth := ctx.UIState.GetWidth(node.Base().ID)
 	direction := node.Base().LayoutDirection
 
 	if direction == Vertical {
 		for _, child := range children {
 			if child.Base().Opts.GrowX {
-				child.Base().Width = availableWidth
+				ctx.UIState.setWidth(child.Base().ID, availableWidth)
 			}
 		}
 	} else {
@@ -114,7 +116,7 @@ func distributeAvailableWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Con
 				growingChildrenCount++
 				growingChildren = append(growingChildren, child)
 			} else {
-				nonGrowingChildrenWidth += child.Base().Width
+				nonGrowingChildrenWidth += ctx.UIState.GetWidth(child.Base().ID)
 			}
 		}
 
@@ -132,7 +134,7 @@ func distributeAvailableWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Con
 				if i < remainder {
 					childWidth++
 				}
-				child.Base().Width = childWidth
+				ctx.UIState.setWidth(child.Base().ID, childWidth)
 			}
 		}
 	}
@@ -147,13 +149,13 @@ func distributeAvailableHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Co
 		return
 	}
 
-	availableHeight := node.Base().Height
+	availableHeight := ctx.UIState.GetHeight(node.Base().ID)
 	direction := node.Base().LayoutDirection
 
 	if direction == Horizontal {
 		for _, child := range children {
 			if child.Base().Opts.GrowY {
-				child.Base().Height = availableHeight
+				ctx.UIState.setHeight(child.Base().ID, availableHeight)
 			}
 		}
 	} else {
@@ -166,7 +168,7 @@ func distributeAvailableHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Co
 				growingChildrenCount++
 				growingChildren = append(growingChildren, child)
 			} else {
-				nonGrowingChildrenHeight += child.Base().Height
+				nonGrowingChildrenHeight += ctx.UIState.GetHeight(child.Base().ID)
 			}
 		}
 
@@ -184,7 +186,7 @@ func distributeAvailableHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *Co
 				if i < remainder {
 					childHeight++
 				}
-				child.Base().Height = childHeight
+				ctx.UIState.setHeight(child.Base().ID, childHeight)
 			}
 		}
 	}

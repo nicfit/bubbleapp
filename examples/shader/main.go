@@ -22,14 +22,16 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 		Foreground(ctx.Styles.Colors.Success).
 		BorderForeground(ctx.Styles.Colors.Success))
 
-	stack := stack.New(ctx, []app.Fc[CustomData]{
-		text.New(ctx, "Shader examples:", nil),
-		text.New(ctx, "Small Caps Shader", &text.Options{
-			Foreground: ctx.Styles.Colors.Primary,
-		}, app.WithShader(shader.NewSmallCapsShader())),
-		button.New(ctx, " Blink ", app.Quit, &button.Options{
-			Variant: button.Danger,
-		}, app.WithShader(blinkShader)),
+	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+		return []app.Fc[CustomData]{
+			text.New(ctx, "Shader examples:", nil),
+			text.New(ctx, "Small Caps Shader", &text.Options{
+				Foreground: ctx.Styles.Colors.Primary,
+			}, app.WithShader(shader.NewSmallCapsShader())),
+			button.New(ctx, " Blink ", app.Quit, &button.Options{
+				Variant: button.Danger,
+			}, app.WithShader(blinkShader)),
+		}
 	}, nil)
 
 	return stack

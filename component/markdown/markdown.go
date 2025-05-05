@@ -30,8 +30,11 @@ func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) str
 		glamour.WithWordWrap(ctx.Width-1),
 	)
 
+	base, cleanup := app.NewBase(ctx, "markdown", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+	defer cleanup()
+
 	return &markdown[T]{
-		base:            app.NewBase[T]("markdown", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...),
+		base:            base,
 		render:          render,
 		glamourRenderer: r,
 	}
