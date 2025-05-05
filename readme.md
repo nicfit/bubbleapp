@@ -90,25 +90,15 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 Stack layout vertically or horizontally. Compose as you like.
 
 ```go
-stack := stack.New(ctx, &stack.Options[CustomData]{
-    Children: []*app.Base[CustomData]{
-        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Danger}),
-        box.New(ctx, &box.Options[CustomData]{
-            Child: stack.New(ctx, &stack.Options[CustomData]{
-                Horizontal: true,
-                Children: []*app.Base[CustomData]{
-                    box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Primary}),
-                    box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Secondary}),
-                    box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Tertiary}),
-                }},
-            ),
-        }),
-        box.New(ctx, &box.Options[CustomData]{Bg: ctx.Styles.Colors.Warning}),
-    }},
-)
-
-base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+stack := stack.New(ctx, []app.Fc[CustomData]{
+    box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Danger}),
+    box.New(ctx, stack.New(ctx, []app.Fc[CustomData]{
+        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Primary}),
+        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Secondary}),
+        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Tertiary}),
+    }, &stack.Options{Horizontal: true}), nil),
+    box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Warning}),
+}, nil)
 ```
 
 ![Stack](./examples/stack/demo.gif)

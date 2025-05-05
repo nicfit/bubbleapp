@@ -22,6 +22,10 @@ type box[T any] struct {
 	child        func(ctx *app.Context[T]) app.Fc[T]
 }
 
+func NewEmpty[T any](ctx *app.Context[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
+	return NewDynamic(ctx, func(ctx *app.Context[T]) app.Fc[T] { return nil }, options, baseOptions...)
+}
+
 func New[T any](ctx *app.Context[T], child app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
 	return NewDynamic(ctx, func(ctx *app.Context[T]) app.Fc[T] { return child }, options, baseOptions...)
 }
@@ -53,24 +57,31 @@ func NewDynamic[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.
 }
 
 func (m box[T]) Render(ctx *app.Context[T]) string {
-	child := m.child(ctx).Render(ctx)
 
 	m.viewport.SetWidth(m.base.Width)
 	m.viewport.SetHeight(m.base.Height)
 
-	if m.contentCache != child {
-		m.viewport.SetContent(child)
-		if !m.opts.DisableFollow {
-			m.viewport.GotoBottom()
+	childFc := m.child(ctx)
+	if childFc != nil {
+		child := childFc.Render(ctx)
+		if m.contentCache != child {
+			m.viewport.SetContent(child)
+			if !m.opts.DisableFollow {
+				m.viewport.GotoBottom()
+			}
 		}
+		m.contentCache = child
 	}
-	m.contentCache = child
 
 	return m.style.Height(m.base.Height).Width(m.base.Width).Render(m.viewport.View())
 }
 
 func (m *box[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	return []app.Fc[T]{m.child(ctx)}
+	child := m.child(ctx)
+	if child != nil {
+		return []app.Fc[T]{child}
+	}
+	return []app.Fc[T]{}
 
 }
 
