@@ -13,3 +13,13 @@ func tickCommand(duration time.Duration) tea.Cmd {
 		return TickMsg(t)
 	})
 }
+
+func tickVisitor[T any](node Fc[T], _ Fc[T], _ *Context[T]) {
+	if node == nil {
+		return
+	}
+	if node.Base() == nil {
+		return
+	}
+	node.Base().Tick()
+}

@@ -164,22 +164,19 @@ Flexible system to add shaders to components. Dynamic shaders are getting the gl
 Could be used for easy animations or transitions in the future.
 
 ```go
-stack := stack.New(ctx, &stack.Options[struct{}]{
-    Children: []*app.Base[struct{}]{
-        text.New(ctx, "Shader examples:", nil),
-        text.New(ctx, "Small Caps Shader", &text.Options{Shader: shader.NewSmallCapsShader()}),
-        button.New(ctx, "blink", &button.Options{
-            Variant: button.Danger,
-            Shader: shader.NewCombinatorShader(
-                shader.NewSmallCapsShader(),
-                shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Success).BorderForeground(ctx.Styles.Colors.Primary)),
-            ),
-        }),
-    }},
-)
+blinkShader := shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().
+    Foreground(ctx.Styles.Colors.Success).
+    BorderForeground(ctx.Styles.Colors.Success))
 
-base := app.New(ctx, app.AsRoot())
-base.AddChild(stack)
+stack := stack.New(ctx, []app.Fc[CustomData]{
+    text.New(ctx, "Shader examples:", nil),
+    text.New(ctx, "Small Caps Shader", &text.Options{
+        Foreground: ctx.Styles.Colors.Primary,
+    }, app.WithShader(shader.NewSmallCapsShader())),
+    button.New(ctx, " Blink ", app.Quit, &button.Options{
+        Variant: button.Danger,
+    }, app.WithShader(blinkShader)),
+}, nil)
 ```
 
 ![Shaders](./examples/shader/demo.gif)

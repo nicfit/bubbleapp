@@ -1,16 +1,14 @@
 package app
 
 import (
-	"github.com/alexanderbh/bubbleapp/shader"
 	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/google/uuid"
 )
 
 type Base[T any] struct {
 	ID              string
-	Parent          Fc[T]
 	LayoutDirection LayoutDirection
-	Shader          shader.Shader
+	Shader          Shader
 	Width           int
 	Height          int
 	Opts            BaseOptions
@@ -28,7 +26,7 @@ type BaseOptions struct {
 	GrowY           bool
 	Focusable       bool
 	LayoutDirection LayoutDirection
-	Shader          shader.Shader
+	Shader          Shader
 }
 
 type BaseOption func(*BaseOptions)
@@ -50,7 +48,7 @@ func WithGrow(grow bool) BaseOption {
 		o.GrowY = grow
 	}
 }
-func WithShader(shader shader.Shader) BaseOption {
+func WithShader(shader Shader) BaseOption {
 	return func(o *BaseOptions) {
 		o.Shader = shader
 	}
@@ -104,4 +102,9 @@ func (base *Base[T]) ApplyShaderWithStyle(input string, style lipgloss.Style) st
 		return base.Shader.Render(input, &style)
 	}
 	return style.Render(input)
+}
+func (base *Base[T]) Tick() {
+	if ds, ok := base.Shader.(DynamicShader[T]); ok && ds != nil {
+		ds.Tick()
+	}
 }

@@ -8,6 +8,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+const (
+	// Global FPS for Ticks. Hardcoded for now. Could be dynamic perhaps.
+	FPS = time.Second / 12
+)
+
 type Fc[T any] interface {
 	Render(ctx *Context[T]) string
 	Update(ctx *Context[T], msg tea.Msg)
@@ -109,6 +114,8 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			foundZone.Update(a.ctx, msg.Event)
 		}
 	case TickMsg:
+		// Propagate tick to all components (used for Dynamic Shaders for now)
+		Visit(a.root, nil, a.ctx, tickVisitor, PreOrder)
 		if a.tickFPS > 0 {
 			cmds = append(cmds, tickCommand(a.tickFPS))
 		}

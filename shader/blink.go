@@ -3,6 +3,7 @@ package shader
 import (
 	"time"
 
+	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -31,8 +32,8 @@ func (b *BlinkShader) Tick() {
 		b.frame = 0
 	}
 }
-func NewBlinkShader(fps time.Duration, blinkStyle lipgloss.Style) Shader {
-	ticks := max(int(float64(fps)/float64(FPS)), 1)
+func NewBlinkShader(fps time.Duration, blinkStyle lipgloss.Style) app.Shader {
+	ticks := max(int(float64(fps)/float64(app.FPS)), 1)
 
 	return &BlinkShader{
 		ticksPerState: ticks,
