@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"sort"
 	"strconv"
@@ -34,11 +36,16 @@ func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
 			rows := generateRowsOfProcesses(ctx.Data)
 			return clms, rows
 		}, nil),
-		button.New(ctx, "Quit", app.Quit, nil),
+		button.New(ctx, "Quit", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
 	}, nil)
 }
 
 func main() {
+	// pprof - used for debugging performance - just ignore
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+
 	ctx := app.NewContext(&AppState{})
 
 	go monitorProcesses(ctx.Data)

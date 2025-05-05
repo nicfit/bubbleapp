@@ -254,7 +254,9 @@ go run .
 
 Here are some planned features in no particular order. Feel free to suggest something.
 
+- **Alignments** - Add justify and align options on relevant components
 - **Border and title on Box** - Add borders and titles to Box component
+- **Speed up Viewport** - Move away from ViewPort to custom stateful variant of a scrolling box
 - **Proper theming** - Default themes (or BYOT, bring your own theme)
 - **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
 - **Modal Component**
@@ -268,5 +270,5 @@ Here are some planned features in no particular order. Feel free to suggest some
 
 ### Shout outs
 
-- Thank you to [Charm](https://github.com/charmbracelet) for the amazing BubbleTea framework.
-- Thank you to [BubbleZone](https://github.com/lrstanley/bubblezone) for making mouse support easy.
+- Thank you [Charm](https://github.com/charmbracelet) for the amazing BubbleTea framework.
+- Thank you [BubbleZone](https://github.com/lrstanley/bubblezone) for making mouse support easy.

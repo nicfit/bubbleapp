@@ -52,7 +52,7 @@ func NewApp[T any](ctx *Context[T], render func(ctx *Context[T]) Fc[T], options 
 	}
 
 	opts := &AppOptions{
-		TickFPS: time.Second / 12,
+		TickFPS: FPS,
 	}
 	for _, opt := range options {
 		opt(opts)
