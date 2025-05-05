@@ -8,13 +8,11 @@ require (
 	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta.2
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta1
-	github.com/google/uuid v1.6.0
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/shirou/gopsutil/v4 v4.25.4
 )
 
 require (
-	gabe565.com/spinners v1.3.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect

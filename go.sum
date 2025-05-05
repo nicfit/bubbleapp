@@ -1,15 +1,9 @@
-gabe565.com/spinners v1.3.0 h1:JB8z8HvZ0p8E6UdTG4VYeU/12hmc9JBGME7057viuKI=
-gabe565.com/spinners v1.3.0/go.mod h1:PE/pE+TNQbtgr5/t3DmvvaY4ld8x8hpFK2aYLb3e5M4=
 github.com/alecthomas/assert/v2 v2.7.0 h1:QtqSACNS3tF7oasA8CU6A6sXZSBDqnm7RfpLl9bZqbE=
 github.com/alecthomas/assert/v2 v2.7.0/go.mod h1:Bze95FyfUr7x34QZrjL+XP+0qgp/zg8yS+TtBj1WA3k=
 github.com/alecthomas/chroma/v2 v2.14.0 h1:R3+wzpnUArGcQz7fCETQBzO5n9IMNi13iIs46aU4V9E=
 github.com/alecthomas/chroma/v2 v2.14.0/go.mod h1:QolEbTfmUHIMVpBqxeDnNBj2uoeI4EbYP4i6n68SG4I=
 github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc=
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
-github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504131637-0fad65c416f5 h1:dZ7l7kGcSfcuNPVJcQqWASf844RtdO1xxM0sbgfO8ik=
-github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504131637-0fad65c416f5/go.mod h1:7PQETTnQ1DGdEaYx3brineTFFIYVwsx07HgHoEmBNrQ=
-github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504133731-4d7ba8e2c8d6 h1:/T+KUAvmpiCaB9n5qqbWGZl1G8VZItOV3IVx5gK8sXM=
-github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504133731-4d7ba8e2c8d6/go.mod h1:7PQETTnQ1DGdEaYx3brineTFFIYVwsx07HgHoEmBNrQ=
 github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504134016-61b96be737e7 h1:ii45wIHlD6XgkeJRx72yB5gZpCtYPsTPV42K/9ZLNQw=
 github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504134016-61b96be737e7/go.mod h1:7PQETTnQ1DGdEaYx3brineTFFIYVwsx07HgHoEmBNrQ=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
@@ -55,8 +49,6 @@ github.com/go-ole/go-ole v1.2.6/go.mod h1:pprOEPIfldk/42T2oK7lQ4v4JSDwmV0As9GaiU
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
-github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/css v1.0.1 h1:ntNaBIghp6JmvWnxbZKANoLyuXTPZ4cAMlo6RyhlbO8=
 github.com/gorilla/css v1.0.1/go.mod h1:BvnYkspnSzMmwRK+b8/xgNPLiIuNZr6vbZBTPQ2A3b0=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
