@@ -1,6 +1,7 @@
 package app
 
 import (
+	"sync" // Added for mutex
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
@@ -11,9 +12,13 @@ type TickMsg struct {
 }
 
 type tickState[T any] struct {
-	tickListeners *[]tickListener
-	timers        *map[time.Duration]*time.Timer
-	lastTickTimes map[string]time.Time
+	tickListeners       *[]tickListener
+	timers              *map[time.Duration]*time.Timer
+	lastTickTimes       map[string]time.Time
+	activeTimer         *time.Timer
+	activeTimerDone     chan struct{}
+	activeTimerInterval time.Duration
+	mu                  sync.Mutex // Added mutex for thread-safe operations
 }
 
 type tickListener struct {
@@ -22,8 +27,11 @@ type tickListener struct {
 }
 
 func (tick *tickState[T]) init() {
+	// This is usually called during setup, mutex might not be strictly needed here
+	// if called before concurrent operations begin.
 	tick.tickListeners = &[]tickListener{}
 	tick.lastTickTimes = make(map[string]time.Time)
+	// activeTimer, activeTimerDone, and activeTimerInterval will be managed by createTimer
 }
 
 // Tell BubbleApp that the component with this ID wants to receive tick events at the given interval.
@@ -71,58 +79,126 @@ func gcdSlice(durations []time.Duration) time.Duration {
 }
 
 func (tick *tickState[T]) createTimer(ctx *Context[T]) {
-	if len(*tick.tickListeners) == 0 {
+	tick.mu.Lock()
+	defer tick.mu.Unlock()
+
+	if tick.tickListeners == nil || len(*tick.tickListeners) == 0 {
+		if tick.activeTimer != nil {
+			tick.activeTimer.Stop()
+			tick.activeTimer = nil
+		}
+		if tick.activeTimerDone != nil {
+			select {
+			case <-tick.activeTimerDone:
+			default:
+				close(tick.activeTimerDone)
+			}
+			tick.activeTimerDone = nil
+		}
+		tick.activeTimerInterval = 0
+		if tick.timers != nil {
+			*tick.timers = make(map[time.Duration]*time.Timer)
+		}
 		return
 	}
 
-	// Collect all intervals
 	intervals := make([]time.Duration, 0, len(*tick.tickListeners))
 	for _, listener := range *tick.tickListeners {
-		// Convert interval to integer milliseconds (loss of precision is fine)
 		ms := listener.interval.Milliseconds()
 		intervals = append(intervals, time.Duration(ms)*time.Millisecond)
 	}
 
-	gcdInterval := gcdSlice(intervals)
+	gcdInterval := max(1*time.Millisecond, gcdSlice(intervals)) // 1ms low limit. Maybe too low.
+
 	if gcdInterval == 0 {
+		if tick.activeTimer != nil {
+			tick.activeTimer.Stop()
+			tick.activeTimer = nil
+		}
+		if tick.activeTimerDone != nil {
+			select {
+			case <-tick.activeTimerDone:
+			default:
+				close(tick.activeTimerDone)
+			}
+			tick.activeTimerDone = nil
+		}
+		tick.activeTimerInterval = 0
+		if tick.timers != nil {
+			*tick.timers = make(map[time.Duration]*time.Timer)
+		}
 		return
 	}
 
+	if tick.activeTimer != nil && tick.activeTimerInterval == gcdInterval && tick.activeTimerDone != nil {
+		return
+	}
+
+	if tick.activeTimer != nil {
+		tick.activeTimer.Stop()
+	}
+	if tick.activeTimerDone != nil {
+		select {
+		case <-tick.activeTimerDone:
+		default:
+			close(tick.activeTimerDone) // Signal old goroutine to stop
+		}
+	}
+
+	tick.activeTimerDone = make(chan struct{})
+	newTimer := time.NewTimer(gcdInterval)
+	tick.activeTimer = newTimer
+	tick.activeTimerInterval = gcdInterval
+
+	newTimersMap := make(map[time.Duration]*time.Timer)
+	newTimersMap[gcdInterval] = newTimer
 	if tick.timers == nil {
-		tick.timers = &map[time.Duration]*time.Timer{}
+		tick.timers = &newTimersMap
+	} else {
+		*tick.timers = newTimersMap
 	}
 
-	// Stop and remove all existing timers except the gcdInterval
-	for interval, timer := range *tick.timers {
-		if interval != gcdInterval {
-			if timer != nil {
-				timer.Stop()
-				go func(t *time.Timer) {
-					for len(t.C) > 0 {
-						<-t.C
-					}
-				}(timer)
-			}
-			delete(*tick.timers, interval)
-		}
-	}
-
-	if timer, ok := (*tick.timers)[gcdInterval]; ok && timer != nil {
-		return // Timer already running
-	}
-
-	t := time.NewTimer(gcdInterval)
-	(*tick.timers)[gcdInterval] = t
-
-	go func(gcdInterval time.Duration, t *time.Timer, ctx *Context[T], listeners []tickListener) {
-		var elapsed time.Duration
+	go func(timer *time.Timer, done <-chan struct{}, program *tea.Program, interval time.Duration) {
+		defer timer.Stop()
 		for {
-			<-t.C
-			elapsed += gcdInterval
-			ctx.teaProgram.Send(TickMsg{OccurredAt: time.Now()})
-			t.Reset(gcdInterval)
+			select {
+			case <-timer.C:
+				if program != nil {
+					program.Send(TickMsg{OccurredAt: time.Now()})
+				}
+				select {
+				case <-done:
+					return
+				default:
+					if timer != nil {
+						timer.Reset(interval)
+					}
+				}
+			case <-done:
+				return
+			}
 		}
-	}(gcdInterval, t, ctx, *tick.tickListeners)
+	}(newTimer, tick.activeTimerDone, ctx.teaProgram, gcdInterval)
+}
+
+func (tick *tickState[T]) StopActiveTimer() {
+	tick.mu.Lock()
+	defer tick.mu.Unlock()
+
+	if tick.activeTimerDone != nil {
+		select {
+		case <-tick.activeTimerDone:
+			// Channel already closed
+		default:
+			close(tick.activeTimerDone)
+		}
+		tick.activeTimerDone = nil
+	}
+
+	if tick.activeTimer != nil {
+		tick.activeTimer.Stop()
+		tick.activeTimer = nil
+	}
 }
 
 func tickCommand(duration time.Duration) tea.Cmd {

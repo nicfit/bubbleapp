@@ -51,7 +51,7 @@ func main() {
 	ctx := app.NewContext(&CustomData{})
 
 	app := app.NewApp(ctx, NewRoot)
-	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)

@@ -28,7 +28,9 @@ func main() {
 		HowCoolIsThis: "Very cool!",
 	})
 
-	p := tea.NewProgram(app.NewApp(ctx, NewRoot), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app := app.NewApp(ctx, NewRoot)
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

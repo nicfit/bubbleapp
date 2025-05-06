@@ -51,7 +51,7 @@ func (ctx *Context[T]) Update() {
 	if ctx.teaProgram == nil {
 		panic("teaProgram is nil. Cannot update manually.")
 	}
-	ctx.teaProgram.Send(InvalidateMsg{})
+	go ctx.teaProgram.Send(InvalidateMsg{})
 }
 
 func (ctx *Context[T]) AddCmd(cmd tea.Cmd) {
@@ -63,6 +63,10 @@ func (ctx *Context[T]) AddCmd(cmd tea.Cmd) {
 	*ctx.cmds = append(*ctx.cmds, cmd)
 }
 
+// Quit signals the application to stop, ensuring cleanup like stopping active timers.
 func (ctx *Context[T]) Quit() {
-	ctx.AddCmd(tea.Quit)
+	if ctx.Tick != nil {
+		ctx.Tick.StopActiveTimer()
+	}
+	go ctx.teaProgram.Quit()
 }

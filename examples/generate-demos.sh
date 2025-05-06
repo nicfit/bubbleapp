@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for dir in examples/*/; do
+for dir in */; do
   if [ -d "$dir" ]; then
     if [ -f "${dir}demo.tape" ]; then
       # Check if demo.tape contains "sudo"

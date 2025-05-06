@@ -95,7 +95,8 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// These are global keys. Is this what we want?
 		switch msg.String() {
 		case "ctrl+c":
-			return a, tea.Quit
+			a.ctx.Quit()
+			return a, nil // Use the new Quit method
 		case "tab":
 			a.ctx.FocusNextCmd(a.ctx.root)
 			return a, nil

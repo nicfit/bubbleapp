@@ -212,13 +212,13 @@ func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	case tea.MouseClickMsg:
 		if msg.Button == tea.MouseLeft {
 			m.onClick(ctx)
-			ctx.Update() // Force re-render in case no ticks
+			ctx.Update()
 		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.KeyMap.Submit):
 			m.onClick(ctx)
-			ctx.Update() // Force re-render in case no ticks
+			ctx.Update()
 		}
 	}
 }
