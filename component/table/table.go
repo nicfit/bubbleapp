@@ -213,7 +213,7 @@ func (m *baseTable[T]) clearHover() {
 }
 
 // update is the Bubble Tea update loop.
-func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	//cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
@@ -250,20 +250,28 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 			switch {
 			case key.Matches(msg, m.KeyMap.LineUp):
 				m.MoveUp(1)
+				return true
 			case key.Matches(msg, m.KeyMap.LineDown):
 				m.MoveDown(1)
+				return true
 			case key.Matches(msg, m.KeyMap.PageUp):
 				m.MoveUp(m.viewport.Height())
+				return true
 			case key.Matches(msg, m.KeyMap.PageDown):
 				m.MoveDown(m.viewport.Height())
+				return true
 			case key.Matches(msg, m.KeyMap.HalfPageUp):
-				m.MoveUp(m.viewport.Height() / 2) //nolint:mnd
+				m.MoveUp(m.viewport.Height() / 2)
+				return true
 			case key.Matches(msg, m.KeyMap.HalfPageDown):
-				m.MoveDown(m.viewport.Height() / 2) //nolint:mnd
+				m.MoveDown(m.viewport.Height() / 2)
+				return true
 			case key.Matches(msg, m.KeyMap.GotoTop):
 				m.GotoTop()
+				return true
 			case key.Matches(msg, m.KeyMap.GotoBottom):
 				m.GotoBottom()
+				return true
 			}
 		}
 	}
@@ -278,6 +286,8 @@ func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	// 		}
 	// 	})
 	// }
+
+	return false
 
 }
 
@@ -374,11 +384,11 @@ func (m *baseTable[T]) MoveUp(n int) {
 	m.setCursor(m.getState().cursor - n)
 	switch {
 	case m.getState().start == 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset, 0, m.getState().cursor))
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset(), 0, m.getState().cursor))
 	case m.getState().start < m.viewport.Height():
-		m.viewport.YOffset = (clamp(clamp(m.viewport.YOffset+n, 0, m.getState().cursor), 0, m.viewport.Height()))
-	case m.viewport.YOffset >= 1:
-		m.viewport.YOffset = clamp(m.viewport.YOffset+n, 1, m.viewport.Height())
+		m.viewport.SetYOffset(clamp(clamp(m.viewport.YOffset()+n, 0, m.getState().cursor), 0, m.viewport.Height()))
+	case m.viewport.YOffset() >= 1:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset()+n, 1, m.viewport.Height()))
 	}
 	m.updateViewport()
 }
@@ -390,13 +400,13 @@ func (m *baseTable[T]) MoveDown(n int) {
 	m.updateViewport()
 
 	switch {
-	case m.getState().end == len(m.getState().rows) && m.viewport.YOffset > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.viewport.Height()))
-	case m.getState().cursor > (m.getState().end-m.getState().start)/2 && m.viewport.YOffset > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.getState().cursor))
-	case m.viewport.YOffset > 1:
-	case m.getState().cursor > m.viewport.YOffset+m.viewport.Height()-1:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset+1, 0, 1))
+	case m.getState().end == len(m.getState().rows) && m.viewport.YOffset() > 0:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset()-n, 1, m.viewport.Height()))
+	case m.getState().cursor > (m.getState().end-m.getState().start)/2 && m.viewport.YOffset() > 0:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset()-n, 1, m.getState().cursor))
+	case m.viewport.YOffset() > 1:
+	case m.getState().cursor > m.viewport.YOffset()+m.viewport.Height()-1:
+		m.viewport.SetYOffset(clamp(m.viewport.YOffset()+1, 0, 1))
 	}
 }
 

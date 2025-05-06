@@ -69,7 +69,7 @@ func (m *tabs[T]) Render(ctx *app.Context[T]) string {
 	return m.root.Render(ctx)
 }
 
-func (m *tabs[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *tabs[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	// 	var (
 	// 		cmd  tea.Cmd
 	// 		cmds []tea.Cmd
@@ -101,6 +101,7 @@ func (m *tabs[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 	// 	cmds = append(cmds, cmd)
 
 	// 	return m, tea.Batch(cmds...)
+	return false
 }
 
 func (m *tabs[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

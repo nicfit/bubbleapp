@@ -10,7 +10,7 @@ import (
 
 type Fc[T any] interface {
 	Render(ctx *Context[T]) string
-	Update(ctx *Context[T], msg tea.Msg)
+	Update(ctx *Context[T], msg tea.Msg) bool
 	Base() *Base
 	Children(ctx *Context[T]) []Fc[T]
 }
@@ -45,9 +45,6 @@ func NewApp[T any](ctx *Context[T], scaffold func(ctx *Context[T]) Fc[T], option
 	}
 	if ctx.Styles == nil {
 		ctx.Styles = style.DefaultStyles()
-	}
-	if ctx.cmds == nil {
-		ctx.cmds = &[]tea.Cmd{}
 	}
 
 	opts := &AppOptions{
@@ -85,42 +82,39 @@ func (a *App[T]) Init() tea.Cmd {
 
 func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
-	if len(*a.ctx.cmds) > 0 {
-		cmds = *a.ctx.cmds
-		a.ctx.cmds = &[]tea.Cmd{}
-	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// These are global keys. Is this what we want?
-		switch msg.String() {
-		case "ctrl+c":
-			a.ctx.Quit()
-			return a, nil // Use the new Quit method
-		case "tab":
-			a.ctx.FocusNextCmd(a.ctx.root)
-			return a, nil
-		case "shift+tab":
-			a.ctx.FocusPrevCmd(a.ctx.root)
-			return a, nil
-		}
-		// Propagate key msg to the focused component
-		if a.ctx.UIState.Focused != "" {
-			focused := a.ctx.id.getNode(a.ctx.UIState.Focused)
-			if focused != nil {
-				focused.Update(a.ctx, msg)
+		handledKeyMsg := a.propagatedFocused(msg)
+		if !handledKeyMsg {
+			// These are global keys. Is this what we want?
+			switch msg.String() {
+			case "ctrl+c":
+				a.ctx.Quit()
+				return a, nil // Use the new Quit method
+			case "tab":
+				a.ctx.FocusNextCmd(a.ctx.root)
+				return a, nil
+			case "shift+tab":
+				a.ctx.FocusPrevCmd(a.ctx.root)
+				return a, nil
 			}
 		}
+		return a, tea.Batch(cmds...)
+
 	case tea.WindowSizeMsg:
 		a.ctx.Width = msg.Width
 		a.ctx.Height = msg.Height
+		return a, tea.Batch(cmds...)
 	case tea.MouseMsg:
 		a.ctx.Zone.AnyInBounds(a, msg)
+		return a, tea.Batch(cmds...)
 	case zone.MsgZoneInBounds:
 		foundZone := a.ctx.ZoneMap[a.ctx.Zone.GetReverse(msg.Zone.Id)]
 		if foundZone != nil {
 			foundZone.Update(a.ctx, msg.Event)
 		}
+		return a, tea.Batch(cmds...)
 	case TickMsg:
 		now := msg.OccurredAt
 		for _, listener := range *a.ctx.Tick.tickListeners {
@@ -136,9 +130,23 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if a.tickFPS > 0 {
 			cmds = append(cmds, tickCommand(a.tickFPS))
 		}
+		return a, tea.Batch(cmds...)
 	}
 
+	a.propagatedFocused(msg)
+
 	return a, tea.Batch(cmds...)
+}
+
+func (a *App[T]) propagatedFocused(msg tea.Msg) bool {
+	if a.ctx.UIState.Focused != "" {
+		focused := a.ctx.id.getNode(a.ctx.UIState.Focused)
+		if focused != nil {
+			handled := focused.Update(a.ctx, msg)
+			return handled
+		}
+	}
+	return false
 }
 
 func (a *App[T]) View() string {

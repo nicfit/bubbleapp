@@ -10,7 +10,7 @@ An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be
 - **[Layout Components](#layout-components)**
   - [Stack](#stack), Scroll Box makes it easy to create flexible layouts
 - **[Widget Components](#widget-components)**
-  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), and more to come...
+  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), [Forms (huh?)](#form) and more to come...
 
 ## Features
 
@@ -92,6 +92,45 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 ![Table](./examples/table/demo.gif)
 
 ---
+
+### [Form](./examples/form/main.go)
+
+Using [Huh](https://github.com/charmbracelet/huh) for form rendering.
+
+```go
+var loginForm = huh.NewForm(
+	huh.NewGroup(
+		huh.NewInput().Key("email").Title("Email"),
+		huh.NewInput().Key("password").Title("Password").EchoMode(huh.EchoModePassword),
+		huh.NewSelect[string]().Key("rememberme").Title("Remember me").Description("Log in automatically when using this SSH key").Options(huh.NewOptions("Yes", "No")...),
+	),
+)
+```
+
+```go
+return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
+  view := []app.Fc[CustomData]{
+    text.New(ctx, loginLogo(ctx), nil),
+    divider.New(ctx),
+    form.New(ctx, loginForm, func(ctx *app.Context[CustomData]) {
+      ctx.Data.email = loginForm.GetString("email")
+      ctx.Data.password = loginForm.GetString("password")
+      ctx.Data.remember = loginForm.GetString("rememberme")
+      ctx.Update()
+    }, nil),
+  }
+
+  if ctx.Data.email != "" {
+    view = append(view, text.New(ctx, "Email: "+ctx.Data.email, nil))
+    view = append(view, text.New(ctx, "Password 🙈: "+ctx.Data.password, nil))
+    view = append(view, text.New(ctx, "Remember me: "+ctx.Data.remember, nil))
+  }
+
+  return view
+}, nil)
+```
+
+## ![form](./examples/form/demo.gif)
 
 ### [Markdown](./examples/markdown/main.go)
 

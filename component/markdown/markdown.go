@@ -48,8 +48,8 @@ func (m *markdown[T]) Render(ctx *app.Context[T]) string {
 	return out
 }
 
-func (m *markdown[T]) Update(ctx *app.Context[T], msg tea.Msg) {
-
+func (m *markdown[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	return false
 }
 
 func (m *markdown[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

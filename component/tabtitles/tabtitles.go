@@ -70,7 +70,7 @@ func (m tabtitles[T]) Init() tea.Cmd {
 	return nil
 }
 
-func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		uiState := m.getState(ctx)
@@ -82,14 +82,14 @@ func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 				if newTab != uiState.activeTab {
 					uiState.activeTab = newTab
 					m.tabChanged(uiState.activeTab)
-					return
+					return true
 				}
 			case "left":
 				newTab := max(uiState.activeTab-1, 0)
 				if newTab != uiState.activeTab {
 					uiState.activeTab = newTab
 					m.tabChanged(uiState.activeTab)
-					return
+					return true
 				}
 			}
 		}
@@ -102,7 +102,7 @@ func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 					if i != uiState.activeTab {
 						uiState.activeTab = i
 						m.tabChanged(uiState.activeTab)
-						return
+						return true
 					}
 					break
 				}
@@ -110,6 +110,7 @@ func (m tabtitles[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 		}
 	}
 
+	return false
 }
 
 func (m *tabtitles[T]) Render(ctx *app.Context[T]) string {

@@ -36,8 +36,8 @@ func (m *divider[T]) Render(ctx *app.Context[T]) string {
 	return m.style.Render(strings.Repeat("─", ctx.UIState.GetWidth(m.base.ID)-1))
 }
 
-func (m *divider[T]) Update(ctx *app.Context[T], msg tea.Msg) {
-
+func (m *divider[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	return false
 }
 
 func (m *divider[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

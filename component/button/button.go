@@ -207,20 +207,23 @@ func (m *button[T]) Render(ctx *app.Context[T]) string {
 	return app.RegisterMouse(ctx, m.base.ID, m, rendered)
 }
 
-func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *button[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	switch msg := msg.(type) {
 	case tea.MouseClickMsg:
 		if msg.Button == tea.MouseLeft {
 			m.onClick(ctx)
 			ctx.Update()
+			return true
 		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.KeyMap.Submit):
 			m.onClick(ctx)
 			ctx.Update()
+			return true
 		}
 	}
+	return false
 }
 
 func (m *button[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

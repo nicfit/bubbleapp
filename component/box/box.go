@@ -86,8 +86,8 @@ func (m *box[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
 
 }
 
-func (m *box[T]) Update(ctx *app.Context[T], msg tea.Msg) {
-
+func (m *box[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	return false
 }
 
 func (m *box[T]) Base() *app.Base {

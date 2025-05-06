@@ -32,7 +32,7 @@ func New[T any](ctx *app.Context[T], registerTicks time.Duration, baseOptions ..
 	}
 }
 
-func (m *tickfps[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *tickfps[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	state := m.getState(ctx)
 	switch msgType := msg.(type) {
 	case app.TickMsg:
@@ -51,6 +51,7 @@ func (m *tickfps[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 		state.msgCount[fmt.Sprintf("%T", msgType)]++
 	}
 
+	return false
 }
 
 func (m *tickfps[T]) Render(ctx *app.Context[T]) string {

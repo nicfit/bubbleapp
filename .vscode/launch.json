@@ -91,6 +91,15 @@
       "program": "${workspaceFolder}/examples/loader/.",
       "cwd": "${workspaceFolder}/examples/loader",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: form",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/form/.",
+      "cwd": "${workspaceFolder}/examples/form",
+      "console": "integratedTerminal"
     }
   ]
 }

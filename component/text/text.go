@@ -76,8 +76,8 @@ func (m *text[T]) Render(ctx *app.Context[T]) string {
 	return m.base.ApplyShaderWithStyle(m.render(ctx), s)
 }
 
-func (m *text[T]) Update(ctx *app.Context[T], msg tea.Msg) {
-
+func (m *text[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	return false
 }
 
 func (m *text[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

@@ -2,7 +2,6 @@ package app
 
 import (
 	"image/color"
-	"sync"
 
 	"github.com/alexanderbh/bubbleapp/style"
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -10,12 +9,11 @@ import (
 )
 
 type Context[T any] struct {
-	root            Fc[T]
-	UIState         *StateStore
-	Zone            *zone.Manager
-	ZoneMap         map[string]Fc[T]
-	cmds            *[]tea.Cmd
-	cmdMutex        sync.Mutex
+	root    Fc[T]
+	UIState *StateStore
+	Zone    *zone.Manager
+	ZoneMap map[string]Fc[T]
+
 	Styles          *style.Styles
 	BackgroundColor color.Color
 	Width           int
@@ -33,7 +31,6 @@ func NewContext[T any](data *T) *Context[T] {
 		Zone:    zone.New(),
 		ZoneMap: make(map[string]Fc[T]),
 		UIState: NewStateStore(),
-		cmds:    &[]tea.Cmd{},
 		Styles:  style.DefaultStyles(),
 		Data:    data,
 		id:      newIDContext[T](),
@@ -55,12 +52,11 @@ func (ctx *Context[T]) Update() {
 }
 
 func (ctx *Context[T]) AddCmd(cmd tea.Cmd) {
-	ctx.cmdMutex.Lock()
-	defer ctx.cmdMutex.Unlock()
-	if ctx.cmds == nil {
-		ctx.cmds = &[]tea.Cmd{}
+	if cmd == nil {
+		return
 	}
-	*ctx.cmds = append(*ctx.cmds, cmd)
+
+	go ctx.teaProgram.Send(cmd())
 }
 
 // Quit signals the application to stop, ensuring cleanup like stopping active timers.

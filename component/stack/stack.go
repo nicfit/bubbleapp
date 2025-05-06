@@ -54,6 +54,9 @@ func (m *stack[T]) Render(ctx *app.Context[T]) string {
 		} else {
 			childRender = childRender + strings.Repeat("\n", m.opts.RowGap)
 		}
+		if childRender == "" {
+			continue
+		}
 		childrenViews = append(childrenViews, childRender)
 
 	}
@@ -64,7 +67,8 @@ func (m *stack[T]) Render(ctx *app.Context[T]) string {
 	return m.style.Render(lipgloss.JoinVertical(lipgloss.Left, childrenViews...))
 }
 
-func (m *stack[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *stack[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	return false
 }
 
 func (m *stack[T]) Children(ctx *app.Context[T]) []app.Fc[T] {

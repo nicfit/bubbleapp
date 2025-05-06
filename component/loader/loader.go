@@ -81,7 +81,7 @@ func NewDynamic[T any](ctx *app.Context[T], variant Spinner, render func(ctx *ap
 	}
 }
 
-func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
+func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 	switch msg.(type) {
 	case app.TickMsg:
 		// Only update frame if enough time has passed according to spinner FPS
@@ -95,8 +95,9 @@ func (m *loader[T]) Update(ctx *app.Context[T], msg tea.Msg) {
 			}
 			uiState.lastTick = now
 		}
-		return
+		return true
 	}
+	return false
 }
 
 func (m *loader[T]) Render(ctx *app.Context[T]) string {
