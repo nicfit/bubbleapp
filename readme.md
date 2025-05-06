@@ -95,7 +95,7 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 
 ### [Form](./examples/form/main.go)
 
-Using [Huh](https://github.com/charmbracelet/huh) for form rendering.
+Using [huh](https://github.com/charmbracelet/huh) for form rendering.
 
 ```go
 var loginForm = huh.NewForm(
