@@ -33,7 +33,7 @@ func (b *BlinkShader) Tick() {
 	}
 }
 func NewBlinkShader(fps time.Duration, blinkStyle lipgloss.Style) app.Shader {
-	ticks := max(int(float64(fps)/float64(app.FPS)), 1)
+	ticks := max(int(float64(fps)/float64(time.Second/12)), 1)
 
 	return &BlinkShader{
 		ticksPerState: ticks,

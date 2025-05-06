@@ -83,14 +83,14 @@ func NewBase[T any](ctx *Context[T], name string, opts ...BaseOption) (*Base, fu
 	}
 
 	b := &Base{
-		ID:              ctx.PushID(name),
+		ID:              ctx.id.push(name),
 		Opts:            options,
 		Shader:          options.Shader,
 		LayoutDirection: options.LayoutDirection,
 	}
 
 	return b, func() {
-		ctx.PopID()
+		ctx.id.pop()
 	}
 }
 

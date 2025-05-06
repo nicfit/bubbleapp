@@ -6,8 +6,7 @@ import (
 
 // Calculate sizes of the component tree
 func (a *App[T]) Layout() {
-	a.ctx.IDMap = make(map[string]Fc[T])
-	a.ctx.ids = make([]string, 0)
+	a.ctx.id.initIDCollections()
 	a.ctx.LayoutPhase = true
 	defer func() {
 		a.ctx.LayoutPhase = false
@@ -21,7 +20,7 @@ func (a *App[T]) Layout() {
 	Visit(a.ctx.root, 0, nil, a.ctx, collectIdsVisitor, PreOrder)
 
 	// --- Pass 0.5: Clean up state ---
-	a.ctx.UIState.cleanup(a.ctx.ids)
+	a.ctx.UIState.cleanup(a.ctx.id.ids)
 
 	// --- Pass 1: Calculate Intrinsic Widths (Bottom-Up) ---
 	Visit(a.ctx.root, 0, nil, a.ctx, calculateIntrinsicWidthVisitor, PostOrder)

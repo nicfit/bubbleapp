@@ -8,11 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-const (
-	// Global FPS for Ticks. Hardcoded for now. Could be dynamic perhaps.
-	FPS = time.Second / 12
-)
-
 type Fc[T any] interface {
 	Render(ctx *Context[T]) string
 	Update(ctx *Context[T], msg tea.Msg)
@@ -25,6 +20,10 @@ type AppOptions struct {
 }
 type AppOption func(*AppOptions)
 
+// This registers a constant global tick
+// Use with caution. Most components should have registered
+// their own tick listener.
+// Use ctx.Update() invalidate the UI form the outside.
 func WithTickFPS(fps time.Duration) AppOption {
 	return func(o *AppOptions) {
 		o.TickFPS = fps
@@ -32,12 +31,12 @@ func WithTickFPS(fps time.Duration) AppOption {
 }
 
 type App[T any] struct {
-	render  func(ctx *Context[T]) Fc[T]
-	ctx     *Context[T]
-	tickFPS time.Duration
+	scaffold func(ctx *Context[T]) Fc[T]
+	ctx      *Context[T]
+	tickFPS  time.Duration
 }
 
-func NewApp[T any](ctx *Context[T], render func(ctx *Context[T]) Fc[T], options ...AppOption) *App[T] {
+func NewApp[T any](ctx *Context[T], scaffold func(ctx *Context[T]) Fc[T], options ...AppOption) *App[T] {
 	if options == nil {
 		options = []AppOption{}
 	}
@@ -47,25 +46,32 @@ func NewApp[T any](ctx *Context[T], render func(ctx *Context[T]) Fc[T], options 
 	if ctx.Styles == nil {
 		ctx.Styles = style.DefaultStyles()
 	}
-	if ctx.Cmds == nil {
-		ctx.Cmds = &[]tea.Cmd{}
+	if ctx.cmds == nil {
+		ctx.cmds = &[]tea.Cmd{}
 	}
 
 	opts := &AppOptions{
-		TickFPS: FPS,
+		TickFPS: 0,
 	}
 	for _, opt := range options {
 		opt(opts)
 	}
 
 	return &App[T]{
-		render:  render,
-		ctx:     ctx,
-		tickFPS: opts.TickFPS,
+		scaffold: scaffold,
+		ctx:      ctx,
+		tickFPS:  opts.TickFPS,
 	}
 }
 
+func (a *App[T]) SetTeaProgram(p *tea.Program) {
+	a.ctx.teaProgram = p
+}
+
 func (a *App[T]) Init() tea.Cmd {
+	if a.ctx.teaProgram == nil {
+		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
+	}
 	var (
 		cmds []tea.Cmd
 	)
@@ -79,9 +85,9 @@ func (a *App[T]) Init() tea.Cmd {
 
 func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
-	if len(*a.ctx.Cmds) > 0 {
-		cmds = *a.ctx.Cmds
-		a.ctx.Cmds = &[]tea.Cmd{}
+	if len(*a.ctx.cmds) > 0 {
+		cmds = *a.ctx.cmds
+		a.ctx.cmds = &[]tea.Cmd{}
 	}
 
 	switch msg := msg.(type) {
@@ -99,7 +105,7 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		// Propagate key msg to the focused component
 		if a.ctx.UIState.Focused != "" {
-			focused := a.ctx.IDMap[a.ctx.UIState.Focused]
+			focused := a.ctx.id.getNode(a.ctx.UIState.Focused)
 			if focused != nil {
 				focused.Update(a.ctx, msg)
 			}
@@ -115,8 +121,17 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			foundZone.Update(a.ctx, msg.Event)
 		}
 	case TickMsg:
-		// Propagate tick to all components (used for Dynamic Shaders for now)
-		Visit(a.ctx.root, 0, nil, a.ctx, tickVisitor, PreOrder)
+		now := msg.OccurredAt
+		for _, listener := range *a.ctx.Tick.tickListeners {
+			l := a.ctx.id.getNode(listener.id)
+			if l != nil {
+				lastTick, ok := a.ctx.Tick.lastTickTimes[listener.id]
+				if !ok || now.Sub(lastTick) >= listener.interval {
+					l.Update(a.ctx, msg)
+					a.ctx.Tick.lastTickTimes[listener.id] = now
+				}
+			}
+		}
 		if a.tickFPS > 0 {
 			cmds = append(cmds, tickCommand(a.tickFPS))
 		}
@@ -126,11 +141,14 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (a *App[T]) View() string {
-	a.ctx.idPath = []string{"root"}
-	a.ctx.idPathCount = make(map[string]int)
+	a.ctx.id.initPath()
+	a.ctx.Tick.init()
 
-	rendered := a.render(a.ctx)
-	a.ctx.root = rendered
+	root := a.scaffold(a.ctx)
+
+	a.ctx.Tick.createTimer(a.ctx)
+
+	a.ctx.root = root
 	a.Layout()
-	return a.ctx.Zone.Scan(rendered.Render(a.ctx))
+	return a.ctx.Zone.Scan(root.Render(a.ctx))
 }

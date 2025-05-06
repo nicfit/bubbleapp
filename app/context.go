@@ -2,8 +2,7 @@ package app
 
 import (
 	"image/color"
-	"strconv"
-	"strings"
+	"sync"
 
 	"github.com/alexanderbh/bubbleapp/style"
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -12,64 +11,58 @@ import (
 
 type Context[T any] struct {
 	root            Fc[T]
-	IDMap           map[string]Fc[T]
-	ids             []string
 	UIState         *StateStore
 	Zone            *zone.Manager
 	ZoneMap         map[string]Fc[T]
-	Cmds            *[]tea.Cmd
+	cmds            *[]tea.Cmd
+	cmdMutex        sync.Mutex
 	Styles          *style.Styles
 	BackgroundColor color.Color
 	Width           int
 	Height          int
 	LayoutPhase     bool
 	Data            *T
+	teaProgram      *tea.Program
 
-	idPath      []string
-	idPathCount map[string]int
+	id   *idContext[T]
+	Tick *tickState[T]
 }
 
 func NewContext[T any](data *T) *Context[T] {
 	return &Context[T]{
 		Zone:    zone.New(),
 		ZoneMap: make(map[string]Fc[T]),
-		IDMap:   make(map[string]Fc[T]),
-		ids:     []string{},
 		UIState: NewStateStore(),
-		Cmds:    &[]tea.Cmd{},
+		cmds:    &[]tea.Cmd{},
 		Styles:  style.DefaultStyles(),
 		Data:    data,
+		id:      newIDContext[T](),
+		Tick:    &tickState[T]{},
 	}
 }
 
-// Used to get an ID when there are children further below.
-// Remember to call PopID() when done.
-func (ctx *Context[T]) PushID(name string) string {
-	path := strings.Join(ctx.idPath, "_")
-	key := path + "_" + name
-	index := ctx.idPathCount[key]
-	ctx.idPathCount[key]++
-	nameWithCount := name + "[" + strconv.Itoa(index) + "]"
-	ctx.idPath = append(ctx.idPath, nameWithCount)
-	return path + "_" + nameWithCount
-}
+type InvalidateMsg struct{}
 
-// Used to get a leaf node ID
-func (ctx *Context[T]) GetID(name string) string {
-	path := strings.Join(ctx.idPath, "_")
-	path = path + "_" + name
-	id := path + "[" + strconv.Itoa(ctx.idPathCount[path]) + "]"
-	ctx.idPathCount[path]++
-	return id
-}
-
-func (ctx *Context[T]) PopID() {
-	if len(ctx.idPath) == 0 {
-		return
+// Invalidates the UI and forces a re-render.
+// Requires a tea.Program to be set with app.SetTeaProgram.
+// This is useful for performance optimizations where a tick
+// is too expensive.
+func (ctx *Context[T]) Update() {
+	if ctx.teaProgram == nil {
+		panic("teaProgram is nil. Cannot update manually.")
 	}
-	ctx.idPath = ctx.idPath[:len(ctx.idPath)-1]
+	ctx.teaProgram.Send(InvalidateMsg{})
+}
+
+func (ctx *Context[T]) AddCmd(cmd tea.Cmd) {
+	ctx.cmdMutex.Lock()
+	defer ctx.cmdMutex.Unlock()
+	if ctx.cmds == nil {
+		ctx.cmds = &[]tea.Cmd{}
+	}
+	*ctx.cmds = append(*ctx.cmds, cmd)
 }
 
 func (ctx *Context[T]) Quit() {
-	*ctx.Cmds = append(*ctx.Cmds, tea.Quit)
+	ctx.AddCmd(tea.Quit)
 }

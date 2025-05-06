@@ -6,12 +6,14 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/button"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/table"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/component/tickfps"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
@@ -37,6 +39,7 @@ func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
 				rows := generateRowsOfProcesses(ctx.Data)
 				return clms, rows
 			}, nil),
+			tickfps.New(ctx, time.Second),
 			button.New(ctx, "Quit", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
 		}
 	}, nil)
@@ -50,9 +53,11 @@ func main() {
 
 	ctx := app.NewContext(&AppState{})
 
-	go monitorProcesses(ctx.Data)
+	go monitorProcesses(ctx)
 
-	p := tea.NewProgram(app.NewApp(ctx, NewRoot), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app := app.NewApp(ctx, NewRoot)
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

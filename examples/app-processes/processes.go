@@ -4,10 +4,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
-func monitorProcesses(state *AppState) {
+func monitorProcesses(ctx *app.Context[AppState]) {
 	for {
 		processes, err := process.Processes()
 		if err != nil {
@@ -47,8 +48,8 @@ func monitorProcesses(state *AppState) {
 			currentProcesses = append(currentProcesses, procInfo)
 		}
 
-		state.Processes = currentProcesses
-
+		ctx.Data.Processes = currentProcesses
+		ctx.Update()
 		time.Sleep(time.Second / 1)
 	}
 }

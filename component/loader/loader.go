@@ -69,6 +69,8 @@ func NewDynamic[T any](ctx *app.Context[T], variant Spinner, render func(ctx *ap
 	base, cleanup := app.NewBase(ctx, "loader", baseOptions...)
 	defer cleanup()
 
+	ctx.Tick.RegisterTickListener(variant.Interval, base.ID)
+
 	return &loader[T]{
 		base:         base,
 		render:       render,

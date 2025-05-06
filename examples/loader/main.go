@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/box"
@@ -9,6 +10,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/loader"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/component/tickfps"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
@@ -22,6 +24,7 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 			text.New(ctx, "Loaders:", nil),
 			divider.New(ctx),
 			loader.New(ctx, loader.Dots, "With text...", &loader.Options{Color: ctx.Styles.Colors.InfoLight, TextColor: ctx.Styles.Colors.Primary}),
+			tickfps.New(ctx, time.Second), // Used for debugging tick events.
 			stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
 				return []app.Fc[CustomData]{
 					box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] {
@@ -113,7 +116,6 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 								loader.NewWithoutText(ctx, loader.Hearts, nil),
 								loader.NewWithoutText(ctx, loader.Clock, nil),
 								loader.NewWithoutText(ctx, loader.Earth, nil),
-								loader.NewWithoutText(ctx, loader.Material, nil),
 								loader.NewWithoutText(ctx, loader.Moon, nil),
 							}
 						}, nil)
@@ -155,7 +157,9 @@ func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
 func main() {
 	ctx := app.NewContext(&CustomData{})
 
-	p := tea.NewProgram(app.NewApp(ctx, NewRoot), tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app := app.NewApp(ctx, NewRoot)
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}
