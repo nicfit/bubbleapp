@@ -26,7 +26,15 @@ type uiState struct {
 	form *huh.Form
 }
 
-// Note: This needs to be in the UI tree after submissions
+// !Work in progress!
+//
+// huh.form assumes it is the only thing running so it does not play well with other things.
+// The plan is to have a composable form, but for now to use huh.form it works best when it
+// is the only thing running in the UI tree.
+//
+// Note: This needs to be in the UI tree after submission to access the state/values
+// Note: Only supports default KeyMap for now. To support custom keymaps the keymap
+// needs to be passed in as a parameter to the form. This is because the keymap is private in the form.
 func New[T any](ctx *app.Context[T], huhForm *huh.Form, onSubmit func(ctx *app.Context[T]), options *Options, baseOptions ...app.BaseOption) *form[T] {
 	if options == nil {
 		options = &Options{}
@@ -49,6 +57,7 @@ func New[T any](ctx *app.Context[T], huhForm *huh.Form, onSubmit func(ctx *app.C
 		}
 
 		ctx.AddCmd(huhForm.Init())
+		// Assume the form is the main thing and force focus on it
 		ctx.UIState.Focused = base.ID
 	}
 
@@ -65,6 +74,7 @@ func (m *form[T]) Render(ctx *app.Context[T]) string {
 }
 
 func (m *form[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
+	state := m.getState(ctx)
 
 	switch msg := msg.(type) {
 	case formSubmitMsg:
@@ -72,14 +82,40 @@ func (m *form[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
 			m.onSubmit(ctx)
 			return true
 		}
+	case tea.KeyMsg:
+		// Hardcoded to DefaultKeymap from huh for now
+		switch msg.String() {
+		case "ctrl+c": // Do not exit on ctrl+c (part of default keymap for huh.Form for some reason)
+			return false
+		case "shift+tab":
+			beforeTab := state.form.GetFocusedField().GetKey()
+			state.form.PrevField()
+			afterTab := state.form.GetFocusedField().GetKey()
+			if beforeTab == afterTab {
+				//state.form.NextField()
+				//state.form.PrevField()
+				return false
+			}
+			state.form.NextField()
+		case "tab":
+			beforeTab := state.form.GetFocusedField().GetKey()
+			state.form.NextField()
+			afterTab := state.form.GetFocusedField().GetKey()
+			if beforeTab == afterTab {
+				//state.form.PrevField()
+				//state.form.NextField()
+				return false
+			}
+			state.form.PrevField()
+		}
 	}
 
-	state := m.getState(ctx)
 	newForm, cmd := state.form.Update(msg)
 	newFormTyped := newForm.(*huh.Form)
 	state.form = newFormTyped
 	ctx.AddCmd(cmd)
 
+	// Return if key was handled or not
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
