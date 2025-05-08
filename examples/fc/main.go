@@ -17,6 +17,10 @@ func NewRoot(c *app.FCContext, _ app.Props) string {
 	clicks, setClicks := app.UseState(c, 0)
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
+	app.UseEffect(c, func() {
+		setGreeting("Who's there?")
+	}, []any{})
+
 	return stack.New(c, func(c *app.FCContext) {
 		button.NewButton(c, "Count clicks here!", func() {
 			setClicks(clicks + 1)

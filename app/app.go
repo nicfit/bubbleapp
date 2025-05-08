@@ -22,10 +22,12 @@ type FCContext struct {
 	Tick             *tickState[any]
 	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
-	LayoutPhase      bool
-	Width            int
-	Height           int
-	UseStateCounter  int // Added for UseState
+	UseEffectCounter int
+
+	LayoutPhase     bool
+	Width           int
+	Height          int
+	UseStateCounter int // Added for UseState
 }
 
 type outputCollector struct {
@@ -56,7 +58,8 @@ func (c *FCContext) Render(fc FC, props Props) string {
 	// while preserving `States`.
 	c.componentContext.set(id, fc, props)
 
-	c.UseStateCounter = 0 // Reset for this component's render pass
+	c.UseStateCounter = 0
+	c.UseEffectCounter = 0
 
 	output := fc(c, props)
 
@@ -236,6 +239,10 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // }
 
 func (a *app) View() string {
+	// Get all component IDs before rendering (current state)
+	prevIDs := a.ctx.componentContext.getAllIDs()
+
+	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
 	a.ctx.Tick.init()
 
@@ -246,6 +253,34 @@ func (a *app) View() string {
 
 	//a.ctx.Tick.createTimer(a.ctx)
 
-	//a.Layout()
-	return a.ctx.Zone.Scan(a.ctx.Render(a.root, nil))
+	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, nil))
+
+	// Get all component IDs after rendering (new state)
+	currentIDs := a.ctx.id.ids // These are the IDs that were actually rendered
+
+	// Determine removed IDs
+	removedIDs := findRemovedIDs(prevIDs, currentIDs)
+
+	// Cleanup effects for removed components
+	a.ctx.componentContext.cleanupEffects(removedIDs)
+
+	// Cleanup general state for removed components (from app/state.go logic)
+	a.ctx.UIState.cleanup(currentIDs)
+
+	return renderedView
+}
+
+// findRemovedIDs returns the IDs that are present in prevIDs but not in currentIDs.
+func findRemovedIDs(prevIDs, currentIDs []string) []string {
+	currentSet := make(map[string]struct{}, len(currentIDs))
+	for _, id := range currentIDs {
+		currentSet[id] = struct{}{}
+	}
+	var removed []string
+	for _, id := range prevIDs {
+		if _, found := currentSet[id]; !found {
+			removed = append(removed, id)
+		}
+	}
+	return removed
 }
