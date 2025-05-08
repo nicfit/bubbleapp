@@ -36,9 +36,9 @@ const (
 
 func Button(c *app.FCContext, props app.Props) string {
 	buttonProps, _ := props.(Props)
-	id := c.UseID()
+	id := app.UseID(c)
 
-	focused := c.UseFocus()
+	focused := app.UseFocus(c)
 	hovered := false
 
 	style := styleResolver(c, buttonProps.Variant, buttonProps.Type, focused, hovered, buttonProps.Disabled)

@@ -9,8 +9,8 @@ func _getFocusableComponentIDs(c *FCContext) []string {
 	}
 
 	for _, id := range c.id.ids {
-		componentInfo := c.componentContext.get(id)
-		if componentInfo != nil && componentInfo.focusable {
+		componentInfo, ok := c.componentContext.get(id)
+		if ok && componentInfo != nil && componentInfo.focusable {
 			focusableIDs = append(focusableIDs, id)
 		}
 	}

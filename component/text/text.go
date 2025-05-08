@@ -5,85 +5,158 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/style"
-	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type Options struct {
+// Props defines the properties for the Text component.
+type Props struct {
+	Content    func(*app.FCContext) string
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
 	style.Margin
+	// TODO: Consider adding Width, Height, MaxWidth, MaxHeight if explicit control is needed directly in props
 }
 
-type text[T any] struct {
-	base   *app.Base
-	render func(ctx *app.Context[T]) string
-	opts   *Options
-	style  lipgloss.Style
-}
+// prop is a function type for setting Props.
+type prop func(*Props)
 
-func New[T any](ctx *app.Context[T], text string, options *Options, baseOptions ...app.BaseOption) *text[T] {
-	return NewDynamic(ctx, func(ctx *app.Context[T]) string {
-		return text
-	}, options, baseOptions...)
-}
-
-func NewDynamic[T any](ctx *app.Context[T], render func(ctx *app.Context[T]) string, options *Options, baseOptions ...app.BaseOption) *text[T] {
-	if options == nil {
-		options = &Options{}
-	}
-	if baseOptions == nil {
-		baseOptions = []app.BaseOption{}
-	}
-	base, cleanup := app.NewBase(ctx, "text", baseOptions...)
-	defer cleanup()
-
-	if options.Foreground == nil {
-		options.Foreground = lipgloss.NoColor{}
-	}
-	if options.Background == nil {
-		options.Background = lipgloss.NoColor{}
+// TextFC is the core functional component for rendering text.
+func Text(c *app.FCContext, props app.Props) string {
+	textProps, ok := props.(Props)
+	if !ok {
+		// In a real scenario, you might log an error or return a specific error string.
+		return ""
 	}
 
-	s := lipgloss.NewStyle().Foreground(options.Foreground).Background(options.Background)
+	var renderedContent string
 
-	s = style.ApplyMargin(s, options.Margin)
+	if textProps.Content != nil {
+		renderedContent = textProps.Content(c)
+	} else {
+		renderedContent = "" // Handle nil function case
+	}
 
-	if options.Bold {
+	s := lipgloss.NewStyle()
+
+	if textProps.Foreground != nil {
+		s = s.Foreground(textProps.Foreground)
+	} else {
+		s = s.Foreground(lipgloss.NoColor{}) // Default as in original
+	}
+
+	if textProps.Background != nil {
+		s = s.Background(textProps.Background)
+	} else {
+		s = s.Background(lipgloss.NoColor{}) // Default as in original
+	}
+
+	if textProps.Bold {
 		s = s.Bold(true)
 	}
-	return &text[T]{
-		base:   base,
-		render: render,
-		style:  s,
-		opts:   options,
+
+	s = style.ApplyMargin(s, textProps.Margin)
+
+	return s.Render(renderedContent)
+}
+
+// NewText creates a new text element.
+// Content can be a static string or a dynamic function: func(c *app.FCContext) string.
+func NewText(c *app.FCContext, content string, opts ...prop) string {
+	p := Props{
+		Content: func(c *app.FCContext) string {
+			return content
+		},
+		Foreground: lipgloss.NoColor{},
+		Background: lipgloss.NoColor{},
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&p)
+		}
+	}
+	return c.Render(Text, p)
+}
+
+// --- Prop Option Functions ---
+
+// WithForeground sets the foreground color.
+func WithForeground(fg color.Color) prop {
+	return func(props *Props) {
+		props.Foreground = fg
 	}
 }
 
-func (m *text[T]) Render(ctx *app.Context[T]) string {
-	s := m.style
-
-	if !ctx.LayoutPhase {
-		width := ctx.UIState.GetWidth(m.base.ID)
-		height := ctx.UIState.GetHeight(m.base.ID)
-		s = s.MaxHeight(height).
-			MaxWidth(width).
-			Height(height).
-			Width(width)
+// WithBackground sets the background color.
+func WithBackground(bg color.Color) prop {
+	return func(props *Props) {
+		props.Background = bg
 	}
-
-	return m.base.ApplyShaderWithStyle(m.render(ctx), s)
 }
 
-func (m *text[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
-	return false
+// WithBold enables or disables bold text.
+func WithBold(bold bool) prop {
+	return func(props *Props) {
+		props.Bold = bold
+	}
 }
 
-func (m *text[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	return nil
+// WithMarginAll sets uniform margin for all sides.
+func WithMarginAll(m int) prop {
+	return func(props *Props) {
+		props.Margin.M = m
+	}
 }
 
-func (m *text[T]) Base() *app.Base {
-	return m.base
+// WithMargin sets individual margins.
+func WithMargin(top, right, bottom, left int) prop {
+	return func(props *Props) {
+		props.Margin.MT = top
+		props.Margin.MR = right
+		props.Margin.MB = bottom
+		props.Margin.ML = left
+	}
+}
+
+// WithMarginTop sets the top margin.
+func WithMarginTop(m int) prop {
+	return func(props *Props) {
+		props.Margin.MT = m
+	}
+}
+
+// WithMarginRight sets the right margin.
+func WithMarginRight(m int) prop {
+	return func(props *Props) {
+		props.Margin.MR = m
+	}
+}
+
+// WithMarginBottom sets the bottom margin.
+func WithMarginBottom(m int) prop {
+	return func(props *Props) {
+		props.Margin.MB = m
+	}
+}
+
+// WithMarginLeft sets the left margin.
+func WithMarginLeft(m int) prop {
+	return func(props *Props) {
+		props.Margin.ML = m
+	}
+}
+
+// WithMarginX sets horizontal (left and right) margins.
+func WithMarginX(m int) prop {
+	return func(props *Props) {
+		props.Margin.MX = m
+	}
+}
+
+// WithMarginY sets vertical (top and bottom) margins.
+func WithMarginY(m int) prop {
+	return func(props *Props) {
+		props.Margin.MY = m
+	}
 }

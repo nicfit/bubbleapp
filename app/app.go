@@ -8,23 +8,24 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+type Props any
+type FC = func(ctx *FCContext, props Props) string
+type Children func(ctx *FCContext)
+
 type FCContext struct {
-	UIState    *StateStore
-	Zone       *zone.Manager
-	ZoneMap    map[string]*fcInstance
-	teaProgram *tea.Program
-	Styles     *style.Styles
-	id         *fcIDContext
-	Tick       *tickState[any]
-
-	collectorStack []*outputCollector
-	isCollecting   bool
-
+	UIState          *StateStore
+	Zone             *zone.Manager
+	ZoneMap          map[string]*fcInstance
+	teaProgram       *tea.Program
+	Styles           *style.Styles
+	id               *fcIDContext
+	Tick             *tickState[any]
+	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
-
-	LayoutPhase bool
-	Width       int
-	Height      int
+	LayoutPhase      bool
+	Width            int
+	Height           int
+	UseStateCounter  int // Added for UseState
 }
 
 type outputCollector struct {
@@ -49,7 +50,13 @@ func (c *FCContext) Render(fc FC, props Props) string {
 	defer c.id.pop()
 
 	c.id.ids = append(c.id.ids, id)
+
+	// Ensure instance exists and fc/props/handlers are up-to-date.
+	// The `set` function in componentContext will create if not exists, or update if exists,
+	// while preserving `States`.
 	c.componentContext.set(id, fc, props)
+
+	c.UseStateCounter = 0 // Reset for this component's render pass
 
 	output := fc(c, props)
 
@@ -61,33 +68,6 @@ func (c *FCContext) Render(fc FC, props Props) string {
 
 	return output
 }
-func (ctx *FCContext) UseID() string {
-	return ctx.id.getID()
-}
-
-// Registers component as focusable and returns the focus state
-func (ctx *FCContext) UseFocus() bool {
-	ctx.componentContext.get(ctx.id.getID()).focusable = true
-	return ctx.UIState.Focused == ctx.id.getID()
-}
-
-func (ctx *FCContext) UseChildren(children Children) []string {
-	newCollector := &outputCollector{}
-	ctx.collectorStack = append(ctx.collectorStack, newCollector)
-
-	if children != nil {
-		children(ctx)
-	}
-
-	ctx.collectorStack = ctx.collectorStack[:len(ctx.collectorStack)-1]
-
-	childOutputs := newCollector.outputs
-	if len(childOutputs) == 0 {
-		return []string{""}
-	}
-
-	return childOutputs
-}
 
 // _____________________
 
@@ -98,10 +78,6 @@ func (ctx *FCContext) Quit() {
 	}
 	go ctx.teaProgram.Quit()
 }
-
-type Props any
-type FC = func(ctx *FCContext, props Props) string
-type Children func(ctx *FCContext)
 
 type AppOptions struct {
 	TickFPS time.Duration
@@ -173,8 +149,8 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		focusedInstance := a.ctx.componentContext.get(a.ctx.UIState.Focused)
-		if focusedInstance != nil {
+		focusedInstance, focusedInstanceExists := a.ctx.componentContext.get(a.ctx.UIState.Focused)
+		if focusedInstanceExists {
 			switch msg.String() {
 			case "enter":
 				if a.dispatchToHandler(focusedInstance, semanticActionPrimary, "OnKeyPress", KeyEvent{
@@ -201,7 +177,8 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		//}
 		return a, tea.Batch(cmds...)
-
+	case nil: // Add this case to handle c.teaProgram.Send(nil) from UseState
+		return a, nil // Just trigger a re-render by returning the model
 	case tea.WindowSizeMsg:
 		a.ctx.Width = msg.Width
 		a.ctx.Height = msg.Height
@@ -210,8 +187,8 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		a.ctx.Zone.AnyInBounds(a, msg)
 		return a, tea.Batch(cmds...)
 	case zone.MsgZoneInBounds:
-		foundInstance := a.ctx.componentContext.get(a.ctx.Zone.GetReverse(msg.Zone.Id))
-		if foundInstance != nil {
+		foundInstance, foundInstanceExists := a.ctx.componentContext.get(a.ctx.Zone.GetReverse(msg.Zone.Id))
+		if foundInstanceExists {
 			switch msg.Event.(type) {
 			case tea.MouseClickMsg:
 				a.dispatchToHandler(foundInstance, semanticActionPrimary, "OnClick", MouseEvent{

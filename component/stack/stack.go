@@ -16,7 +16,7 @@ type StackProps struct {
 func Stack(c *app.FCContext, props app.Props) string {
 	stackProps, _ := props.(StackProps)
 
-	children := c.UseChildren(stackProps.Children)
+	children := app.UseChildren(c, stackProps.Children)
 
 	var processedChildren []string
 	if stackProps.Direction == app.Horizontal {

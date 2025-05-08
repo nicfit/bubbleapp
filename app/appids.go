@@ -34,13 +34,23 @@ func (ctx *fcIDContext) initIDCollections() {
 // Used to get an ID when there are children further below.
 // Remember to call PopID() when done.
 func (ctx *fcIDContext) push(name string) string {
-	path := strings.Join(ctx.idPath, "_")
-	key := path + "_" + name
-	index := ctx.idPathCount[key]
-	ctx.idPathCount[key]++
-	nameWithCount := name + "[" + strconv.Itoa(index) + "]"
-	ctx.idPath = append(ctx.idPath, nameWithCount)
-	return path + "_" + nameWithCount
+	// Create a key for idPathCount to ensure uniqueness of counts
+	// based on the current position in the hierarchy.
+	parentPathString := strings.Join(ctx.idPath, "_")
+	countKey := name // Default for root elements
+	if parentPathString != "" {
+		countKey = parentPathString + "_" + name
+	}
+
+	index := ctx.idPathCount[countKey]
+	ctx.idPathCount[countKey]++
+
+	// The segment added to idPath should be simple: name + [index]
+	currentSegment := name + "[" + strconv.Itoa(index) + "]"
+	ctx.idPath = append(ctx.idPath, currentSegment)
+
+	// The ID for the component is the full path.
+	return strings.Join(ctx.idPath, "_")
 }
 
 func (ctx *fcIDContext) pop() {
@@ -51,8 +61,5 @@ func (ctx *fcIDContext) pop() {
 }
 
 func (ctx *fcIDContext) getID() string {
-	if len(ctx.idPath) == 0 {
-		return "root"
-	}
 	return strings.Join(ctx.idPath, "_")
 }
