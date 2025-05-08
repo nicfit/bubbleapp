@@ -15,30 +15,30 @@ type Fc[T any] interface {
 	Children(ctx *Context[T]) []Fc[T]
 }
 
-type AppOptions struct {
+type AppOs struct {
 	TickFPS time.Duration
 }
-type AppOption func(*AppOptions)
+type AppO func(*AppOs)
 
 // This registers a constant global tick
 // Use with caution. Most components should have registered
 // their own tick listener.
 // Use ctx.Update() invalidate the UI form the outside.
-func WithTickFPS(fps time.Duration) AppOption {
-	return func(o *AppOptions) {
+func WithTickFPSOption(fps time.Duration) AppO {
+	return func(o *AppOs) {
 		o.TickFPS = fps
 	}
 }
 
-type App[T any] struct {
+type appOld[T any] struct {
 	scaffold func(ctx *Context[T]) Fc[T]
 	ctx      *Context[T]
 	tickFPS  time.Duration
 }
 
-func NewApp[T any](ctx *Context[T], scaffold func(ctx *Context[T]) Fc[T], options ...AppOption) *App[T] {
+func NewApp[T any](ctx *Context[T], scaffold func(ctx *Context[T]) Fc[T], options ...AppO) *appOld[T] {
 	if options == nil {
-		options = []AppOption{}
+		options = []AppO{}
 	}
 	if ctx.ZoneMap == nil {
 		ctx.ZoneMap = make(map[string]Fc[T])
@@ -47,25 +47,25 @@ func NewApp[T any](ctx *Context[T], scaffold func(ctx *Context[T]) Fc[T], option
 		ctx.Styles = style.DefaultStyles()
 	}
 
-	opts := &AppOptions{
+	opts := &AppOs{
 		TickFPS: 0,
 	}
 	for _, opt := range options {
 		opt(opts)
 	}
 
-	return &App[T]{
+	return &appOld[T]{
 		scaffold: scaffold,
 		ctx:      ctx,
 		tickFPS:  opts.TickFPS,
 	}
 }
 
-func (a *App[T]) SetTeaProgram(p *tea.Program) {
+func (a *appOld[T]) SetTeaProgram(p *tea.Program) {
 	a.ctx.teaProgram = p
 }
 
-func (a *App[T]) Init() tea.Cmd {
+func (a *appOld[T]) Init() tea.Cmd {
 	if a.ctx.teaProgram == nil {
 		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
 	}
@@ -80,7 +80,7 @@ func (a *App[T]) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (a *appOld[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -138,7 +138,7 @@ func (a *App[T]) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return a, tea.Batch(cmds...)
 }
 
-func (a *App[T]) propagatedFocused(msg tea.Msg) bool {
+func (a *appOld[T]) propagatedFocused(msg tea.Msg) bool {
 	if a.ctx.UIState.Focused != "" {
 		focused := a.ctx.id.getNode(a.ctx.UIState.Focused)
 		if focused != nil {
@@ -149,7 +149,7 @@ func (a *App[T]) propagatedFocused(msg tea.Msg) bool {
 	return false
 }
 
-func (a *App[T]) View() string {
+func (a *appOld[T]) View() string {
 	a.ctx.id.initPath()
 	a.ctx.Tick.init()
 

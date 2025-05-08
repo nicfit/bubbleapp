@@ -5,7 +5,7 @@ import (
 )
 
 // Calculate sizes of the component tree
-func (a *App[T]) Layout() {
+func (a *appOld[T]) Layout() {
 	a.ctx.id.initIDCollections()
 	a.ctx.LayoutPhase = true
 	defer func() {

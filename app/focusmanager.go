@@ -1,101 +1,79 @@
 package app
 
-func (ctx *Context[T]) getAllFocusable(root Fc[T]) []Fc[T] {
-	focusableItems := []Fc[T]{}
-
-	var traverse func(Fc[T])
-	traverse = func(node Fc[T]) {
-		if node == nil {
-			return
-		}
-
-		if node.Base().Opts.Focusable {
-			focusableItems = append(focusableItems, node)
-		}
-		for _, child := range node.Children(ctx) {
-			traverse(child)
-		}
-
+// _getFocusableComponentIDs retrieves all focusable component IDs.
+func _getFocusableComponentIDs(c *FCContext) []string {
+	var focusableIDs []string
+	if c.id == nil || c.componentContext == nil {
+		// Should not happen in a healthy context
+		return focusableIDs
 	}
 
-	traverse(root)
-
-	return focusableItems
+	for _, id := range c.id.ids {
+		componentInfo := c.componentContext.get(id)
+		if componentInfo != nil && componentInfo.focusable {
+			focusableIDs = append(focusableIDs, id)
+		}
+	}
+	return focusableIDs
 }
 
-func (ctx *Context[T]) FocusFirstCmd(root Fc[T]) {
-
-	focusableItems := ctx.getAllFocusable(root)
-	if len(focusableItems) == 0 {
-		return
+// _findCurrentFocusIndex finds the index of the currentFocusID in the focusableIDs list.
+// Returns -1 if not found.
+func _findCurrentFocusIndex(focusableIDs []string, currentFocusID string) int {
+	for i, id := range focusableIDs {
+		if id == currentFocusID {
+			return i
+		}
 	}
-	ctx.UIState.Focused = focusableItems[0].Base().ID
+	return -1
 }
 
-func (ctx *Context[T]) FocusNextCmd(root Fc[T]) {
-
-	focusableItems := ctx.getAllFocusable(root)
-	if len(focusableItems) == 0 {
-		ctx.UIState.Focused = ""
-		return
-	}
-	if len(focusableItems) == 1 {
-		if ctx.UIState.Focused == focusableItems[0].Base().ID {
-			ctx.UIState.Focused = ""
-			return
-		}
-		ctx.UIState.Focused = focusableItems[0].Base().ID
-		return
+func (c *FCContext) FocusNext() string {
+	focusableIDs := _getFocusableComponentIDs(c)
+	if len(focusableIDs) == 0 {
+		c.UIState.Focused = ""
+		return "" // No items to focus
 	}
 
-	currentIndex := -1
-	if ctx.UIState.Focused != "" {
-		for i, item := range focusableItems {
-			if item.Base().ID == ctx.UIState.Focused {
-				currentIndex = i
-				break
-			}
-		}
+	currentFocusID := c.UIState.Focused
+	currentIndex := _findCurrentFocusIndex(focusableIDs, currentFocusID)
+
+	nextIndex := 0
+	if currentIndex != -1 {
+		// Current focused item is in the list, move to the next
+		nextIndex = (currentIndex + 1) % len(focusableIDs)
+	} else {
+		// Current focused item is not in the list (e.g. initially empty, or item disappeared)
+		// or no item was focused; focus the first available item.
+		nextIndex = 0
 	}
 
-	if currentIndex == -1 {
-		ctx.UIState.Focused = focusableItems[0].Base().ID
-		return
-	}
-
-	nextIndex := (currentIndex + 1) % len(focusableItems)
-
-	ctx.UIState.Focused = focusableItems[nextIndex].Base().ID
+	nextIDToFocus := focusableIDs[nextIndex]
+	c.UIState.Focused = nextIDToFocus
+	return nextIDToFocus
 }
 
-func (ctx *Context[T]) FocusPrevCmd(root Fc[T]) {
-
-	focusableItems := ctx.getAllFocusable(root)
-	if len(focusableItems) == 0 {
-		ctx.UIState.Focused = ""
-		return
-	}
-	if len(focusableItems) == 1 {
-		ctx.UIState.Focused = focusableItems[0].Base().ID
-		return
+func (c *FCContext) FocusPrev() string {
+	focusableIDs := _getFocusableComponentIDs(c)
+	if len(focusableIDs) == 0 {
+		c.UIState.Focused = ""
+		return "" // No items to focus
 	}
 
-	currentIndex := -1
-	if ctx.UIState.Focused != "" {
-		for i, item := range focusableItems {
-			if item.Base().ID == ctx.UIState.Focused {
-				currentIndex = i
-				break
-			}
-		}
+	currentFocusID := c.UIState.Focused
+	currentIndex := _findCurrentFocusIndex(focusableIDs, currentFocusID)
+
+	prevIndex := 0
+	if currentIndex != -1 {
+		// Current focused item is in the list, move to the previous
+		prevIndex = (currentIndex - 1 + len(focusableIDs)) % len(focusableIDs)
+	} else {
+		// Current focused item is not in the list (e.g. initially empty, or item disappeared)
+		// or no item was focused; focus the last available item.
+		prevIndex = len(focusableIDs) - 1
 	}
 
-	if currentIndex == -1 {
-		ctx.UIState.Focused = focusableItems[len(focusableItems)-1].Base().ID
-		return
-	}
-
-	prevIndex := (currentIndex - 1 + len(focusableItems)) % len(focusableItems)
-
-	ctx.UIState.Focused = focusableItems[prevIndex].Base().ID
+	prevIDToFocus := focusableIDs[prevIndex]
+	c.UIState.Focused = prevIDToFocus
+	return prevIDToFocus
 }
