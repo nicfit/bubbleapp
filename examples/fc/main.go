@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/button"
@@ -18,7 +19,10 @@ func NewRoot(c *app.FCContext, _ app.Props) string {
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
 	app.UseEffect(c, func() {
-		setGreeting("Who's there?")
+		go func() {
+			time.Sleep(2 * time.Second)
+			setGreeting("Who's there?")
+		}()
 	}, []any{})
 
 	return stack.New(c, func(c *app.FCContext) {

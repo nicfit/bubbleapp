@@ -57,10 +57,9 @@ func UseState[T any](c *FCContext, initialValue T) (T, func(newValue T)) {
 
 	setter := func(newValue T) {
 		instance.States[hookIndex] = newValue
-		// Trigger a re-render by sending RerenderMsg
-		// if c.teaProgram != nil { // Ensure teaProgram is set
-		// 	c.teaProgram.Send(RerenderMsg{}) // Send RerenderMsg
-		// }
+		if c.teaProgram != nil {
+			go c.teaProgram.Send(InvalidateMsg{})
+		}
 	}
 
 	return currentValue, setter
@@ -118,6 +117,9 @@ func UseEffectWithCleanup(c *FCContext, effect func() func(), deps []any) {
 		record.cleanupFn = effect()
 		record.deps = deps
 		record.hasExecuted = true
+		if c.teaProgram != nil {
+			go c.teaProgram.Send(InvalidateMsg{})
+		}
 	}
 }
 
