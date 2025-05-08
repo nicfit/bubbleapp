@@ -22,16 +22,12 @@ func Stack(c *app.FCContext, props app.Props) string {
 	if stackProps.Direction == app.Horizontal {
 		gap := strings.Repeat(" ", stackProps.Gap)
 		for i, child := range children {
-			if i > 0 && stackProps.Gap > 0 {
-				// Add gap before this child
-				childLines := strings.Split(child, "\n")
-				for j, cl := range childLines {
-					childLines[j] = gap + cl
-				}
-				child = strings.Join(childLines, "\n")
-			}
 			if child != "" {
 				processedChildren = append(processedChildren, child)
+				// Add gap after each child except the last
+				if stackProps.Gap > 0 && i < len(children)-1 {
+					processedChildren = append(processedChildren, gap)
+				}
 			}
 		}
 	} else {
@@ -40,7 +36,7 @@ func Stack(c *app.FCContext, props app.Props) string {
 				processedChildren = append(processedChildren, child)
 				// Add vertical gap after each child except the last
 				if stackProps.Gap > 0 && i < len(children)-1 {
-					processedChildren = append(processedChildren, strings.Repeat("\n", stackProps.Gap))
+					processedChildren = append(processedChildren, strings.Repeat(" ", stackProps.Gap))
 				}
 			}
 		}

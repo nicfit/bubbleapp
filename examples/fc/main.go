@@ -13,13 +13,13 @@ import (
 func NewRoot(c *app.FCContext, _ app.Props) string {
 
 	return stack.New(c, func(c *app.FCContext) {
-		button.NewButton(c, "CLICK ME 1", func() {
+		button.NewButton(c, "Quit", func() {
 			c.Quit()
-		})
-		button.NewButton(c, "CLICK ME 2", nil)
-		button.NewButton(c, "CLICK ME 3", nil)
-		button.NewButton(c, "CLICK ME 4", nil)
-	}, stack.WithDirection(app.Horizontal), stack.WithGap(2))
+		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
+		button.NewButton(c, "CLICK ME 2", nil, button.WithType(button.Compact))
+		button.NewButton(c, "CLICK ME 3", nil, button.WithType(button.Compact))
+		button.NewButton(c, "CLICK ME 4", nil, button.WithType(button.Compact))
+	}, stack.WithGap(1))
 
 }
 
