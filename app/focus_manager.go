@@ -1,7 +1,7 @@
 package app
 
 // _getFocusableComponentIDs retrieves all focusable component IDs.
-func _getFocusableComponentIDs(c *FCContext) []string {
+func _getFocusableComponentIDs(c *Ctx) []string {
 	var focusableIDs []string
 	if c.id == nil || c.componentContext == nil {
 		// Should not happen in a healthy context
@@ -28,7 +28,7 @@ func _findCurrentFocusIndex(focusableIDs []string, currentFocusID string) int {
 	return -1
 }
 
-func (c *FCContext) FocusNext() string {
+func (c *Ctx) FocusNext() string {
 	focusableIDs := _getFocusableComponentIDs(c)
 	if len(focusableIDs) == 0 {
 		c.UIState.Focused = ""
@@ -53,7 +53,7 @@ func (c *FCContext) FocusNext() string {
 	return nextIDToFocus
 }
 
-func (c *FCContext) FocusPrev() string {
+func (c *Ctx) FocusPrev() string {
 	focusableIDs := _getFocusableComponentIDs(c)
 	if len(focusableIDs) == 0 {
 		c.UIState.Focused = ""

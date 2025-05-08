@@ -5,7 +5,10 @@ import (
 	"strings"
 )
 
-type fcIDContext struct {
+// idContext stores the context for generating unique IDs for components in a tree structure.
+// It maintains a list of IDs, the current path in the tree, and a count of how many times
+// each ID has been used in the current path.
+type idContext struct {
 	// IDs is a list of all IDs in tree
 	ids []string
 	// The current path of the tree. Used to calculate IDs
@@ -14,26 +17,26 @@ type fcIDContext struct {
 	idPathCount map[string]int
 }
 
-func newFCIDContext() *fcIDContext {
-	return &fcIDContext{
+func newIdContext() *idContext {
+	return &idContext{
 		ids:         []string{},
 		idPath:      []string{},
 		idPathCount: make(map[string]int),
 	}
 }
 
-func (ctx *fcIDContext) initPath() {
+func (ctx *idContext) initPath() {
 	ctx.idPath = []string{}
 	ctx.idPathCount = make(map[string]int)
 }
 
-func (ctx *fcIDContext) initIDCollections() {
+func (ctx *idContext) initIDCollections() {
 	ctx.ids = []string{}
 }
 
 // Used to get an ID when there are children further below.
 // Remember to call PopID() when done.
-func (ctx *fcIDContext) push(name string) string {
+func (ctx *idContext) push(name string) string {
 	// Create a key for idPathCount to ensure uniqueness of counts
 	// based on the current position in the hierarchy.
 	parentPathString := strings.Join(ctx.idPath, "_")
@@ -53,13 +56,23 @@ func (ctx *fcIDContext) push(name string) string {
 	return strings.Join(ctx.idPath, "_")
 }
 
-func (ctx *fcIDContext) pop() {
+func (ctx *idContext) pop() {
 	if len(ctx.idPath) == 0 {
 		return
 	}
 	ctx.idPath = ctx.idPath[:len(ctx.idPath)-1]
 }
 
-func (ctx *fcIDContext) getID() string {
+func (ctx *idContext) getID() string {
 	return strings.Join(ctx.idPath, "_")
 }
+
+// NOT USED FROM OLD ID SYSTEM
+// func collectIdsVisitor[T any](node Fc[T], index int, parent Fc[T], ctx *Context[T]) {
+// 	if node == nil {
+// 		return
+// 	}
+
+// 	ctx.id.idMap[node.Base().ID] = node
+// 	ctx.id.ids = append(ctx.id.ids, node.Base().ID)
+// }

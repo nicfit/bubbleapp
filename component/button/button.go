@@ -34,7 +34,7 @@ const (
 	Warning
 )
 
-func Button(c *app.FCContext, props app.Props) string {
+func Button(c *app.Ctx, props app.Props) string {
 	buttonProps, _ := props.(Props)
 	id := app.UseID(c)
 
@@ -51,7 +51,7 @@ func Button(c *app.FCContext, props app.Props) string {
 	return c.Zone.Mark(id, style.Render(buttonProps.Text))
 }
 
-func NewButton(c *app.FCContext, text string, onAction func(), props ...Prop) string {
+func NewButton(c *app.Ctx, text string, onAction func(), props ...Prop) string {
 	p := Props{
 		Text:     text,
 		OnAction: onAction,
@@ -75,7 +75,7 @@ func WithType(btnType Type) Prop {
 
 // OMG I hate this. How to make a nice design system that maybe can also work for custom components?
 // This is a mess. I need to think about this more.
-func styleResolver(c *app.FCContext, variant Variant, btnType Type, focused bool, hovered bool, disabled bool) lipgloss.Style {
+func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hovered bool, disabled bool) lipgloss.Style {
 	if btnType == Compact {
 		if focused {
 			switch variant {

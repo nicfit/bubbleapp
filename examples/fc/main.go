@@ -13,7 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.FCContext, _ app.Props) string {
+func NewRoot(c *app.Ctx, _ app.Props) string {
 
 	clicks, setClicks := app.UseState(c, 0)
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
@@ -25,7 +25,7 @@ func NewRoot(c *app.FCContext, _ app.Props) string {
 		}()
 	}, []any{})
 
-	return stack.New(c, func(c *app.FCContext) {
+	return stack.New(c, func(c *app.Ctx) {
 		button.NewButton(c, "Count clicks here!", func() {
 			setClicks(clicks + 1)
 		}, button.WithType(button.Compact))

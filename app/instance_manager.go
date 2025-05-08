@@ -5,7 +5,10 @@ import (
 	"strings"
 )
 
-type fcInstance struct {
+// instanceContext represents an instance of a functional component (FC).
+// It holds the component's ID, focusable state, function reference, props,
+// event handlers, and state management for both state and effects.
+type instanceContext struct {
 	id        string
 	focusable bool
 	fc        FC
@@ -16,41 +19,34 @@ type fcInstance struct {
 }
 
 type fcInstanceContext struct {
-	ctxs map[string]*fcInstance
+	ctxs map[string]*instanceContext
 }
 
-func newFCInstanceContext() *fcInstanceContext {
+func newInstanceContext() *fcInstanceContext {
 	return &fcInstanceContext{
-		ctxs: make(map[string]*fcInstance),
+		ctxs: make(map[string]*instanceContext),
 	}
 }
 
-func (c *fcInstanceContext) get(id string) (*fcInstance, bool) {
+func (c *fcInstanceContext) get(id string) (*instanceContext, bool) {
 	instance, ok := c.ctxs[id]
 	return instance, ok
 }
 
-func (c *fcInstanceContext) set(id string, fc FC, props Props) *fcInstance {
+func (c *fcInstanceContext) set(id string, fc FC, props Props) *instanceContext {
 	instance, ok := c.ctxs[id]
 	if !ok {
-		instance = &fcInstance{
+		instance = &instanceContext{
 			id:       id,
 			handlers: make(map[string]interface{}),
-			States:   make([]any, 0),          // Initialize States for a new instance
-			Effects:  make([]effectRecord, 0), // Initialize Effects for a new instance
+			States:   make([]any, 0),
+			Effects:  make([]effectRecord, 0),
 		}
 		c.ctxs[id] = instance
 	}
 	// Always update fc and props
 	instance.fc = fc
 	instance.props = props
-
-	// Reset hook counters for this instance before its FC is called
-	// This is done in FCContext.Render, but ensuring it here as well for safety
-	// if the instance is re-used in complex scenarios without a full FCContext.Render pass.
-	// instance.stateCounter = 0
-	// instance.effectCounter = 0
-	// TODO: Re-evaluate if resetting counters here is necessary or if FCContext.Render is sufficient.
 
 	// Re-extract handlers
 	instance.handlers = make(map[string]interface{}) // Clear old handlers

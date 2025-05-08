@@ -1,12 +1,12 @@
 package app
 
 // Returns the component ID
-func UseID(c *FCContext) string {
+func UseID(c *Ctx) string {
 	return c.id.getID()
 }
 
 // Registers component as focusable and returns the focus state
-func UseFocus(c *FCContext) bool {
+func UseFocus(c *Ctx) bool {
 	instance, instanceExists := c.componentContext.get(c.id.getID())
 	if instanceExists {
 		instance.focusable = true
@@ -14,7 +14,7 @@ func UseFocus(c *FCContext) bool {
 	return c.UIState.Focused == c.id.getID()
 }
 
-func UseChildren(c *FCContext, children Children) []string {
+func UseChildren(c *Ctx, children Children) []string {
 	newCollector := &outputCollector{}
 	c.collectorStack = append(c.collectorStack, newCollector)
 
@@ -36,13 +36,13 @@ func UseChildren(c *FCContext, children Children) []string {
 // It's analogous to React's useState hook.
 // IMPORTANT: Hooks must be called in the same order on every render,
 // and they must not be called conditionally.
-func UseState[T any](c *FCContext, initialValue T) (T, func(newValue T)) {
+func UseState[T any](c *Ctx, initialValue T) (T, func(newValue T)) {
 	instanceID := c.id.getID()
 	// FCContext.Render guarantees that the instance exists by calling componentContext.set
 	instance, _ := c.componentContext.get(instanceID)
 
-	hookIndex := c.UseStateCounter
-	c.UseStateCounter++
+	hookIndex := c.useStateCounter
+	c.useStateCounter++
 
 	if hookIndex >= len(instance.States) {
 		// This is the first render for this hook in this component instance,
@@ -65,7 +65,6 @@ func UseState[T any](c *FCContext, initialValue T) (T, func(newValue T)) {
 	return currentValue, setter
 }
 
-// effectRecord stores the effect function and its last dependencies.
 type effectRecord struct {
 	cleanupFn   func() // The cleanup function returned by the effect.
 	deps        []any  // Dependencies for the effect.
@@ -76,12 +75,12 @@ type effectRecord struct {
 // Dependencies (deps) are checked to see if the effect should re-run.
 // If deps is nil, the effect runs after every render.
 // If deps is an empty slice, it runs only once after the initial render and on unmount.
-func UseEffectWithCleanup(c *FCContext, effect func() func(), deps []any) {
+func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	instanceID := c.id.getID()
 	instance, _ := c.componentContext.get(instanceID)
 
-	hookIndex := c.UseEffectCounter
-	c.UseEffectCounter++ // Increment for the next UseEffect call
+	hookIndex := c.useEffectCounter
+	c.useEffectCounter++ // Increment for the next UseEffect call
 
 	// Ensure the Effects slice is large enough
 	if hookIndex >= len(instance.Effects) {
@@ -123,9 +122,9 @@ func UseEffectWithCleanup(c *FCContext, effect func() func(), deps []any) {
 	}
 }
 
-func UseEffect(c *FCContext, effect func(), deps []any) {
+func UseEffect(c *Ctx, effect func(), deps []any) {
 	UseEffectWithCleanup(c, func() func() {
 		effect()
-		return nil // No cleanup function
+		return nil
 	}, deps)
 }

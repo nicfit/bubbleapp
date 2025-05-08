@@ -10,6 +10,18 @@ Sleep 500ms
 
 Enter
 
-Sleep 3s
+Sleep 1s
 
-Type "q"
+Tab
+
+Sleep 400ms
+
+Enter@200ms 12
+
+Sleep 2s
+
+Tab 1
+
+Sleep 200ms
+
+Enter

@@ -78,7 +78,7 @@ func gcdSlice(durations []time.Duration) time.Duration {
 	return result
 }
 
-func (tick *tickState[T]) createTimer(ctx *Context[T]) {
+func (tick *tickState[T]) createTimer(ctx *Ctx) {
 	tick.mu.Lock()
 	defer tick.mu.Unlock()
 

@@ -10,7 +10,7 @@ import (
 
 // Props defines the properties for the Text component.
 type Props struct {
-	Content    func(*app.FCContext) string
+	Content    func(*app.Ctx) string
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
@@ -22,7 +22,7 @@ type Props struct {
 type prop func(*Props)
 
 // TextFC is the core functional component for rendering text.
-func Text(c *app.FCContext, props app.Props) string {
+func Text(c *app.Ctx, props app.Props) string {
 	textProps, ok := props.(Props)
 	if !ok {
 		// In a real scenario, you might log an error or return a specific error string.
@@ -62,9 +62,9 @@ func Text(c *app.FCContext, props app.Props) string {
 
 // NewText creates a new text element.
 // Content can be a static string or a dynamic function: func(c *app.FCContext) string.
-func NewText(c *app.FCContext, content string, opts ...prop) string {
+func NewText(c *app.Ctx, content string, opts ...prop) string {
 	p := Props{
-		Content: func(c *app.FCContext) string {
+		Content: func(c *app.Ctx) string {
 			return content
 		},
 		Foreground: lipgloss.NoColor{},

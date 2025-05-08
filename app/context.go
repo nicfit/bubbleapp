@@ -1,7 +1,6 @@
 package app
 
 import (
-	"image/color"
 	"reflect"
 	"runtime"
 	"strings"
@@ -11,44 +10,73 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type Context[T any] struct {
-	root    Fc[T]
-	UIState *StateStore
-	Zone    *zone.Manager
-	ZoneMap map[string]Fc[T]
+type Ctx struct {
+	UIState          *uiStateContext
+	Zone             *zone.Manager
+	ZoneMap          map[string]*instanceContext
+	teaProgram       *tea.Program
+	Styles           *style.Styles
+	id               *idContext
+	Tick             *tickState[any]
+	collectorStack   []*outputCollector
+	componentContext *fcInstanceContext
+	useEffectCounter int
+	useStateCounter  int // Added for UseState
 
-	Styles          *style.Styles
-	BackgroundColor color.Color
-	Width           int
-	Height          int
-	LayoutPhase     bool
-	Data            *T
-	teaProgram      *tea.Program
-
-	id   *idContext[T]
-	Tick *tickState[T]
+	LayoutPhase bool
+	Width       int
+	Height      int
 }
 
-func NewContext[T any](data *T) *Context[T] {
-	return &Context[T]{
-		Zone:    zone.New(),
-		ZoneMap: make(map[string]Fc[T]),
-		UIState: NewStateStore(),
-		Styles:  style.DefaultStyles(),
-		Data:    data,
-		id:      newIDContext[T](),
-		Tick:    &tickState[T]{},
+func NewFCContext() *Ctx {
+	return &Ctx{
+		UIState:          NewUIStateContext(),
+		Zone:             zone.New(),
+		ZoneMap:          make(map[string]*instanceContext),
+		Styles:           style.DefaultStyles(),
+		id:               newIdContext(),
+		Tick:             &tickState[any]{},
+		collectorStack:   []*outputCollector{},
+		componentContext: newInstanceContext(),
 	}
 }
 
+// Render a functional component with the given props.
+// This function is responsible for managing the lifecycle of the component,
+// including state management, effect handling, and ID management.
+func (c *Ctx) Render(fc FC, props Props) string {
+	id := c.id.push(getFuncName(fc))
+	defer c.id.pop()
+
+	c.id.ids = append(c.id.ids, id)
+
+	c.componentContext.set(id, fc, props)
+
+	c.useStateCounter = 0
+	c.useEffectCounter = 0
+
+	output := fc(c, props)
+
+	// If there is an active output collector, append the output to it
+	if len(c.collectorStack) > 0 {
+		currentCollector := c.collectorStack[len(c.collectorStack)-1]
+		currentCollector.outputs = append(currentCollector.outputs, output)
+	}
+
+	return output
+}
+
+type outputCollector struct {
+	outputs []string
+}
 type InvalidateMsg struct{}
 
-// Helper to get function name (can be fragile, use with caution)
+// Helper to get function name (can be fragile - consider other approach)
 func getFuncName(fn interface{}) string {
 	// Ensure fn is a function
 	v := reflect.ValueOf(fn)
 	if v.Kind() != reflect.Func {
-		return "unknownComponent" // Or panic, or handle error
+		return "unknownComponent"
 	}
 	fullName := runtime.FuncForPC(v.Pointer()).Name()
 	parts := strings.Split(fullName, ".")
@@ -65,23 +93,15 @@ func getFuncName(fn interface{}) string {
 // Requires a tea.Program to be set with app.SetTeaProgram.
 // This is useful for performance optimizations where a tick
 // is too expensive.
-func (ctx *Context[T]) Update() {
+func (ctx *Ctx) Update() {
 	if ctx.teaProgram == nil {
 		panic("teaProgram is nil. Cannot update manually.")
 	}
 	go ctx.teaProgram.Send(InvalidateMsg{})
 }
 
-func (ctx *Context[T]) AddCmd(cmd tea.Cmd) {
-	if cmd == nil {
-		return
-	}
-
-	go ctx.teaProgram.Send(cmd())
-}
-
 // Quit signals the application to stop, ensuring cleanup like stopping active timers.
-func (ctx *Context[T]) Quit() {
+func (ctx *Ctx) Quit() {
 	if ctx.Tick != nil {
 		ctx.Tick.StopActiveTimer()
 	}

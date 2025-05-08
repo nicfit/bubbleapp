@@ -24,7 +24,7 @@ const (
 // It supports different types of event data, such as MouseEvent, KeyEvent, and others.
 // If the handler is not found or the event data type does not match, it falls back to a parameter-less function call.
 // The function returns true if the handler was found and called, false otherwise.
-func (m app) dispatchToHandler(instance *fcInstance, semanticIntent string, handlerName string, eventData ...interface{}) bool {
+func (m app) dispatchToHandler(instance *instanceContext, semanticIntent string, handlerName string, eventData ...interface{}) bool {
 
 	// Try the semantic intent first
 	if primaryActionHandler, ok := instance.handlers[semanticIntent].(func()); ok {

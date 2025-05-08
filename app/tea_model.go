@@ -9,78 +9,10 @@ import (
 )
 
 type Props any
-type FC = func(ctx *FCContext, props Props) string
-type Children func(ctx *FCContext)
-
-type FCContext struct {
-	UIState          *StateStore
-	Zone             *zone.Manager
-	ZoneMap          map[string]*fcInstance
-	teaProgram       *tea.Program
-	Styles           *style.Styles
-	id               *fcIDContext
-	Tick             *tickState[any]
-	collectorStack   []*outputCollector
-	componentContext *fcInstanceContext
-	UseEffectCounter int
-
-	LayoutPhase     bool
-	Width           int
-	Height          int
-	UseStateCounter int // Added for UseState
-}
-
-type outputCollector struct {
-	outputs []string
-}
-
-func NewFCContext() *FCContext {
-	return &FCContext{
-		UIState:          NewStateStore(),
-		Zone:             zone.New(),
-		ZoneMap:          make(map[string]*fcInstance),
-		Styles:           style.DefaultStyles(),
-		id:               newFCIDContext(),
-		Tick:             &tickState[any]{},
-		collectorStack:   []*outputCollector{},
-		componentContext: newFCInstanceContext(),
-	}
-}
-
-func (c *FCContext) Render(fc FC, props Props) string {
-	id := c.id.push(getFuncName(fc))
-	defer c.id.pop()
-
-	c.id.ids = append(c.id.ids, id)
-
-	// Ensure instance exists and fc/props/handlers are up-to-date.
-	// The `set` function in componentContext will create if not exists, or update if exists,
-	// while preserving `States`.
-	c.componentContext.set(id, fc, props)
-
-	c.UseStateCounter = 0
-	c.UseEffectCounter = 0
-
-	output := fc(c, props)
-
-	// If there is an active output collector, append the output to it
-	if len(c.collectorStack) > 0 {
-		currentCollector := c.collectorStack[len(c.collectorStack)-1]
-		currentCollector.outputs = append(currentCollector.outputs, output)
-	}
-
-	return output
-}
+type FC = func(ctx *Ctx, props Props) string
+type Children func(ctx *Ctx)
 
 // _____________________
-
-// Quit signals the application to stop, ensuring cleanup like stopping active timers.
-func (ctx *FCContext) Quit() {
-	if ctx.Tick != nil {
-		ctx.Tick.StopActiveTimer()
-	}
-	go ctx.teaProgram.Quit()
-}
 
 type AppOptions struct {
 	TickFPS time.Duration
@@ -99,16 +31,16 @@ func WithTickFPS(fps time.Duration) AppOption {
 
 type app struct {
 	root    FC
-	ctx     *FCContext
+	ctx     *Ctx
 	tickFPS time.Duration
 }
 
-func New(ctx *FCContext, root FC, options ...AppOption) *app {
+func New(ctx *Ctx, root FC, options ...AppOption) *app {
 	if options == nil {
 		options = []AppOption{}
 	}
 	if ctx.ZoneMap == nil {
-		ctx.ZoneMap = make(map[string]*fcInstance)
+		ctx.ZoneMap = make(map[string]*instanceContext)
 	}
 	if ctx.Styles == nil {
 		ctx.Styles = style.DefaultStyles()

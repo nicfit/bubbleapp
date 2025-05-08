@@ -13,7 +13,7 @@ type StackProps struct {
 	Children  app.Children
 }
 
-func Stack(c *app.FCContext, props app.Props) string {
+func Stack(c *app.Ctx, props app.Props) string {
 	stackProps, _ := props.(StackProps)
 
 	children := app.UseChildren(c, stackProps.Children)
@@ -61,7 +61,7 @@ func WithGap(gap int) StackProp {
 		props.Gap = gap
 	}
 }
-func New(c *app.FCContext, children app.Children, props ...StackProp) string {
+func New(c *app.Ctx, children app.Children, props ...StackProp) string {
 	appliedProps := StackProps{
 		Children: children,
 	}
