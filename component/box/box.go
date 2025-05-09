@@ -2,94 +2,107 @@ package box
 
 import (
 	"image/color"
+	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type Options struct {
+// BoxProps defines the properties for the Box component.
+type BoxProps struct {
 	Bg            color.Color
 	DisableFollow bool
-}
-type box[T any] struct {
-	base         *app.Base
-	opts         *Options
-	style        lipgloss.Style
-	viewport     viewport.Model
-	contentCache string
-	child        app.Fc[T]
+	Children      app.Children
+	Size          app.Size
 }
 
-func NewEmpty[T any](ctx *app.Context[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
-	return New(ctx, func(ctx *app.Context[T]) app.Fc[T] { return nil }, options, baseOptions...)
-}
+// BoxProp is a function type for setting BoxProps.
+type BoxProp func(*BoxProps)
 
-func New[T any](ctx *app.Context[T], child func(ctx *app.Context[T]) app.Fc[T], options *Options, baseOptions ...app.BaseOption) *box[T] {
-	if options == nil {
-		options = &Options{}
-	}
-	if baseOptions == nil {
-		baseOptions = []app.BaseOption{}
+// Box is the functional component for rendering a box with a viewport.
+func Box(c *app.Ctx, props app.Props) string {
+	boxProps, ok := props.(BoxProps)
+	if !ok {
+		return ""
 	}
 
-	base, cleanup := app.NewBase(ctx, "box", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
-	defer cleanup()
+	id := app.UseID(c)
 
-	viewport := viewport.New()
+	vp, _ := app.UseState(c, viewport.New())
+
+	// Get children
+	childrenContent := app.UseChildren(c, boxProps.Children)
+	renderedChildren := strings.Join(childrenContent, "\n")
+
+	// For prevContent, T is string, so prevContent is string, setPrevContent is func(string).
+	prevContent, setPrevContent := app.UseState(c, "")
+
+	// Get dimensions from the UI state (populated by the layout system)
+	width := c.UIState.GetWidth(id)
+	height := c.UIState.GetHeight(id)
+
+	vp.SetWidth(width)
+	vp.SetHeight(height)
+
+	// Update viewport content if it has changed
+	if prevContent != renderedChildren {
+		vp.SetContent(renderedChildren)
+		setPrevContent(renderedChildren) // Update string state for comparison
+		if !boxProps.DisableFollow {
+			vp.GotoBottom() // or vp.GotoTop() depending on desired behavior
+		}
+	}
 
 	style := lipgloss.NewStyle()
-	if options.Bg != nil {
-		style = style.Background(options.Bg)
+	if boxProps.Bg != nil {
+		style = style.Background(boxProps.Bg)
 	}
 
-	c := child(ctx)
+	finalRender := style.Width(width).Height(height).Render(vp.View())
 
-	return &box[T]{
-		base:         base,
-		opts:         options,
-		style:        style,
-		viewport:     viewport,
-		contentCache: "",
-		child:        c,
-	}
+	return c.Zone.Mark(id, finalRender)
 }
 
-func (m box[T]) Render(ctx *app.Context[T]) string {
-
-	m.viewport.SetWidth(ctx.UIState.GetWidth(m.base.ID))
-	m.viewport.SetHeight(ctx.UIState.GetHeight(m.base.ID))
-
-	childFc := m.child
-	if childFc != nil {
-		child := childFc.Render(ctx)
-		if m.contentCache != child {
-			m.viewport.SetContent(child)
-			if !m.opts.DisableFollow {
-				m.viewport.GotoBottom()
-			}
+// New creates a new Box component.
+func New(c *app.Ctx, children app.Children, opts ...BoxProp) string {
+	appliedProps := BoxProps{
+		Children: children,
+		// Default values
+		DisableFollow: false,
+	}
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&appliedProps)
 		}
-		m.contentCache = child
 	}
-
-	// This does not work when not Grow. Needs to not limit on LayoutPhase. Fix.
-	return m.style.Height(ctx.UIState.GetHeight(m.base.ID)).Width(ctx.UIState.GetWidth(m.base.ID)).Render(m.viewport.View())
+	return c.Render(Box, appliedProps)
 }
 
-func (m *box[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	child := m.child
-	if child != nil {
-		return []app.Fc[T]{child}
+// NewEmpty creates a new Box component with no children.
+func NewEmpty(c *app.Ctx, opts ...BoxProp) string {
+	return New(c, nil, opts...)
+}
+
+// --- Prop Option Functions ---
+
+// WithBg sets the background color for the box.
+func WithBg(bg color.Color) BoxProp {
+	return func(props *BoxProps) {
+		props.Bg = bg
 	}
-	return []app.Fc[T]{}
-
 }
 
-func (m *box[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
-	return false
+// WithDisableFollow disables the viewport's auto-scrolling to the bottom on content change.
+func WithDisableFollow(disable bool) BoxProp {
+	return func(props *BoxProps) {
+		props.DisableFollow = disable
+	}
 }
 
-func (m *box[T]) Base() *app.Base {
-	return m.base
+func WithGrow(grow bool) BoxProp {
+	return func(props *BoxProps) {
+		props.Size.GrowX = grow
+		props.Size.GrowY = grow
+	}
 }

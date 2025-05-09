@@ -7,6 +7,13 @@ const (
 	Horizontal
 )
 
+type Size struct {
+	Width  int
+	Height int
+	GrowX  bool
+	GrowY  bool
+}
+
 // NOT USED YET IN THE FC SYSTEM
 // Calculate sizes of the component tree
 

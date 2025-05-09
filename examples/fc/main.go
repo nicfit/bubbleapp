@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
+	"github.com/alexanderbh/bubbleapp/component/box"
 	"github.com/alexanderbh/bubbleapp/component/button"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
@@ -32,6 +33,8 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 
 		text.NewText(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
 		text.NewText(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+
+		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary), box.WithGrow(true))
 
 		button.NewButton(c, "Quit", func() {
 			c.Quit()
