@@ -68,6 +68,7 @@ func (a *app) Init() tea.Cmd {
 	if a.ctx.teaProgram == nil {
 		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
 	}
+
 	var (
 		cmds []tea.Cmd
 	)
@@ -115,8 +116,8 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case nil: // Add this case to handle c.teaProgram.Send(nil) from UseState
 		return a, nil // Just trigger a re-render by returning the model
 	case tea.WindowSizeMsg:
-		a.ctx.Width = msg.Width
-		a.ctx.Height = msg.Height
+		// SET THE SIZE OF THE LAYOUT HERE
+		//a.ctx.layoutManager.SetSize(msg.Width, msg.Height)
 		return a, tea.Batch(cmds...)
 	case tea.MouseMsg:
 		a.ctx.Zone.AnyInBounds(a, msg)
@@ -177,11 +178,6 @@ func (a *app) View() string {
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
 	a.ctx.Tick.init()
-
-	a.ctx.LayoutPhase = true
-	a.ctx.Render(a.root, nil)
-	a.ctx.LayoutPhase = false
-	a.ctx.id.initPath()
 
 	//a.ctx.Tick.createTimer(a.ctx)
 

@@ -22,13 +22,9 @@ type Ctx struct {
 	componentContext *fcInstanceContext
 	useEffectCounter int
 	useStateCounter  int // Added for UseState
-
-	LayoutPhase bool
-	Width       int
-	Height      int
 }
 
-func NewFCContext() *Ctx {
+func NewCtx() *Ctx {
 	return &Ctx{
 		UIState:          NewUIStateContext(),
 		Zone:             zone.New(),
