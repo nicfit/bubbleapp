@@ -81,15 +81,15 @@ func NewText(c *app.Ctx, content string, opts ...prop) string {
 
 // --- Prop Option Functions ---
 
-// WithForeground sets the foreground color.
-func WithForeground(fg color.Color) prop {
+// WithFg sets the foreground color.
+func WithFg(fg color.Color) prop {
 	return func(props *Props) {
 		props.Foreground = fg
 	}
 }
 
-// WithBackground sets the background color.
-func WithBackground(bg color.Color) prop {
+// WithBg sets the background color.
+func WithBg(bg color.Color) prop {
 	return func(props *Props) {
 		props.Background = bg
 	}

@@ -30,8 +30,8 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 			setClicks(clicks + 1)
 		}, button.WithType(button.Compact))
 
-		text.NewText(c, "Clicks: "+strconv.Itoa(clicks), text.WithForeground(c.Styles.Colors.Warning))
-		text.NewText(c, "Greeting: "+greeting, text.WithForeground(c.Styles.Colors.Warning))
+		text.NewText(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
+		text.NewText(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
 
 		button.NewButton(c, "Quit", func() {
 			c.Quit()
@@ -41,7 +41,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 }
 
 func main() {
-	ctx := app.NewFCContext()
+	ctx := app.NewCtx()
 
 	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
