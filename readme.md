@@ -20,9 +20,9 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
   - Automatic mouse handling and propagation for all components.
 - **[Focus Management](#focus)**
   - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
-- **Global Ticks**
+- **Global Ticks** IN PROGRESS
   - Adding several Spinners from Bubbles is really slow over SSH since they each start a Tick message. In BubbleTea all components use the same global tick for real time updates.
-- **[Shaders](#shaders)**
+- **[Shaders](#shaders)** IN PROGRESS
   - Attach shaders to components to transform their output. Dynamic Shaders listen for the Global Tick and can react in real time. The possibilities are endless.
 
 # Examples
@@ -83,10 +83,14 @@ loader.New(ctx, loader.Dots, "Loading...", nil),
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
 ```go
-stack := stack.New(ctx, []app.Fc[CustomData]{
-    table.New(ctx, clms, rows, nil),
-    table.New(ctx, clms, rows, nil),
-}, &stack.Options{Horizontal: true})
+stack := stack.New(ctx, func(ctx *app.Ctx) {
+  table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+    return clms, rows
+  }))
+  table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+    return clms, rows
+  }))
+}, stack.WithDirection(app.Horizontal))
 ```
 
 ![Table](./examples/table/demo.gif)

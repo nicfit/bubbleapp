@@ -16,8 +16,25 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-type Options struct {
+// Props holds the configuration for the Table component.
+type Props struct {
+	DataFunc func(ctx *app.Ctx) (clms []Column, rows []Row)
+	KeyMap   KeyMap
+	Styles   Styles
+	Help     help.Model
 	style.Margin
+	app.Layout
+}
+
+type tableProp func(*Props)
+
+// tableState holds the internal state of the Table component.
+type tableState struct {
+	cols     []column
+	rows     []Row
+	cursor   int
+	rowHover int // Currently unused as mouse hover interactions are not fully ported
+	viewport viewport.Model
 }
 
 type Row []string
@@ -39,28 +56,7 @@ func WidthInt(i int) ColumnWidth {
 	return ColumnWidth{Int: i}
 }
 
-type uiState struct {
-	cols     []column
-	rows     []Row
-	cursor   int
-	rowHover int
-	start    int
-	end      int
-}
-
-type baseTable[T any] struct {
-	base   *app.Base
-	ctx    *app.Context[T]
-	KeyMap KeyMap
-	Help   help.Model
-
-	data func(*app.Context[T]) (clms []Column, rows []Row)
-
-	styles Styles
-
-	viewport viewport.Model
-}
-
+// column is an internal representation with calculated width.
 type column struct {
 	Title string
 	Width int
@@ -131,11 +127,10 @@ type Styles struct {
 	Header    lipgloss.Style
 	Cell      lipgloss.Style
 	Selected  lipgloss.Style
-	Hovered   lipgloss.Style
+	Hovered   lipgloss.Style // Currently unused
 }
 
-// DefaultStyles returns a set of default style definitions for this table.
-func defaultStyles[T any](ctx *app.Context[T]) Styles {
+func defaultStyles(ctx *app.Ctx) Styles {
 	base := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, true, true, true).BorderForeground(ctx.Styles.Colors.Ghost)
 	return Styles{
 		Base:      base,
@@ -147,314 +142,262 @@ func defaultStyles[T any](ctx *app.Context[T]) Styles {
 	}
 }
 
-type Option[T any] func(*baseTable[T])
-
-func New[T any](ctx *app.Context[T], clms []Column, rows []Row, options *Options, baseOptions ...app.BaseOption) *baseTable[T] {
-	return NewDynamic(ctx, func(ctx *app.Context[T]) ([]Column, []Row) {
-		return clms, rows
-	}, options, baseOptions...)
-}
-
-func NewDynamic[T any](ctx *app.Context[T], data func(ctx *app.Context[T]) (clms []Column, rows []Row), options *Options, baseOptions ...app.BaseOption) *baseTable[T] {
-	if options == nil {
-		options = &Options{}
-	}
-	if baseOptions == nil {
-		baseOptions = []app.BaseOption{}
-	}
-	base, cleanup := app.NewBase(ctx, "table", append([]app.BaseOption{app.WithFocusable(true), app.WithGrow(true)}, baseOptions...)...)
-	defer cleanup()
-
-	s := defaultStyles(ctx)
-
-	s.Base = style.ApplyMargin(s.Base, options.Margin)
-	s.BaseFocus = style.ApplyMargin(s.BaseFocus, options.Margin)
-
-	m := baseTable[T]{
-		base: base,
-		ctx:  ctx,
-		data: data,
-
-		viewport: viewport.New(),
-
+// NewTable creates a new table component instance.
+func New(ctx *app.Ctx, props ...tableProp) string {
+	p := Props{
 		KeyMap: defaultKeyMap(),
+		Styles: defaultStyles(ctx),
 		Help:   help.New(),
-		styles: s,
+		Layout: app.Layout{
+			GrowX: true,
+			GrowY: true,
+		},
 	}
-
-	m.updateViewport()
-
-	return &m
-}
-
-func (m *baseTable[T]) getState() *uiState {
-	state := app.GetUIState[T, uiState](m.ctx, m.base.ID)
-	if state == nil {
-		state = &uiState{
-			cursor:   -1,
-			rowHover: -1,
-		}
-		app.SetUIState(m.ctx, m.base.ID, state)
-	}
-	return state
-}
-
-func (m *baseTable[T]) setHover(n int) {
-	if m.getState().rowHover != n {
-		m.getState().rowHover = n
-		m.updateViewport()
-	}
-}
-func (m *baseTable[T]) clearHover() {
-	if m.getState().rowHover != -1 {
-		m.getState().rowHover = -1
-		m.updateViewport()
-	}
-}
-
-// update is the Bubble Tea update loop.
-func (m *baseTable[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
-	//cmds := []tea.Cmd{}
-
-	switch msg := msg.(type) {
-	// case tea.MouseMsg:
-	// 	switch msg := msg.(type) {
-	// 	case tea.MouseMotionMsg:
-	// 		for i := range m.rows {
-	// 			if ctx.Zone.Get(m.base.ID + "_" + strconv.Itoa(i)).InBounds(msg) {
-	// 				m.setHover(i)
-	// 				break
-	// 			}
-	// 			if i == len(m.rows)-1 {
-	// 				m.clearHover()
-	// 			}
-	// 		}
-	// 	case tea.MouseClickMsg:
-	// 		if msg.Button == tea.MouseLeft {
-	// 			for i := range m.rows {
-	// 				if ctx.Zone.Get(m.base.ID + "_" + strconv.Itoa(i)).InBounds(msg) {
-	// 					m.setFocus()
-	// 					m.setCursor(i)
-	// 					m.updateViewport()
-	// 					cmds = append(cmds, func() tea.Msg {
-	// 						return app.FocusComponentMsg{
-	// 							TargetID: m.tableID,
-	// 						}
-	// 					})
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	case tea.KeyPressMsg:
-		if m.ctx.UIState.Focused == m.base.ID {
-			switch {
-			case key.Matches(msg, m.KeyMap.LineUp):
-				m.MoveUp(1)
-				return true
-			case key.Matches(msg, m.KeyMap.LineDown):
-				m.MoveDown(1)
-				return true
-			case key.Matches(msg, m.KeyMap.PageUp):
-				m.MoveUp(m.viewport.Height())
-				return true
-			case key.Matches(msg, m.KeyMap.PageDown):
-				m.MoveDown(m.viewport.Height())
-				return true
-			case key.Matches(msg, m.KeyMap.HalfPageUp):
-				m.MoveUp(m.viewport.Height() / 2)
-				return true
-			case key.Matches(msg, m.KeyMap.HalfPageDown):
-				m.MoveDown(m.viewport.Height() / 2)
-				return true
-			case key.Matches(msg, m.KeyMap.GotoTop):
-				m.GotoTop()
-				return true
-			case key.Matches(msg, m.KeyMap.GotoBottom):
-				m.GotoBottom()
-				return true
-			}
+	for _, prop := range props {
+		if prop != nil {
+			prop(&p)
 		}
 	}
+	p.Styles.Base = style.ApplyMargin(p.Styles.Base, p.Margin)
+	p.Styles.BaseFocus = style.ApplyMargin(p.Styles.BaseFocus, p.Margin)
 
-	// if m.cursorChanged && m.cursor >= 0 && m.cursor < len(m.rows) {
-	// 	m.cursorChanged = false
-	// 	cmds = append(cmds, func() tea.Msg {
-	// 		return RowFocusMsg{
-	// 			TableID: m.tableID,
-	// 			Row:     m.cursor,
-	// 			RowID:   m.rows[m.cursor][0], // Column 0 is the ID for now
-	// 		}
-	// 	})
-	// }
-
-	return false
-
+	return ctx.Render(Table, p)
 }
 
-// view renders the component.
-func (m *baseTable[T]) Render(ctx *app.Context[T]) string {
-	uiState := m.getState()
-	s := m.getBaseStyle(ctx)
-	width := ctx.UIState.GetWidth(m.base.ID)
-	height := ctx.UIState.GetHeight(m.base.ID)
+func WithDataFunc(f func(ctx *app.Ctx) (clms []Column, rows []Row)) tableProp {
+	return func(props *Props) {
+		props.DataFunc = f
+	}
+}
 
-	if m.data != nil {
+// Table is the functional component for rendering a table.
+func Table(ctx *app.Ctx, props app.Props) string {
+	p, _ := props.(Props)
+	id := app.UseID(ctx)
+	isFocused := app.UseFocus(ctx)
+
+	state, setState := app.UseState(ctx, tableState{
+		cursor:   -1,
+		rowHover: -1, // Unused for now
+		viewport: viewport.New(),
+	})
+
+	app.UseEffect(ctx, func() {
 		var rawCols []Column
-		rawCols, uiState.rows = m.data(ctx)
-		uiState.cols = columnMapping(width-s.GetHorizontalFrameSize()-(m.styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
-	}
-	if ctx.UIState.Focused == m.base.ID {
-		if uiState.cursor < 0 {
-			m.setCursor(0)
+		rawCols, state.rows = p.DataFunc(ctx)
+		// Determine width based on current UI state for the component ID
+		currentLayoutWidth := ctx.UIState.GetWidth(id)
+		baseStyleToUse := p.Styles.Base
+		if isFocused {
+			baseStyleToUse = p.Styles.BaseFocus
 		}
+		state.cols = columnMapping(currentLayoutWidth-baseStyleToUse.GetHorizontalFrameSize()-(p.Styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
+		setState(state)
+	}, []any{ctx.UIState.GetWidth(id)})
+
+	numRows := len(state.rows) // Use state for calculations
+
+	// Handle cursor initialization and bounds
+	currentCursor := state.cursor
+	updatedCursor := currentCursor
+
+	if isFocused && updatedCursor < 0 && numRows > 0 {
+		updatedCursor = 0
 	}
-	if uiState.cursor >= len(uiState.rows) {
-		m.setCursor(len(uiState.rows) - 1)
-	}
-	headersView := m.headersView()
-	m.viewport.SetHeight(height - lipgloss.Height(headersView) - s.GetVerticalFrameSize())
-	m.viewport.SetWidth(width - s.GetHorizontalFrameSize())
-	m.updateViewport()
-
-	return s.Render(headersView + "\n" + app.RegisterMouse(ctx, m.base.ID+"_body", m, m.viewport.View()))
-}
-
-func (m *baseTable[T]) getBaseStyle(ctx *app.Context[T]) lipgloss.Style {
-	if ctx.UIState.Focused == m.base.ID {
-		return m.styles.BaseFocus
-	}
-	return m.styles.Base
-}
-
-// helpView is a helper method for rendering the help menu from the keymap.
-// Note that this view is not rendered by default and you must call it
-// manually in your application, where applicable.
-func (m baseTable[T]) helpView() string {
-	return m.Help.View(m.KeyMap)
-}
-
-// updateViewport updates the list content based on the previously defined
-// columns and rows.
-func (m *baseTable[T]) updateViewport() {
-	uiState := m.getState()
-	renderedRows := make([]string, 0, len(uiState.rows))
-
-	// Render only rows from: m.cursor-m.viewport.Height to: m.cursor+m.viewport.Height
-	// Constant runtime, independent of number of rows in a table.
-	// Limits the number of renderedRows to a maximum of 2*m.viewport.Height
-	if uiState.cursor >= 0 {
-		uiState.start = clamp(uiState.cursor-m.viewport.Height(), 0, uiState.cursor)
+	if numRows > 0 {
+		updatedCursor = clamp(updatedCursor, 0, numRows-1)
 	} else {
-		uiState.start = 0
-	}
-	uiState.end = clamp(max(0, uiState.cursor)+m.viewport.Height(), uiState.cursor, len(uiState.rows))
-	for i := uiState.start; i < uiState.end; i++ {
-		renderedRows = append(renderedRows, m.renderRow(i))
+		updatedCursor = -1 // No rows, no cursor
 	}
 
-	m.viewport.SetContent(
-		lipgloss.JoinVertical(lipgloss.Left, renderedRows...),
-	)
-}
+	if updatedCursor != currentCursor {
+		state.cursor = updatedCursor
+		setState(state)
+	}
+	// Key press handling is done by the parent calling HandleKeyPress
 
-// selectedRow returns the selected row.
-// You can cast it to your own implementation.
-func (m baseTable[T]) selectedRow() Row {
-	uiState := m.getState()
-	if uiState.cursor < 0 || uiState.cursor >= len(uiState.rows) {
-		return nil
+	headersViewStr := generateHeadersView(state.cols, p.Styles)
+
+	// Get current dimensions from UI state
+	currentLayoutWidth := ctx.UIState.GetWidth(id)
+	currentLayoutHeight := ctx.UIState.GetHeight(id)
+
+	currentBaseStyle := p.Styles.Base
+	if isFocused {
+		currentBaseStyle = p.Styles.BaseFocus
 	}
 
-	return uiState.rows[uiState.cursor]
+	state.viewport.SetHeight(currentLayoutHeight - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
+	state.viewport.SetWidth(currentLayoutWidth - currentBaseStyle.GetHorizontalFrameSize())
+
+	updateViewportContent(&state.viewport, state, p.Styles, ctx, id)
+
+	return currentBaseStyle.Render(headersViewStr + "\n" + state.viewport.View())
 }
 
-// Cursor returns the index of the selected row.
-func (m baseTable[T]) getCursor() int {
-	return m.getState().cursor
-}
-
-// SetCursor sets the cursor position in the table.
-func (m *baseTable[T]) setCursor(n int) {
-	m.getState().cursor = clamp(n, 0, len(m.getState().rows)-1)
-}
-
-// MoveUp moves the selection up by any number of rows.
-// It can not go above the first row.
-func (m *baseTable[T]) MoveUp(n int) {
-	m.setCursor(m.getState().cursor - n)
-	switch {
-	case m.getState().start == 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset(), 0, m.getState().cursor))
-	case m.getState().start < m.viewport.Height():
-		m.viewport.SetYOffset(clamp(clamp(m.viewport.YOffset()+n, 0, m.getState().cursor), 0, m.viewport.Height()))
-	case m.viewport.YOffset() >= 1:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset()+n, 1, m.viewport.Height()))
-	}
-	m.updateViewport()
-}
-
-// MoveDown moves the selection down by any number of rows.
-// It can not go below the last row.
-func (m *baseTable[T]) MoveDown(n int) {
-	m.setCursor(m.getState().cursor + n)
-	m.updateViewport()
+// HandleKeyPress processes key presses for table navigation.
+// It now takes the current state and a function to set the new state.
+func HandleKeyPress(msg tea.KeyPressMsg, km KeyMap, currentState tableState, setState func(tableState)) bool {
+	numRows := len(currentState.rows)
 
 	switch {
-	case m.getState().end == len(m.getState().rows) && m.viewport.YOffset() > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset()-n, 1, m.viewport.Height()))
-	case m.getState().cursor > (m.getState().end-m.getState().start)/2 && m.viewport.YOffset() > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset()-n, 1, m.getState().cursor))
-	case m.viewport.YOffset() > 1:
-	case m.getState().cursor > m.viewport.YOffset()+m.viewport.Height()-1:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset()+1, 0, 1))
+	case key.Matches(msg, km.LineUp):
+		moveUp(currentState, setState, 1, numRows)
+	case key.Matches(msg, km.LineDown):
+		moveDown(currentState, setState, 1, numRows)
+	case key.Matches(msg, km.PageUp):
+		moveUp(currentState, setState, currentState.viewport.Height(), numRows)
+	case key.Matches(msg, km.PageDown):
+		moveDown(currentState, setState, currentState.viewport.Height(), numRows)
+	case key.Matches(msg, km.HalfPageUp):
+		moveUp(currentState, setState, currentState.viewport.Height()/2, numRows)
+	case key.Matches(msg, km.HalfPageDown):
+		moveDown(currentState, setState, currentState.viewport.Height()/2, numRows)
+	case key.Matches(msg, km.GotoTop):
+		gotoTop(currentState, setState, numRows)
+	case key.Matches(msg, km.GotoBottom):
+		gotoBottom(currentState, setState, numRows)
+	default:
+		return false // No key matched
+	}
+	return true
+}
+
+func calculateClampedCursorValue(currentCursor, delta, numRows int) int {
+	if numRows == 0 {
+		return -1
+	}
+	newCursor := currentCursor + delta
+	return clamp(newCursor, 0, numRows-1)
+}
+
+func moveUp(currentState tableState, setState func(tableState), n int, numRows int) {
+	if numRows == 0 {
+		return
+	}
+	newCursor := calculateClampedCursorValue(currentState.cursor, -n, numRows)
+
+	newYOffset := currentState.viewport.YOffset()
+	if newCursor < newYOffset { // Cursor moved above viewport top
+		newYOffset = newCursor
+	}
+
+	if newCursor != currentState.cursor || newYOffset != currentState.viewport.YOffset() {
+		state := currentState
+		state.cursor = newCursor
+		state.viewport.SetYOffset(newYOffset) // Modifies the viewport copy in state
+		setState(state)
 	}
 }
 
-// GotoTop moves the selection to the first row.
-func (m *baseTable[T]) GotoTop() {
-	m.MoveUp(m.getState().cursor)
+func moveDown(currentState tableState, setState func(tableState), n int, numRows int) {
+	if numRows == 0 {
+		return
+	}
+	newCursor := calculateClampedCursorValue(currentState.cursor, n, numRows)
+
+	newYOffset := currentState.viewport.YOffset()
+	// Cursor moved below viewport bottom
+	if newCursor >= newYOffset+currentState.viewport.Height() {
+		newYOffset = newCursor - currentState.viewport.Height() + 1
+	}
+
+	if newCursor != currentState.cursor || newYOffset != currentState.viewport.YOffset() {
+		state := currentState
+		state.cursor = newCursor
+		state.viewport.SetYOffset(newYOffset)
+		setState(state)
+	}
 }
 
-// GotoBottom moves the selection to the last row.
-func (m *baseTable[T]) GotoBottom() {
-	m.MoveDown(len(m.getState().rows))
+func gotoTop(currentState tableState, setState func(tableState), numRows int) {
+	if numRows == 0 {
+		return
+	}
+	newCursor := calculateClampedCursorValue(0, 0, numRows) // Effectively clamp(0,0,numRows-1)
+
+	if newCursor != currentState.cursor || currentState.viewport.YOffset() != 0 {
+		state := currentState
+		state.cursor = newCursor
+		state.viewport.GotoTop() // Modifies the viewport copy in state
+		setState(state)
+	}
 }
 
-func (m baseTable[T]) headersView() string {
-	s := make([]string, 0, len(m.getState().cols))
-	for _, col := range m.getState().cols {
+func gotoBottom(currentState tableState, setState func(tableState), numRows int) {
+	if numRows == 0 {
+		return
+	}
+	newCursor := calculateClampedCursorValue(numRows-1, 0, numRows)
+
+	// Calculate the YOffset that would make the last item visible.
+	// This logic is tricky with GotoBottom() as it scrolls to the very end of content.
+	// We need to ensure the viewport's YOffset is correctly set if it changes.
+	tempViewport := currentState.viewport // Copy to simulate GotoBottom
+	tempViewport.GotoBottom()             // This sets YOffset to show the end of content.
+	newYOffset := tempViewport.YOffset()
+
+	if newCursor != currentState.cursor || newYOffset != currentState.viewport.YOffset() {
+		state := currentState
+		state.cursor = newCursor
+		state.viewport.SetYOffset(newYOffset) // Use the calculated YOffset
+		setState(state)
+	}
+}
+
+func generateHeadersView(cols []column, styles Styles) string {
+	s := make([]string, 0, len(cols))
+	for _, col := range cols {
 		if col.Width <= 0 {
 			continue
 		}
 		style := lipgloss.NewStyle().Width(col.Width).MaxWidth(col.Width).Inline(true)
 		renderedCell := style.Render(runewidth.Truncate(col.Title, col.Width, "…"))
-		s = append(s, m.styles.Header.Render(renderedCell))
+		s = append(s, styles.Header.Render(renderedCell))
 	}
 	return lipgloss.JoinHorizontal(lipgloss.Top, s...)
 }
 
-func (m *baseTable[T]) renderRow(r int) string {
-	uiState := m.getState()
-	s := make([]string, 0, len(uiState.cols))
-	for i, value := range uiState.rows[r] {
-		if uiState.cols[i].Width <= 0 {
+func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Styles, ctx *app.Ctx, tableID string) string {
+	s := make([]string, 0, len(state.cols))
+	for i, value := range rowData {
+		if i >= len(state.cols) || state.cols[i].Width <= 0 { // Boundary check for cols
 			continue
 		}
-		style := lipgloss.NewStyle().Width(uiState.cols[i].Width).MaxWidth(uiState.cols[i].Width).Inline(true)
-		renderedCell := m.styles.Cell.Render(style.Render(runewidth.Truncate(value, uiState.cols[i].Width, "…")))
+		cellStyle := lipgloss.NewStyle().Width(state.cols[i].Width).MaxWidth(state.cols[i].Width).Inline(true)
+		renderedCell := styles.Cell.Render(cellStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
 		s = append(s, renderedCell)
 	}
 
-	row := lipgloss.JoinHorizontal(lipgloss.Top, s...)
+	rowStr := lipgloss.JoinHorizontal(lipgloss.Top, s...)
+	rowElementID := tableID + "_row_" + strconv.Itoa(rowIndex) // Unique ID for mouse events per row
 
-	if r == uiState.cursor {
-		return app.RegisterMouse(m.ctx, m.base.ID+"_"+strconv.Itoa(r), m, m.styles.Selected.Render(row))
+	finalRowStr := rowStr
+	if rowIndex == state.cursor {
+		finalRowStr = styles.Selected.Render(rowStr)
 	}
-	if r == uiState.rowHover {
-		return app.RegisterMouse(m.ctx, m.base.ID+"_"+strconv.Itoa(r), m, m.styles.Hovered.Render(row))
+	// Hover state not implemented for functional component yet
+	// if rowIndex == state.rowHover {
+	// 	finalRowStr = styles.Hovered.Render(rowStr)
+	// }
+	return ctx.Zone.Mark(rowElementID, finalRowStr) // Use ctx.Zone.Mark
+}
+
+func updateViewportContent(vp *viewport.Model, state tableState, styles Styles, ctx *app.Ctx, tableID string) {
+	if len(state.rows) == 0 {
+		vp.SetContent("")
+		return
 	}
 
-	return app.RegisterMouse(m.ctx, m.base.ID+"_"+strconv.Itoa(r), m, row)
+	renderedRows := make([]string, len(state.rows))
+	for i, rowData := range state.rows {
+		// Pass state by value (it's already a copy or the original from UseState)
+		renderedRows[i] = generateRenderedRow(i, rowData, state, styles, ctx, tableID)
+	}
+
+	vp.SetContent(
+		lipgloss.JoinVertical(lipgloss.Left, renderedRows...),
+	)
 }
 
 func columnMapping(width int, clms []Column) []column {
@@ -480,8 +423,8 @@ func columnMapping(width int, clms []Column) []column {
 		remainder = growWidth % numberOfGrowers
 	}
 
-	columns := []column{}
-	for _, clm := range clms {
+	columns := make([]column, len(clms))
+	for i, clm := range clms {
 		colWidth := 0
 		if clm.Width.Grow {
 			colWidth = baseSizePerGrower
@@ -496,23 +439,28 @@ func columnMapping(width int, clms []Column) []column {
 		if colWidth < 0 {
 			colWidth = 0
 		}
-
-		columns = append(columns, column{
+		columns[i] = column{
 			Title: clm.Title,
 			Width: colWidth,
-		})
+		}
 	}
-
 	return columns
 }
 
 func clamp(v, low, high int) int {
-	return min(max(v, low), high)
-}
-
-func (m *baseTable[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	return nil
-}
-func (m *baseTable[T]) Base() *app.Base {
-	return m.base
+	if high < low {
+		// This case implies an invalid range, e.g., for an empty list where high might be -1 and low 0.
+		// Depending on context, returning low or high might be appropriate.
+		// For cursor clamping, if numRows is 0, high becomes -1. clamp(cursor, 0, -1).
+		// max(v, 0) -> min(that, -1). If v=0, max(0,0)=0, min(0,-1)=-1. This is what setCursor needs for empty.
+		// So, the original min(max(v,low),high) is often correct for 0-based indexing even with empty lists.
+		return min(max(v, low), high)
+	}
+	if v < low {
+		return low
+	}
+	if v > high {
+		return high
+	}
+	return v
 }

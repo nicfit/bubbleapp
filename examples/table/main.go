@@ -10,36 +10,38 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-var clms = []table.Column{
-	{Title: "Rank", Width: table.WidthInt(4)},
-	{Title: "City", Width: table.WidthGrow()},
-	{Title: "Country", Width: table.WidthGrow()},
-	{Title: "Population", Width: table.WidthGrow()},
-}
-
 type CustomData struct{}
 
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+func NewRoot(ctx *app.Ctx, _ app.Props) string {
 
-	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		return []app.Fc[CustomData]{
-			table.New(ctx, clms, rows, nil),
-			table.New(ctx, clms, rows, nil),
-		}
-	}, &stack.Options{Horizontal: true})
+	stack := stack.New(ctx, func(ctx *app.Ctx) {
+		table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+			return clms, rows
+		}))
+		table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+			return clms, rows
+		}))
+	}, stack.WithDirection(app.Horizontal))
 
 	return stack
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{})
+	ctx := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}
+}
+
+var clms = []table.Column{
+	{Title: "Rank", Width: table.WidthInt(4)},
+	{Title: "City", Width: table.WidthGrow()},
+	{Title: "Country", Width: table.WidthGrow()},
+	{Title: "Population", Width: table.WidthInt(10)},
 }
 
 var rows = []table.Row{

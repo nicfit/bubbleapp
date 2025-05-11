@@ -76,6 +76,9 @@ type effectRecord struct {
 // If deps is nil, the effect runs after every render.
 // If deps is an empty slice, it runs only once after the initial render and on unmount.
 func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
 	instanceID := c.id.getID()
 	instance, _ := c.componentContext.get(instanceID)
 
