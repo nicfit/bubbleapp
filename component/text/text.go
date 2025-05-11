@@ -60,9 +60,9 @@ func Text(c *app.Ctx, props app.Props) string {
 	return s.Render(renderedContent)
 }
 
-// NewText creates a new text element.
+// New creates a new text element.
 // Content can be a static string or a dynamic function: func(c *app.FCContext) string.
-func NewText(c *app.Ctx, content string, opts ...prop) string {
+func New(c *app.Ctx, content string, opts ...prop) string {
 	p := Props{
 		Content: func(c *app.Ctx) string {
 			return content

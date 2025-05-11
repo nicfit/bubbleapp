@@ -21,11 +21,11 @@ type Ctx struct {
 	Tick             *tickState[any]
 	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
-	useEffectCounter int
-	useStateCounter  int
+	useEffectCounter map[string]int
+	useStateCounter  map[string]int
 
 	// Layout
-	layoutPhase   layoutPhase
+	LayoutPhase   layoutPhase
 	layoutManager *layoutManager
 }
 
@@ -40,6 +40,8 @@ func NewCtx() *Ctx {
 		collectorStack:   []*outputCollector{},
 		componentContext: newInstanceContext(),
 		layoutManager:    newLayoutManager(),
+		useEffectCounter: make(map[string]int),
+		useStateCounter:  make(map[string]int),
 	}
 }
 
@@ -51,7 +53,7 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	defer c.id.pop()
 
 	var node *ComponentNode
-	if c.layoutPhase == LayoutPhaseIntrincintWidth {
+	if c.LayoutPhase == LayoutPhaseIntrincintWidth {
 		node = c.layoutManager.addComponent(id, fc, props)
 		defer c.layoutManager.pop()
 	} else {
@@ -62,8 +64,8 @@ func (c *Ctx) Render(fc FC, props Props) string {
 
 	c.componentContext.set(id, fc, props)
 
-	c.useStateCounter = 0
-	c.useEffectCounter = 0
+	c.useStateCounter[id] = 0
+	c.useEffectCounter[id] = 0
 
 	output := fc(c, props)
 
@@ -75,14 +77,14 @@ func (c *Ctx) Render(fc FC, props Props) string {
 
 	if node != nil {
 		node.LastRender = output
-		if c.layoutPhase == LayoutPhaseIntrincintWidth {
+		if c.LayoutPhase == LayoutPhaseIntrincintWidth {
 			if node.Parent == nil {
 				c.UIState.setWidth(id, c.layoutManager.width)
 			} else if !node.Layout.GrowX {
 				c.UIState.setWidth(id, lipgloss.Width(output))
 			}
 		}
-		if c.layoutPhase == LayoutPhaseIntrincintHeight {
+		if c.LayoutPhase == LayoutPhaseIntrincintHeight {
 			if node.Parent == nil {
 				c.UIState.setHeight(id, c.layoutManager.height)
 			} else if !node.Layout.GrowY {

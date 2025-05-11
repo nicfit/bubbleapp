@@ -29,35 +29,30 @@ func Box(c *app.Ctx, props app.Props) string {
 
 	id := app.UseID(c)
 
-	vp, _ := app.UseState(c, viewport.New())
+	// Create a new viewport model instance first
+	initialViewport := viewport.New()
+	// Then pass its address to UseState to store a pointer
+	vp, _ := app.UseState(c, &initialViewport)
 
 	// Get children
 	childrenContent := app.UseChildren(c, boxProps.Children)
 	renderedChildren := strings.Join(childrenContent, "\n")
-
-	// For prevContent, T is string, so prevContent is string, setPrevContent is func(string).
-	prevContent, setPrevContent := app.UseState(c, "")
 
 	// Get dimensions from the UI state (populated by the layout system)
 	width := c.UIState.GetWidth(id)
 	height := c.UIState.GetHeight(id)
 
 	if width <= 0 || height <= 0 {
-		// If the width or height is not set, we can skip rendering
 		return ""
-
 	}
 
+	// Is this right? When trying to get intrinsic size it feels like this should not be set
 	vp.SetWidth(width)
 	vp.SetHeight(height)
 
-	// Update viewport content if it has changed
-	if prevContent != renderedChildren {
-		vp.SetContent(renderedChildren)
-		setPrevContent(renderedChildren) // Update string state for comparison
-		if !boxProps.DisableFollow {
-			vp.GotoBottom() // or vp.GotoTop() depending on desired behavior
-		}
+	vp.SetContent(renderedChildren)
+	if !boxProps.DisableFollow {
+		vp.GotoBottom()
 	}
 
 	style := lipgloss.NewStyle()

@@ -14,19 +14,19 @@ type CustomData struct{}
 
 func NewRoot(c *app.Ctx, _ app.Props) string {
 
-	stack := stack.New(c, func(ctx *app.Ctx) {
+	stack := stack.New(c, func(c *app.Ctx) {
 
-		box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Danger))
-		box.New(ctx, func(ctx *app.Ctx) {
-			stack.New(ctx, func(ctx *app.Ctx) {
+		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger))
+		box.New(c, func(c *app.Ctx) {
+			stack.New(c, func(c *app.Ctx) {
 
-				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Primary))
-				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Secondary))
-				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Tertiary))
+				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary))
+				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary))
+				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary))
 
 			}, stack.WithDirection(app.Horizontal))
 		})
-		box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Warning))
+		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning))
 
 	})
 

@@ -41,8 +41,8 @@ func UseState[T any](c *Ctx, initialValue T) (T, func(newValue T)) {
 	// FCContext.Render guarantees that the instance exists by calling componentContext.set
 	instance, _ := c.componentContext.get(instanceID)
 
-	hookIndex := c.useStateCounter
-	c.useStateCounter++
+	hookIndex := c.useStateCounter[instanceID]
+	c.useStateCounter[instanceID]++
 
 	if hookIndex >= len(instance.States) {
 		// This is the first render for this hook in this component instance,
@@ -79,10 +79,9 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	instanceID := c.id.getID()
 	instance, _ := c.componentContext.get(instanceID)
 
-	hookIndex := c.useEffectCounter
-	c.useEffectCounter++ // Increment for the next UseEffect call
+	hookIndex := c.useEffectCounter[instanceID]
+	c.useEffectCounter[instanceID]++
 
-	// Ensure the Effects slice is large enough
 	if hookIndex >= len(instance.Effects) {
 		instance.Effects = append(instance.Effects, effectRecord{})
 	}

@@ -31,8 +31,8 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 			setClicks(clicks + 1)
 		}, button.WithType(button.Compact))
 
-		text.NewText(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
-		text.NewText(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+		text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
+		text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
 
 		box.NewEmpty(c)
 

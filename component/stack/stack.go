@@ -8,8 +8,7 @@ import (
 )
 
 type StackProps struct {
-	Direction app.LayoutDirection
-	Children  app.Children
+	Children app.Children
 	app.Layout
 }
 
@@ -19,7 +18,7 @@ func Stack(c *app.Ctx, props app.Props) string {
 	children := app.UseChildren(c, stackProps.Children)
 
 	var processedChildren []string
-	if stackProps.Direction == app.Horizontal {
+	if stackProps.Layout.Direction == app.Horizontal {
 		gap := strings.Repeat(" ", stackProps.Layout.GapX)
 		for i, child := range children {
 			if child != "" {
@@ -42,7 +41,7 @@ func Stack(c *app.Ctx, props app.Props) string {
 		}
 	}
 
-	if stackProps.Direction == app.Horizontal {
+	if stackProps.Layout.Direction == app.Horizontal {
 		return lipgloss.JoinHorizontal(lipgloss.Top, processedChildren...)
 	}
 	return lipgloss.JoinVertical(lipgloss.Left, processedChildren...)
@@ -53,8 +52,9 @@ func New(c *app.Ctx, children app.Children, props ...StackProp) string {
 	appliedProps := StackProps{
 		Children: children,
 		Layout: app.Layout{
-			GrowX: true,
-			GrowY: true,
+			Direction: app.Vertical,
+			GrowX:     true,
+			GrowY:     true,
 		},
 	}
 	for _, prop := range props {
@@ -70,7 +70,7 @@ type StackProp func(*StackProps)
 
 func WithDirection(direction app.LayoutDirection) StackProp {
 	return func(props *StackProps) {
-		props.Direction = direction
+		props.Layout.Direction = direction
 	}
 }
 func WithGap(gap int) StackProp {

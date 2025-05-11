@@ -5,11 +5,11 @@ import (
 )
 
 type Layout struct {
-	LayoutDirection LayoutDirection
-	GrowX           bool
-	GrowY           bool
-	GapX            int
-	GapY            int
+	Direction LayoutDirection
+	GrowX     bool
+	GrowY     bool
+	GapX      int
+	GapY      int
 }
 
 type LayoutDirection int
@@ -203,11 +203,11 @@ func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order 
 // and finally falls back to individual field checks via reflection.
 func extractLayoutFromProps(props interface{}) Layout {
 	defaultLayout := Layout{
-		LayoutDirection: Vertical,
-		GrowX:           false,
-		GrowY:           false,
-		GapX:            0,
-		GapY:            0,
+		Direction: Vertical,
+		GrowX:     false,
+		GrowY:     false,
+		GapX:      0,
+		GapY:      0,
 	}
 
 	if props == nil {
@@ -231,8 +231,8 @@ func extractLayoutFromProps(props interface{}) Layout {
 		if field.Type() == reflect.TypeOf(Layout{}) {
 			if layout, ok := field.Interface().(Layout); ok {
 				mergedLayout := defaultLayout
-				if layout.LayoutDirection != defaultLayout.LayoutDirection {
-					mergedLayout.LayoutDirection = layout.LayoutDirection
+				if layout.Direction != defaultLayout.Direction {
+					mergedLayout.Direction = layout.Direction
 				}
 				mergedLayout.GrowX = layout.GrowX
 				mergedLayout.GrowY = layout.GrowY
@@ -256,7 +256,7 @@ func distributeAvailableWidthVisitor(node *ComponentNode, _ int, c *Ctx) {
 	}
 
 	availableWidth := c.UIState.GetWidth(node.ID)
-	direction := node.Layout.LayoutDirection
+	direction := node.Layout.Direction
 
 	if direction == Vertical {
 		for _, child := range children {
@@ -314,7 +314,7 @@ func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
 	}
 
 	availableHeight := ctx.UIState.GetHeight(node.ID)
-	direction := node.Layout.LayoutDirection
+	direction := node.Layout.Direction
 
 	if direction == Horizontal {
 		for _, child := range children {

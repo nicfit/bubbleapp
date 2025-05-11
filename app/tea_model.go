@@ -190,19 +190,19 @@ func (a *app) View() string {
 	}
 
 	a.ctx.UIState.resetSizes()
-	a.ctx.layoutPhase = LayoutPhaseIntrincintWidth
+	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
 	a.ctx.Render(a.root, defaultRootProps)
-	a.ctx.UIState.setWidth(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.width)
+	//a.ctx.UIState.setWidth(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.width)
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
-	a.ctx.layoutPhase = LayoutPhaseIntrincintHeight
+	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
 	a.ctx.Render(a.root, defaultRootProps)
 	a.ctx.layoutManager.distributeHeight(a.ctx)
 	//a.ctx.UIState.setHeight(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.height)
 
-	a.ctx.layoutPhase = LayoutPhaseFinalRender
+	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
 	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, defaultRootProps))
