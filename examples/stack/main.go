@@ -12,31 +12,31 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+func NewRoot(c *app.Ctx, _ app.Props) string {
 
-	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		return []app.Fc[CustomData]{
-			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Danger}),
-			box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] {
-				return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-					return []app.Fc[CustomData]{
-						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Primary}),
-						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Secondary}),
-						box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Tertiary}),
-					}
-				}, &stack.Options{Horizontal: true})
-			}, nil),
-			box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Warning}),
-		}
-	}, nil)
+	stack := stack.New(c, func(ctx *app.Ctx) {
+
+		box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Danger))
+		box.New(ctx, func(ctx *app.Ctx) {
+			stack.New(ctx, func(ctx *app.Ctx) {
+
+				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Primary))
+				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Secondary))
+				box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Tertiary))
+
+			}, stack.WithDirection(app.Horizontal))
+		})
+		box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Warning))
+
+	})
 
 	return stack
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{})
+	ctx := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen())
 	app.SetTeaProgram(p)
 

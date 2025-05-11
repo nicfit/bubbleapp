@@ -58,7 +58,9 @@ func New(c *app.Ctx, children app.Children, props ...StackProp) string {
 		},
 	}
 	for _, prop := range props {
-		prop(&appliedProps)
+		if prop != nil {
+			prop(&appliedProps)
+		}
 	}
 
 	return c.Render(Stack, appliedProps)
