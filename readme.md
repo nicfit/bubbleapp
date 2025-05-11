@@ -16,6 +16,8 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
 
 - **[Functional components](#functional)**
   - Create large apps in a style familiar to a certain web framework. UseState hook for state and UseEffect hook for... well side-effects.
+- **Layout Engine**
+  - A multi-pass layout algorithm makes it possible to have growing components that take up available space. Enables resposive and flexible layouts.
 - **Mouse support** - using [BubbleZone](https://github.com/lrstanley/bubblezone)
   - Automatic mouse handling and propagation for all components.
 - **[Focus Management](#focus)**
