@@ -124,6 +124,20 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	}
 }
 
+// UseKeyHandler registers a function to handle key presses internally within a component.
+// This handler is only called if the component is focused and the key event is not
+// handled by a more specific semantic handler (like OnKeyPress for Enter).
+// The handler function should return true if it handled the key, false otherwise.
+func UseKeyHandler(c *Ctx, handler InternalKeyHandler) {
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		// This should ideally not happen if hooks are called correctly within a component's lifecycle
+		return
+	}
+	instance.internalKeyHandler = handler
+}
+
 func UseEffect(c *Ctx, effect func(), deps []any) {
 	UseEffectWithCleanup(c, func() func() {
 		effect()

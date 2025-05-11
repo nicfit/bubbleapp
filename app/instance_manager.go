@@ -3,19 +3,26 @@ package app
 import (
 	"reflect"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea/v2"
 )
+
+// InternalKeyHandler defines the signature for component-internal key handlers.
+// It returns true if the key press was handled, false otherwise.
+type InternalKeyHandler func(keyMsg tea.KeyMsg) bool
 
 // instanceContext represents an instance of a functional component (FC).
 // It holds the component's ID, focusable state, function reference, props,
 // event handlers, and state management for both state and effects.
 type instanceContext struct {
-	id        string
-	focusable bool
-	fc        FC
-	props     Props
-	handlers  map[string]interface{}
-	States    []any          // Added for UseState
-	Effects   []effectRecord // New field for UseEffect states
+	id                 string
+	focusable          bool
+	fc                 FC
+	props              Props
+	handlers           map[string]interface{}
+	States             []any              // Added for UseState
+	Effects            []effectRecord     // New field for UseEffect states
+	internalKeyHandler InternalKeyHandler // New field for internal key handling
 }
 
 type fcInstanceContext struct {
@@ -41,6 +48,7 @@ func (c *fcInstanceContext) set(id string, fc FC, props Props) *instanceContext 
 			handlers: make(map[string]interface{}),
 			States:   make([]any, 0),
 			Effects:  make([]effectRecord, 0),
+			// internalKeyHandler will be nil by default
 		}
 		c.ctxs[id] = instance
 	}

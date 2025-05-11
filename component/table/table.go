@@ -178,14 +178,17 @@ func Table(ctx *app.Ctx, props app.Props) string {
 
 	state, setState := app.UseState(ctx, tableState{
 		cursor:   -1,
-		rowHover: -1, // Unused for now
+		rowHover: -1,
 		viewport: viewport.New(),
+	})
+
+	app.UseKeyHandler(ctx, func(keyMsg tea.KeyMsg) bool {
+		return processInternalKeys(keyMsg, p.KeyMap, state, setState)
 	})
 
 	app.UseEffect(ctx, func() {
 		var rawCols []Column
 		rawCols, state.rows = p.DataFunc(ctx)
-		// Determine width based on current UI state for the component ID
 		currentLayoutWidth := ctx.UIState.GetWidth(id)
 		baseStyleToUse := p.Styles.Base
 		if isFocused {
@@ -195,7 +198,7 @@ func Table(ctx *app.Ctx, props app.Props) string {
 		setState(state)
 	}, []any{ctx.UIState.GetWidth(id)})
 
-	numRows := len(state.rows) // Use state for calculations
+	numRows := len(state.rows)
 
 	// Handle cursor initialization and bounds
 	currentCursor := state.cursor
@@ -211,14 +214,21 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	}
 
 	if updatedCursor != currentCursor {
-		state.cursor = updatedCursor
-		setState(state)
+		newState := state
+		newState.cursor = updatedCursor
+		// If cursor moves due to focus/data change, ensure viewport is valid
+		if numRows > 0 {
+			if newState.cursor < newState.viewport.YOffset() {
+				newState.viewport.SetYOffset(newState.cursor)
+			} else if newState.cursor >= newState.viewport.YOffset()+newState.viewport.Height() {
+				newState.viewport.SetYOffset(newState.cursor - newState.viewport.Height() + 1)
+			}
+		}
+		setState(newState)
 	}
-	// Key press handling is done by the parent calling HandleKeyPress
 
 	headersViewStr := generateHeadersView(state.cols, p.Styles)
 
-	// Get current dimensions from UI state
 	currentLayoutWidth := ctx.UIState.GetWidth(id)
 	currentLayoutHeight := ctx.UIState.GetHeight(id)
 
@@ -235,34 +245,39 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	return currentBaseStyle.Render(headersViewStr + "\n" + state.viewport.View())
 }
 
-// HandleKeyPress processes key presses for table navigation.
-// It now takes the current state and a function to set the new state.
-func HandleKeyPress(msg tea.KeyPressMsg, km KeyMap, currentState tableState, setState func(tableState)) bool {
-	numRows := len(currentState.rows)
+// processInternalKeys contains the logic for handling key presses for table navigation.
+func processInternalKeys(keyMsg tea.KeyMsg, km KeyMap, currentTableState tableState, setState func(tableState)) bool {
+	numRows := len(currentTableState.rows)
+
+	if numRows == 0 && !(key.Matches(keyMsg, km.LineUp) || key.Matches(keyMsg, km.LineDown)) {
+		if key.Matches(keyMsg, km.LineUp) || key.Matches(keyMsg, km.LineDown) {
+			return true
+		}
+		return false
+	}
 
 	switch {
-	case key.Matches(msg, km.LineUp):
-		moveUp(currentState, setState, 1, numRows)
-	case key.Matches(msg, km.LineDown):
-		moveDown(currentState, setState, 1, numRows)
-	case key.Matches(msg, km.PageUp):
-		moveUp(currentState, setState, currentState.viewport.Height(), numRows)
-	case key.Matches(msg, km.PageDown):
-		moveDown(currentState, setState, currentState.viewport.Height(), numRows)
-	case key.Matches(msg, km.HalfPageUp):
-		moveUp(currentState, setState, currentState.viewport.Height()/2, numRows)
-	case key.Matches(msg, km.HalfPageDown):
-		moveDown(currentState, setState, currentState.viewport.Height()/2, numRows)
-	case key.Matches(msg, km.GotoTop):
-		gotoTop(currentState, setState, numRows)
-	case key.Matches(msg, km.GotoBottom):
-		gotoBottom(currentState, setState, numRows)
+	case key.Matches(keyMsg, km.LineUp):
+		moveUp(currentTableState, setState, 1, numRows)
+	case key.Matches(keyMsg, km.LineDown):
+		moveDown(currentTableState, setState, 1, numRows)
+	case key.Matches(keyMsg, km.PageUp):
+		moveUp(currentTableState, setState, currentTableState.viewport.Height(), numRows)
+	case key.Matches(keyMsg, km.PageDown):
+		moveDown(currentTableState, setState, currentTableState.viewport.Height(), numRows)
+	case key.Matches(keyMsg, km.HalfPageUp):
+		moveUp(currentTableState, setState, currentTableState.viewport.Height()/2, numRows)
+	case key.Matches(keyMsg, km.HalfPageDown):
+		moveDown(currentTableState, setState, currentTableState.viewport.Height()/2, numRows)
+	case key.Matches(keyMsg, km.GotoTop):
+		gotoTop(currentTableState, setState, numRows)
+	case key.Matches(keyMsg, km.GotoBottom):
+		gotoBottom(currentTableState, setState, numRows)
 	default:
 		return false // No key matched
 	}
 	return true
 }
-
 func calculateClampedCursorValue(currentCursor, delta, numRows int) int {
 	if numRows == 0 {
 		return -1
@@ -380,7 +395,7 @@ func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Sty
 	// if rowIndex == state.rowHover {
 	// 	finalRowStr = styles.Hovered.Render(rowStr)
 	// }
-	return ctx.Zone.Mark(rowElementID, finalRowStr) // Use ctx.Zone.Mark
+	return ctx.Zone.Mark(rowElementID, finalRowStr)
 }
 
 func updateViewportContent(vp *viewport.Model, state tableState, styles Styles, ctx *app.Ctx, tableID string) {
@@ -391,7 +406,6 @@ func updateViewportContent(vp *viewport.Model, state tableState, styles Styles, 
 
 	renderedRows := make([]string, len(state.rows))
 	for i, rowData := range state.rows {
-		// Pass state by value (it's already a copy or the original from UseState)
 		renderedRows[i] = generateRenderedRow(i, rowData, state, styles, ctx, tableID)
 	}
 
@@ -449,11 +463,6 @@ func columnMapping(width int, clms []Column) []column {
 
 func clamp(v, low, high int) int {
 	if high < low {
-		// This case implies an invalid range, e.g., for an empty list where high might be -1 and low 0.
-		// Depending on context, returning low or high might be appropriate.
-		// For cursor clamping, if numRows is 0, high becomes -1. clamp(cursor, 0, -1).
-		// max(v, 0) -> min(that, -1). If v=0, max(0,0)=0, min(0,-1)=-1. This is what setCursor needs for empty.
-		// So, the original min(max(v,low),high) is often correct for 0-based indexing even with empty lists.
 		return min(max(v, low), high)
 	}
 	if v < low {

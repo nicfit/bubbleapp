@@ -90,6 +90,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		focusedInstance, focusedInstanceExists := a.ctx.componentContext.get(a.ctx.UIState.Focused)
 		if focusedInstanceExists {
+			// First, try to dispatch to a semantic handler like OnKeyPress for Enter
 			switch msg.String() {
 			case "enter":
 				if a.dispatchToHandler(focusedInstance, semanticActionPrimary, "OnKeyPress", KeyEvent{
@@ -98,11 +99,17 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return a, nil
 				}
 			}
+
+			// If not handled by a specific semantic handler, try the internal key handler
+			if focusedInstance.internalKeyHandler != nil {
+				if focusedInstance.internalKeyHandler(msg) {
+					return a, nil // Key was handled by the component's internal handler
+				}
+			}
 		}
 
-		//handledKeyMsg := a.propagatedFocused(msg)
-		//	if !handledKeyMsg {
-		// These are global keys. Is this what we want?
+		// If no focused component handled the key, or there's no focused component,
+		// handle global key bindings.
 		switch msg.String() {
 		case "ctrl+c":
 			a.ctx.Quit()
@@ -114,7 +121,6 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.ctx.FocusPrev()
 			return a, nil
 		}
-		//}
 		return a, tea.Batch(cmds...)
 	case tea.WindowSizeMsg:
 		a.ctx.layoutManager.width = msg.Width
