@@ -3,23 +3,23 @@
 > [!WARNING]
 > This is work in progress. Help is welcome.
 
-An opinionated App Framework for BubbleTea. Building large BubbleTea apps can be a lot of manual work for every thing shown on the screen. BubbleApp add a separate UI layer on top of the BubbleTea architecture and handles all interoperability.
+An opinionated App Framework for BubbleTea. Using composable functional components and hooks it becomes easy to make large BubbleTea apps without too much code. See the examples for how it works.
 
 ## Components
 
 - **[Layout Components](#layout-components)**
-  - [Stack](#stack), Scroll Box makes it easy to create flexible layouts
+  - [Stack](#stack) and (Flex) Box makes it easy to create flexible layouts
 - **[Widget Components](#widget-components)**
   - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), [Forms (huh?)](#form) and more to come...
 
 ## Features
 
+- **Functional components**
+  - Create large apps in a style familiar to a certain web framework. UseState hook for state and UseEffect hook for... well side-effects.
 - **Mouse support** - using [BubbleZone](https://github.com/lrstanley/bubblezone)
   - Automatic mouse handling and propagation for all components.
 - **[Focus Management](#focus)**
   - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
-- **Global App State**
-  - Every component and model in a BubbleApp has a reference to your global app state (or app instance if using [Wish](https://github.com/charmbracelet/wish)). Use this anywhere in your app for rendering or behavior.
 - **Global Ticks**
   - Adding several Spinners from Bubbles is really slow over SSH since they each start a Tick message. In BubbleTea all components use the same global tick for real time updates.
 - **[Shaders](#shaders)**
@@ -154,18 +154,21 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 
 ### [Stack](./examples/stack/main.go)
 
-Stack layout vertically or horizontally. Compose as you like.
+Stack layouts vertically or horizontally.
 
 ```go
-stack := stack.New(ctx, []app.Fc[CustomData]{
-    box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Danger}),
-    box.New(ctx, stack.New(ctx, []app.Fc[CustomData]{
-        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Primary}),
-        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Secondary}),
-        box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Tertiary}),
-    }, &stack.Options{Horizontal: true}), nil),
-    box.NewEmpty(ctx, &box.Options{Bg: ctx.Styles.Colors.Warning}),
-}, nil)
+stack := stack.New(c, func(c *app.Ctx) {
+  box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger))
+  box.New(c, func(c *app.Ctx) {
+    stack.New(c, func(c *app.Ctx) {
+      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary))
+      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary))
+      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary))
+
+    }, stack.WithDirection(app.Horizontal))
+  })
+  box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning))
+})
 ```
 
 ![Stack](./examples/stack/demo.gif)
@@ -205,24 +208,35 @@ stack := stack.New(ctx, []app.Fc[CustomData]{
 Global tab management without any extra code. All focusable components are automatically in a tab order (their order in the UI tree).
 
 ```go
-addButton := button.New(ctx, "Button 1", func(ctx *app.Context[CustomData]) {
-    ctx.Data.log = append(ctx.Data.log, "["+strconv.Itoa(ctx.Data.presses)+"] "+"Button 1 pressed")
-    ctx.Data.presses++
-}, &button.Options{Variant: button.Primary, Type: button.Compact})
+func NewRoot(c *app.Ctx, _ app.Props) string {
+	presses, setPresses := app.UseState(c, 0)
+	log, setLog := app.UseState(c, []string{})
 
-logMessages := box.New(ctx,
-    text.NewDynamic(ctx, func(ctx *app.Context[CustomData]) (log string) {
-        return strings.Join(ctx.Data.log, "\n")
-    }, nil), nil)
+	return stack.New(c, func(c *app.Ctx) {
+		text.New(c, "Tab through the buttons to see focus state!")
 
-stack := stack.New(ctx, []app.Fc[CustomData]{
-    text.New(ctx, "Tab through the buttons to see focus state!", nil),
-    addButton,
-    divider.New(ctx),
-    logMessages,
-    divider.New(ctx),
-    button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
-}, nil)
+		button.NewButton(c, "Button 1", func() {
+			currentLog := log
+			currentPresses := presses
+			newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
+			setLog(newLog)
+			setPresses(currentPresses + 1)
+		}, button.WithVariant(button.Primary), button.WithType(button.Compact))
+
+		divider.New(c)
+
+		box.New(c, func(c *app.Ctx) {
+			text.New(c, strings.Join(log, "\n"))
+		})
+
+		divider.New(c)
+
+		button.NewButton(c, "Quit App", func() {
+			c.Quit()
+		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
+
+	}, stack.WithGrow(true))
+}
 ```
 
 ![Focus Tabbing](./examples/focus-management/demo.gif)

@@ -15,11 +15,9 @@ type CustomData struct{}
 func NewRoot(c *app.Ctx, _ app.Props) string {
 
 	stack := stack.New(c, func(c *app.Ctx) {
-
 		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger))
 		box.New(c, func(c *app.Ctx) {
 			stack.New(c, func(c *app.Ctx) {
-
 				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary))
 				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary))
 				box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary))
@@ -27,7 +25,6 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 			}, stack.WithDirection(app.Horizontal))
 		})
 		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning))
-
 	})
 
 	return stack
