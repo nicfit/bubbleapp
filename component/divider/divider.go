@@ -1,49 +1,100 @@
 package divider
 
 import (
+	"image/color"
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // TODO: Support GrowY/Vertical divider
-type divider[T any] struct {
-	base  *app.Base
-	style lipgloss.Style
+
+type Props struct {
+	Char    string      // If not set defaults to "─"
+	FGColor color.Color // If nil, defaults to app.Ctx.Styles.Colors.Ghost.
+	app.Layout
 }
 
-func New[T any](ctx *app.Context[T], baseOptions ...app.BaseOption) *divider[T] {
-	if baseOptions == nil {
-		baseOptions = []app.BaseOption{}
-	}
-	style := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Ghost)
-	base, cleanup := app.NewBase(ctx, "divider", append([]app.BaseOption{app.WithGrowX(true)}, baseOptions...)...)
-	defer cleanup()
+type prop func(*Props)
 
-	return &divider[T]{
-		base:  base,
-		style: style,
-	}
-}
-
-func (m *divider[T]) Render(ctx *app.Context[T]) string {
-	if ctx.UIState.GetWidth(m.base.ID) == 0 {
+func Divider(c *app.Ctx, props app.Props) string {
+	divProps, ok := props.(Props)
+	if !ok {
 		return ""
 	}
-	// Why -1 here? Check if this is required and so why
-	return m.style.Render(strings.Repeat("─", ctx.UIState.GetWidth(m.base.ID)-1))
+
+	id := app.UseID(c)
+
+	finalFGColor := divProps.FGColor
+	if finalFGColor == nil {
+		finalFGColor = c.Styles.Colors.Ghost
+	}
+	style := lipgloss.NewStyle().Foreground(finalFGColor)
+
+	char := divProps.Char
+
+	var length int
+	width := c.UIState.GetWidth(id)
+	if width > 0 {
+		length = width - 1
+	} else {
+		length = 0
+	}
+
+	if length <= 0 {
+		return ""
+	}
+
+	return style.Render(strings.Repeat(char, length))
 }
 
-func (m *divider[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
-	return false
+// New creates a new divider element.
+func New(c *app.Ctx, opts ...prop) string {
+	p := Props{
+		Char:    "─",
+		FGColor: c.Styles.Colors.Ghost,
+		Layout: app.Layout{
+			GrowX: true,
+			GrowY: false,
+		},
+	}
+
+	for _, opt := range opts {
+		if opt != nil {
+			opt(&p)
+		}
+	}
+	return c.Render(Divider, p)
 }
 
-func (m *divider[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	return nil
+// --- Prop Option Functions ---
+
+// WithChar sets the character to be repeated for the divider.
+func WithChar(char string) prop {
+	return func(props *Props) {
+		props.Char = char
+	}
 }
 
-func (m *divider[T]) Base() *app.Base {
-	return m.base
+// WithFGColor sets the foreground color of the divider.
+func WithFGColor(fg color.Color) prop {
+	return func(props *Props) {
+		props.FGColor = fg
+	}
 }
+
+// WithGrowX sets whether the divider should grow horizontally.
+func WithGrowX(grow bool) prop {
+	return func(props *Props) {
+		props.Layout.GrowX = grow
+	}
+}
+
+// Note: WithGrowY might not be typical for a horizontal divider,
+// but could be added if vertical dividers or other use cases emerge.
+// func WithGrowY(grow bool) prop {
+// 	return func(props *Props) {
+// 		props.Layout.GrowY = grow
+// 	}
+// }

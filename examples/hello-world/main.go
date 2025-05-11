@@ -13,23 +13,21 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+func NewRoot(c *app.Ctx, _ app.Props) string {
 
-	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		return []app.Fc[CustomData]{
-			text.New(ctx, "Hello World!", nil),
-			divider.New(ctx),
-			text.New(ctx, "Press [ctrl-c] to quit.", nil),
-		}
-	}, nil)
+	stack := stack.New(c, func(c *app.Ctx) {
+		text.New(c, "Hello World!", nil)
+		divider.New(c)
+		text.New(c, "Press [ctrl-c] to quit.", nil)
+	})
 
 	return stack
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{})
+	ctx := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
