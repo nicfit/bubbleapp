@@ -7,11 +7,74 @@ const (
 	Horizontal
 )
 
-type Size struct {
-	Width  int
-	Height int
-	GrowX  bool
-	GrowY  bool
+type layoutPhase int
+
+const (
+	LayoutPhaseIntrincintWidth layoutPhase = iota
+	LayoutDone
+)
+
+type componentTree struct {
+	nodes map[string]*ComponentNode
+	root  *ComponentNode
+}
+
+func newComponentTree() *componentTree {
+	return &componentTree{
+		nodes: make(map[string]*ComponentNode),
+		root:  nil,
+	}
+}
+
+type layoutManager struct {
+	componentTree *componentTree
+	currentParent []*ComponentNode
+}
+
+func newLayoutManager() *layoutManager {
+	return &layoutManager{
+		componentTree: newComponentTree(),
+		currentParent: nil,
+	}
+}
+
+type ComponentNode struct {
+	ID       string
+	Parent   *ComponentNode
+	Fc       FC               // The component function
+	Props    Props            // Props passed to this instance
+	Children []*ComponentNode // Children in rendered order
+}
+
+func (lm *layoutManager) addComponent(id string, fc FC, props Props) *ComponentNode {
+
+	node := &ComponentNode{
+		ID:    id,
+		Fc:    fc,
+		Props: props,
+	}
+
+	if len(lm.currentParent) > 0 {
+		parent := lm.currentParent[len(lm.currentParent)-1]
+		node.Parent = parent
+
+		parent.Children = append(parent.Children, node)
+	}
+	lm.currentParent = append(lm.currentParent, node)
+
+	if lm.componentTree.root == nil {
+		lm.componentTree.root = node
+	}
+
+	lm.componentTree.nodes[id] = node
+
+	return node
+}
+
+func (lm *layoutManager) pop() {
+	if len(lm.currentParent) > 0 {
+		lm.currentParent = lm.currentParent[:len(lm.currentParent)-1]
+	}
 }
 
 // NOT USED YET IN THE FC SYSTEM

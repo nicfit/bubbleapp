@@ -21,7 +21,11 @@ type Ctx struct {
 	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
 	useEffectCounter int
-	useStateCounter  int // Added for UseState
+	useStateCounter  int
+
+	// Layout
+	layoutPhase   layoutPhase
+	layoutManager *layoutManager
 }
 
 func NewCtx() *Ctx {
@@ -34,6 +38,7 @@ func NewCtx() *Ctx {
 		Tick:             &tickState[any]{},
 		collectorStack:   []*outputCollector{},
 		componentContext: newInstanceContext(),
+		layoutManager:    newLayoutManager(),
 	}
 }
 
@@ -43,6 +48,9 @@ func NewCtx() *Ctx {
 func (c *Ctx) Render(fc FC, props Props) string {
 	id := c.id.push(getFuncName(fc))
 	defer c.id.pop()
+
+	c.layoutManager.addComponent(id, fc, props)
+	defer c.layoutManager.pop()
 
 	c.id.ids = append(c.id.ids, id)
 

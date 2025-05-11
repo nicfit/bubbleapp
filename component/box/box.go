@@ -14,7 +14,6 @@ type BoxProps struct {
 	Bg            color.Color
 	DisableFollow bool
 	Children      app.Children
-	Size          app.Size
 }
 
 // BoxProp is a function type for setting BoxProps.
@@ -100,9 +99,9 @@ func WithDisableFollow(disable bool) BoxProp {
 	}
 }
 
-func WithGrow(grow bool) BoxProp {
-	return func(props *BoxProps) {
-		props.Size.GrowX = grow
-		props.Size.GrowY = grow
-	}
-}
+// func WithGrow(grow bool) BoxProp {
+// 	return func(props *BoxProps) {
+// 		props.Size.GrowX = grow
+// 		props.Size.GrowY = grow
+// 	}
+// }
