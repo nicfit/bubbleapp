@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type StackProps struct {

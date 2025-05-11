@@ -8,24 +8,20 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-// Props defines the properties for the Text component.
 type Props struct {
 	Content    func(*app.Ctx) string
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
 	style.Margin
-	// TODO: Consider adding Width, Height, MaxWidth, MaxHeight if explicit control is needed directly in props
 }
 
-// prop is a function type for setting Props.
 type prop func(*Props)
 
-// TextFC is the core functional component for rendering text.
+// Text is the core functional component for rendering text.
 func Text(c *app.Ctx, props app.Props) string {
 	textProps, ok := props.(Props)
 	if !ok {
-		// In a real scenario, you might log an error or return a specific error string.
 		return ""
 	}
 
@@ -34,7 +30,7 @@ func Text(c *app.Ctx, props app.Props) string {
 	if textProps.Content != nil {
 		renderedContent = textProps.Content(c)
 	} else {
-		renderedContent = "" // Handle nil function case
+		renderedContent = ""
 	}
 
 	s := lipgloss.NewStyle()
