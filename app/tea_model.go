@@ -9,6 +9,9 @@ import (
 )
 
 type Props any
+type rootProps struct {
+	Layout Layout
+}
 type FC = func(ctx *Ctx, props Props) string
 type Children func(ctx *Ctx)
 
@@ -179,23 +182,30 @@ func (a *app) View() string {
 
 	//a.ctx.Tick.createTimer(a.ctx)
 
+	defaultRootProps := rootProps{
+		Layout: Layout{
+			GrowX: true,
+			GrowY: true,
+		},
+	}
+
 	a.ctx.UIState.resetSizes()
 	a.ctx.layoutPhase = LayoutPhaseIntrincintWidth
-	a.ctx.Render(a.root, nil)
+	a.ctx.Render(a.root, defaultRootProps)
 	a.ctx.UIState.setWidth(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.width)
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
 	a.ctx.layoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	a.ctx.Render(a.root, nil)
+	a.ctx.Render(a.root, defaultRootProps)
 	a.ctx.layoutManager.distributeHeight(a.ctx)
-	a.ctx.UIState.setHeight(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.height)
+	//a.ctx.UIState.setHeight(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.height)
 
 	a.ctx.layoutPhase = LayoutPhaseFinalRender
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, nil))
+	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, defaultRootProps))
 
 	// Get all component IDs after rendering (new state)
 	currentIDs := a.ctx.id.ids // These are the IDs that were actually rendered

@@ -34,12 +34,12 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 		text.NewText(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
 		text.NewText(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
 
-		box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary))
+		box.NewEmpty(c)
 
 		button.NewButton(c, "Quit", func() {
 			c.Quit()
 		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
-	}, stack.WithGap(1))
+	}, stack.WithGap(1), stack.WithGrow(true))
 
 }
 

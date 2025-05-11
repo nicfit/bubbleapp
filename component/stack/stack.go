@@ -9,9 +9,8 @@ import (
 
 type StackProps struct {
 	Direction app.LayoutDirection
-	Gap       int
 	Children  app.Children
-	// app.Layout
+	app.Layout
 }
 
 func Stack(c *app.Ctx, props app.Props) string {
@@ -21,12 +20,12 @@ func Stack(c *app.Ctx, props app.Props) string {
 
 	var processedChildren []string
 	if stackProps.Direction == app.Horizontal {
-		gap := strings.Repeat(" ", stackProps.Gap)
+		gap := strings.Repeat(" ", stackProps.Layout.GapX)
 		for i, child := range children {
 			if child != "" {
 				processedChildren = append(processedChildren, child)
 				// Add gap after each child except the last
-				if stackProps.Gap > 0 && i < len(children)-1 {
+				if stackProps.GapX > 0 && i < len(children)-1 {
 					processedChildren = append(processedChildren, gap)
 				}
 			}
@@ -36,8 +35,8 @@ func Stack(c *app.Ctx, props app.Props) string {
 			if child != "" {
 				processedChildren = append(processedChildren, child)
 				// Add vertical gap after each child except the last
-				if stackProps.Gap > 0 && i < len(children)-1 {
-					processedChildren = append(processedChildren, strings.Repeat(" ", stackProps.Gap))
+				if stackProps.GapY > 0 && i < len(children)-1 {
+					processedChildren = append(processedChildren, " ")
 				}
 			}
 		}
@@ -53,10 +52,10 @@ func Stack(c *app.Ctx, props app.Props) string {
 func New(c *app.Ctx, children app.Children, props ...StackProp) string {
 	appliedProps := StackProps{
 		Children: children,
-		// Layout: app.Layout{
-		// 	GrowX: true,
-		// 	GrowY: true,
-		// },
+		Layout: app.Layout{
+			GrowX: true,
+			GrowY: true,
+		},
 	}
 	for _, prop := range props {
 		prop(&appliedProps)
@@ -74,23 +73,24 @@ func WithDirection(direction app.LayoutDirection) StackProp {
 }
 func WithGap(gap int) StackProp {
 	return func(props *StackProps) {
-		props.Gap = gap
+		props.GapX = gap
+		props.GapY = gap
 	}
 }
 
-// func WithGrowX(grow bool) StackProp {
-// 	return func(props *StackProps) {
-// 		props.GrowX = grow
-// 	}
-// }
-// func WithGrowY(grow bool) StackProp {
-// 	return func(props *StackProps) {
-// 		props.GrowY = grow
-// 	}
-// }
-// func WithGrow(grow bool) StackProp {
-// 	return func(props *StackProps) {
-// 		props.GrowX = grow
-// 		props.GrowY = grow
-// 	}
-// }
+func WithGrowX(grow bool) StackProp {
+	return func(props *StackProps) {
+		props.GrowX = grow
+	}
+}
+func WithGrowY(grow bool) StackProp {
+	return func(props *StackProps) {
+		props.GrowY = grow
+	}
+}
+func WithGrow(grow bool) StackProp {
+	return func(props *StackProps) {
+		props.GrowX = grow
+		props.GrowY = grow
+	}
+}

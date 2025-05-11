@@ -8,6 +8,8 @@ type Layout struct {
 	LayoutDirection LayoutDirection
 	GrowX           bool
 	GrowY           bool
+	GapX            int
+	GapY            int
 }
 
 type LayoutDirection int
@@ -200,11 +202,12 @@ func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order 
 // It prioritizes direct type assertion to Layout, then checks for an embedded Layout field,
 // and finally falls back to individual field checks via reflection.
 func extractLayoutFromProps(props interface{}) Layout {
-	// Default layout values
 	defaultLayout := Layout{
 		LayoutDirection: Vertical,
 		GrowX:           false,
 		GrowY:           false,
+		GapX:            0,
+		GapY:            0,
 	}
 
 	if props == nil {
@@ -223,26 +226,23 @@ func extractLayoutFromProps(props interface{}) Layout {
 		return defaultLayout
 	}
 
-	// Check for an embedded field of type Layout (e.g., type MyProps struct { app.Layout })
-	// or a direct field named Layout of type app.Layout
 	for i := range val.NumField() {
 		field := val.Field(i)
 		if field.Type() == reflect.TypeOf(Layout{}) {
 			if layout, ok := field.Interface().(Layout); ok {
-				// Merge with defaults.
 				mergedLayout := defaultLayout
-				if layout.LayoutDirection != defaultLayout.LayoutDirection { // Check if explicitly set
+				if layout.LayoutDirection != defaultLayout.LayoutDirection {
 					mergedLayout.LayoutDirection = layout.LayoutDirection
 				}
-				// For booleans, any value from an embedded Layout struct is considered intentional.
 				mergedLayout.GrowX = layout.GrowX
 				mergedLayout.GrowY = layout.GrowY
+				mergedLayout.GapX = layout.GapX
+				mergedLayout.GapY = layout.GapY
 				return mergedLayout
 			}
 		}
 	}
 
-	// If no embedded Layout struct is found, return the default.
 	return defaultLayout
 }
 
@@ -278,7 +278,13 @@ func distributeAvailableWidthVisitor(node *ComponentNode, _ int, c *Ctx) {
 			}
 		}
 
-		remainingWidth := availableWidth - nonGrowingChildrenWidth
+		totalGapWidth := 0
+		// Calculate total gap width if there's more than one child and a positive gap is specified by the parent
+		if len(children) > 1 && node.Layout.GapX > 0 {
+			totalGapWidth = (len(children) - 1) * node.Layout.GapX
+		}
+
+		remainingWidth := availableWidth - nonGrowingChildrenWidth - totalGapWidth
 		if remainingWidth < 0 {
 			remainingWidth = 0
 		}
@@ -316,7 +322,7 @@ func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
 				ctx.UIState.setHeight(child.ID, availableHeight)
 			}
 		}
-	} else {
+	} else { // Vertical
 		nonGrowingChildrenHeight := 0
 		growingChildrenCount := 0
 		var growingChildren []*ComponentNode
@@ -330,7 +336,12 @@ func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
 			}
 		}
 
-		remainingHeight := availableHeight - nonGrowingChildrenHeight
+		totalGapHeight := 0
+		if len(children) > 1 && node.Layout.GapY > 0 {
+			totalGapHeight = (len(children) - 1) * node.Layout.GapY
+		}
+
+		remainingHeight := availableHeight - nonGrowingChildrenHeight - totalGapHeight
 		if remainingHeight < 0 {
 			remainingHeight = 0
 		}

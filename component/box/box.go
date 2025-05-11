@@ -42,6 +42,12 @@ func Box(c *app.Ctx, props app.Props) string {
 	width := c.UIState.GetWidth(id)
 	height := c.UIState.GetHeight(id)
 
+	if width <= 0 || height <= 0 {
+		// If the width or height is not set, we can skip rendering
+		return ""
+
+	}
+
 	vp.SetWidth(width)
 	vp.SetHeight(height)
 
