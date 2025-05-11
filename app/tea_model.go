@@ -113,11 +113,9 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		//}
 		return a, tea.Batch(cmds...)
-	case nil: // Add this case to handle c.teaProgram.Send(nil) from UseState
-		return a, nil // Just trigger a re-render by returning the model
 	case tea.WindowSizeMsg:
-		// SET THE SIZE OF THE LAYOUT HERE
-		//a.ctx.layoutManager.SetSize(msg.Width, msg.Height)
+		a.ctx.layoutManager.width = msg.Width
+		a.ctx.layoutManager.height = msg.Height
 		return a, tea.Batch(cmds...)
 	case tea.MouseMsg:
 		a.ctx.Zone.AnyInBounds(a, msg)
@@ -181,6 +179,22 @@ func (a *app) View() string {
 
 	//a.ctx.Tick.createTimer(a.ctx)
 
+	a.ctx.UIState.resetSizes()
+	a.ctx.layoutPhase = LayoutPhaseIntrincintWidth
+	a.ctx.Render(a.root, nil)
+	a.ctx.UIState.setWidth(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.width)
+	a.ctx.layoutManager.distributeWidth(a.ctx)
+	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
+	a.ctx.layoutPhase = LayoutPhaseIntrincintHeight
+	a.ctx.id.initIDCollections()
+	a.ctx.id.initPath()
+	a.ctx.Render(a.root, nil)
+	a.ctx.layoutManager.distributeHeight(a.ctx)
+	a.ctx.UIState.setHeight(a.ctx.layoutManager.componentTree.root.ID, a.ctx.layoutManager.height)
+
+	a.ctx.layoutPhase = LayoutPhaseFinalRender
+	a.ctx.id.initIDCollections()
+	a.ctx.id.initPath()
 	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, nil))
 
 	// Get all component IDs after rendering (new state)

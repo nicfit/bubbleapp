@@ -11,6 +11,7 @@ type StackProps struct {
 	Direction app.LayoutDirection
 	Gap       int
 	Children  app.Children
+	// app.Layout
 }
 
 func Stack(c *app.Ctx, props app.Props) string {
@@ -49,6 +50,21 @@ func Stack(c *app.Ctx, props app.Props) string {
 
 }
 
+func New(c *app.Ctx, children app.Children, props ...StackProp) string {
+	appliedProps := StackProps{
+		Children: children,
+		// Layout: app.Layout{
+		// 	GrowX: true,
+		// 	GrowY: true,
+		// },
+	}
+	for _, prop := range props {
+		prop(&appliedProps)
+	}
+
+	return c.Render(Stack, appliedProps)
+}
+
 type StackProp func(*StackProps)
 
 func WithDirection(direction app.LayoutDirection) StackProp {
@@ -61,13 +77,20 @@ func WithGap(gap int) StackProp {
 		props.Gap = gap
 	}
 }
-func New(c *app.Ctx, children app.Children, props ...StackProp) string {
-	appliedProps := StackProps{
-		Children: children,
-	}
-	for _, prop := range props {
-		prop(&appliedProps)
-	}
 
-	return c.Render(Stack, appliedProps)
-}
+// func WithGrowX(grow bool) StackProp {
+// 	return func(props *StackProps) {
+// 		props.GrowX = grow
+// 	}
+// }
+// func WithGrowY(grow bool) StackProp {
+// 	return func(props *StackProps) {
+// 		props.GrowY = grow
+// 	}
+// }
+// func WithGrow(grow bool) StackProp {
+// 	return func(props *StackProps) {
+// 		props.GrowX = grow
+// 		props.GrowY = grow
+// 	}
+// }

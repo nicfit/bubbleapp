@@ -34,6 +34,10 @@ func (s *uiStateContext) GetWidth(id string) int {
 func (s *uiStateContext) setWidth(id string, value int) {
 	s.widths[id] = value
 }
+func (s *uiStateContext) resetSizes() {
+	s.heights = make(map[string]int)
+	s.widths = make(map[string]int)
+}
 
 func (s *uiStateContext) cleanup(existingIDs []string) {
 	for id := range s.heights {

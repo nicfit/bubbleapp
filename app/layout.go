@@ -1,5 +1,15 @@
 package app
 
+import (
+	"reflect"
+)
+
+type Layout struct {
+	LayoutDirection LayoutDirection
+	GrowX           bool
+	GrowY           bool
+}
+
 type LayoutDirection int
 
 const (
@@ -11,7 +21,8 @@ type layoutPhase int
 
 const (
 	LayoutPhaseIntrincintWidth layoutPhase = iota
-	LayoutDone
+	LayoutPhaseIntrincintHeight
+	LayoutPhaseFinalRender
 )
 
 type componentTree struct {
@@ -29,6 +40,8 @@ func newComponentTree() *componentTree {
 type layoutManager struct {
 	componentTree *componentTree
 	currentParent []*ComponentNode
+	width         int
+	height        int
 }
 
 func newLayoutManager() *layoutManager {
@@ -39,19 +52,22 @@ func newLayoutManager() *layoutManager {
 }
 
 type ComponentNode struct {
-	ID       string
-	Parent   *ComponentNode
-	Fc       FC               // The component function
-	Props    Props            // Props passed to this instance
-	Children []*ComponentNode // Children in rendered order
+	ID         string
+	Parent     *ComponentNode
+	Fc         FC // The component function
+	LastRender string
+	Props      Props            // Props passed to this instance
+	Children   []*ComponentNode // Children in rendered order
+	Layout     Layout
 }
 
 func (lm *layoutManager) addComponent(id string, fc FC, props Props) *ComponentNode {
 
 	node := &ComponentNode{
-		ID:    id,
-		Fc:    fc,
-		Props: props,
+		ID:     id,
+		Fc:     fc,
+		Props:  props,
+		Layout: extractLayoutFromProps(props),
 	}
 
 	if len(lm.currentParent) > 0 {
@@ -75,6 +91,21 @@ func (lm *layoutManager) pop() {
 	if len(lm.currentParent) > 0 {
 		lm.currentParent = lm.currentParent[:len(lm.currentParent)-1]
 	}
+}
+
+func (lm *layoutManager) getComponent(id string) *ComponentNode {
+	node, ok := lm.componentTree.nodes[id]
+	if !ok {
+		return nil
+	}
+	return node
+}
+
+func (lm *layoutManager) distributeWidth(c *Ctx) {
+	Visit(lm.componentTree.root, 0, c, distributeAvailableWidthVisitor, PreOrder)
+}
+func (lm *layoutManager) distributeHeight(c *Ctx) {
+	Visit(lm.componentTree.root, 0, c, distributeAvailableHeightVisitor, PreOrder)
 }
 
 // NOT USED YET IN THE FC SYSTEM
@@ -115,32 +146,32 @@ func (lm *layoutManager) pop() {
 // 	Visit(a.ctx.root, 0, nil, a.ctx, distributeAvailableHeightVisitor, PreOrder)
 // }
 
-// type VisitorFunc[T any] func(node Fc[T], index int, parent Fc[T], ctx *FCContext)
+type VisitorFunc func(node *ComponentNode, index int, ctx *Ctx)
 
-// type Order int
+type Order int
 
-// const (
-// 	PreOrder Order = iota
-// 	PostOrder
-// )
+const (
+	PreOrder Order = iota
+	PostOrder
+)
 
-// func Visit[T any](node Fc[T], index int, parent Fc[T], ctx *FCContext, visitor VisitorFunc[T], order Order) {
-// 	if node == nil {
-// 		return
-// 	}
+func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order Order) {
+	if node == nil {
+		return
+	}
 
-// 	if order == PreOrder {
-// 		visitor(node, index, parent, ctx)
-// 	}
+	if order == PreOrder {
+		visitor(node, index, ctx)
+	}
 
-// 	for i, child := range node.Children(ctx) {
-// 		Visit(child, i, node, ctx, visitor, order)
-// 	}
+	for i, child := range node.Children {
+		Visit(child, i, ctx, visitor, order)
+	}
 
-// 	if order == PostOrder {
-// 		visitor(node, index, parent, ctx)
-// 	}
-// }
+	if order == PostOrder {
+		visitor(node, index, ctx)
+	}
+}
 
 // func calculateIntrinsicWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *FCContext) {
 // 	if node == nil {
@@ -161,109 +192,160 @@ func (lm *layoutManager) pop() {
 // 		renderResult := node.Render(ctx)
 // 		height := lipgloss.Height(renderResult)
 // 		ctx.UIState.setHeight(node.Base().ID, height)
-// 	}
+// 		}
+// 		}
 // }
 
-// func distributeAvailableWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *FCContext) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	children := node.Children(ctx)
-// 	if len(children) == 0 {
-// 		return
-// 	}
+// extractLayoutFromProps attempts to extract layout information from a props interface.
+// It prioritizes direct type assertion to Layout, then checks for an embedded Layout field,
+// and finally falls back to individual field checks via reflection.
+func extractLayoutFromProps(props interface{}) Layout {
+	// Default layout values
+	defaultLayout := Layout{
+		LayoutDirection: Vertical,
+		GrowX:           false,
+		GrowY:           false,
+	}
 
-// 	availableWidth := ctx.UIState.GetWidth(node.Base().ID)
-// 	direction := node.Base().LayoutDirection
+	if props == nil {
+		return defaultLayout
+	}
 
-// 	if direction == Vertical {
-// 		for _, child := range children {
-// 			if child.Base().Opts.GrowX {
-// 				ctx.UIState.setWidth(child.Base().ID, availableWidth)
-// 			}
-// 		}
-// 	} else {
-// 		nonGrowingChildrenWidth := 0
-// 		growingChildrenCount := 0
-// 		var growingChildren []Fc[T]
+	val := reflect.ValueOf(props)
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return defaultLayout
+		}
+		val = val.Elem()
+	}
 
-// 		for _, child := range children {
-// 			if child.Base().Opts.GrowX {
-// 				growingChildrenCount++
-// 				growingChildren = append(growingChildren, child)
-// 			} else {
-// 				nonGrowingChildrenWidth += ctx.UIState.GetWidth(child.Base().ID)
-// 			}
-// 		}
+	if val.Kind() != reflect.Struct {
+		return defaultLayout
+	}
 
-// 		remainingWidth := availableWidth - nonGrowingChildrenWidth
-// 		if remainingWidth < 0 {
-// 			remainingWidth = 0
-// 		}
+	// Check for an embedded field of type Layout (e.g., type MyProps struct { app.Layout })
+	// or a direct field named Layout of type app.Layout
+	for i := range val.NumField() {
+		field := val.Field(i)
+		if field.Type() == reflect.TypeOf(Layout{}) {
+			if layout, ok := field.Interface().(Layout); ok {
+				// Merge with defaults.
+				mergedLayout := defaultLayout
+				if layout.LayoutDirection != defaultLayout.LayoutDirection { // Check if explicitly set
+					mergedLayout.LayoutDirection = layout.LayoutDirection
+				}
+				// For booleans, any value from an embedded Layout struct is considered intentional.
+				mergedLayout.GrowX = layout.GrowX
+				mergedLayout.GrowY = layout.GrowY
+				return mergedLayout
+			}
+		}
+	}
 
-// 		if growingChildrenCount > 0 {
-// 			baseWidth := remainingWidth / growingChildrenCount
-// 			remainder := remainingWidth % growingChildrenCount
+	// If no embedded Layout struct is found, return the default.
+	return defaultLayout
+}
 
-// 			for i, child := range growingChildren {
-// 				childWidth := baseWidth
-// 				if i < remainder {
-// 					childWidth++
-// 				}
-// 				ctx.UIState.setWidth(child.Base().ID, childWidth)
-// 			}
-// 		}
-// 	}
-// }
+func distributeAvailableWidthVisitor(node *ComponentNode, _ int, c *Ctx) {
+	if node == nil {
+		return
+	}
+	children := node.Children
+	if len(children) == 0 {
+		return
+	}
 
-// func distributeAvailableHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *FCContext) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	children := node.Children(ctx)
-// 	if len(children) == 0 {
-// 		return
-// 	}
+	availableWidth := c.UIState.GetWidth(node.ID)
+	direction := node.Layout.LayoutDirection
 
-// 	availableHeight := ctx.UIState.GetHeight(node.Base().ID)
-// 	direction := node.Base().LayoutDirection
+	if direction == Vertical {
+		for _, child := range children {
+			if child.Layout.GrowX {
+				c.UIState.setWidth(child.ID, availableWidth)
+			}
+		}
+	} else { // Horizontal
+		nonGrowingChildrenWidth := 0
+		growingChildrenCount := 0
+		var growingChildren []*ComponentNode
 
-// 	if direction == Horizontal {
-// 		for _, child := range children {
-// 			if child.Base().Opts.GrowY {
-// 				ctx.UIState.setHeight(child.Base().ID, availableHeight)
-// 			}
-// 		}
-// 	} else {
-// 		nonGrowingChildrenHeight := 0
-// 		growingChildrenCount := 0
-// 		var growingChildren []Fc[T]
+		for _, child := range children {
+			if child.Layout.GrowX {
+				growingChildrenCount++
+				growingChildren = append(growingChildren, child)
+			} else {
+				nonGrowingChildrenWidth += c.UIState.GetWidth(child.ID)
+			}
+		}
 
-// 		for _, child := range children {
-// 			if child.Base().Opts.GrowY {
-// 				growingChildrenCount++
-// 				growingChildren = append(growingChildren, child)
-// 			} else {
-// 				nonGrowingChildrenHeight += ctx.UIState.GetHeight(child.Base().ID)
-// 			}
-// 		}
+		remainingWidth := availableWidth - nonGrowingChildrenWidth
+		if remainingWidth < 0 {
+			remainingWidth = 0
+		}
 
-// 		remainingHeight := availableHeight - nonGrowingChildrenHeight
-// 		if remainingHeight < 0 {
-// 			remainingHeight = 0
-// 		}
+		if growingChildrenCount > 0 {
+			baseWidth := remainingWidth / growingChildrenCount
+			remainder := remainingWidth % growingChildrenCount
 
-// 		if growingChildrenCount > 0 {
-// 			baseHeight := remainingHeight / growingChildrenCount
-// 			remainder := remainingHeight % growingChildrenCount
+			for i, child := range growingChildren {
+				childWidth := baseWidth
+				if i < remainder {
+					childWidth++
+				}
+				c.UIState.setWidth(child.ID, childWidth)
+			}
+		}
+	}
+}
 
-// 			for i, child := range growingChildren {
-// 				childHeight := baseHeight
-// 				if i < remainder {
-// 					childHeight++
-// 				}
-// 				ctx.UIState.setHeight(child.Base().ID, childHeight)
-// 			}
-// 		}
-// 	}
-// }
+func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
+	if node == nil {
+		return
+	}
+	children := node.Children
+	if len(children) == 0 {
+		return
+	}
+
+	availableHeight := ctx.UIState.GetHeight(node.ID)
+	direction := node.Layout.LayoutDirection
+
+	if direction == Horizontal {
+		for _, child := range children {
+			if child.Layout.GrowY {
+				ctx.UIState.setHeight(child.ID, availableHeight)
+			}
+		}
+	} else {
+		nonGrowingChildrenHeight := 0
+		growingChildrenCount := 0
+		var growingChildren []*ComponentNode
+
+		for _, child := range children {
+			if child.Layout.GrowY {
+				growingChildrenCount++
+				growingChildren = append(growingChildren, child)
+			} else {
+				nonGrowingChildrenHeight += ctx.UIState.GetHeight(child.ID)
+			}
+		}
+
+		remainingHeight := availableHeight - nonGrowingChildrenHeight
+		if remainingHeight < 0 {
+			remainingHeight = 0
+		}
+
+		if growingChildrenCount > 0 {
+			baseHeight := remainingHeight / growingChildrenCount
+			remainder := remainingHeight % growingChildrenCount
+
+			for i, child := range growingChildren {
+				childHeight := baseHeight
+				if i < remainder {
+					childHeight++
+				}
+				ctx.UIState.setHeight(child.ID, childHeight)
+			}
+		}
+	}
+}

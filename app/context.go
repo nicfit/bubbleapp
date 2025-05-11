@@ -8,6 +8,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/style"
 	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type Ctx struct {
@@ -49,8 +50,13 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	id := c.id.push(getFuncName(fc))
 	defer c.id.pop()
 
-	c.layoutManager.addComponent(id, fc, props)
-	defer c.layoutManager.pop()
+	var node *ComponentNode
+	if c.layoutPhase == LayoutPhaseIntrincintWidth {
+		node = c.layoutManager.addComponent(id, fc, props)
+		defer c.layoutManager.pop()
+	} else {
+		node = c.layoutManager.getComponent(id)
+	}
 
 	c.id.ids = append(c.id.ids, id)
 
@@ -65,6 +71,24 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	if len(c.collectorStack) > 0 {
 		currentCollector := c.collectorStack[len(c.collectorStack)-1]
 		currentCollector.outputs = append(currentCollector.outputs, output)
+	}
+
+	if node != nil {
+		node.LastRender = output
+		if c.layoutPhase == LayoutPhaseIntrincintWidth {
+			if node.Parent == nil {
+				c.UIState.setWidth(id, c.layoutManager.width)
+			} else if !node.Layout.GrowX {
+				c.UIState.setWidth(id, lipgloss.Width(output))
+			}
+		}
+		if c.layoutPhase == LayoutPhaseIntrincintHeight {
+			if node.Parent == nil {
+				c.UIState.setHeight(id, c.layoutManager.height)
+			} else if !node.Layout.GrowY {
+				c.UIState.setHeight(id, lipgloss.Height(output))
+			}
+		}
 	}
 
 	return output
