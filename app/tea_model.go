@@ -128,12 +128,14 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if foundInstanceExists {
 			switch msg.Event.(type) {
 			case tea.MouseClickMsg:
-				a.dispatchToHandler(foundInstance, semanticActionPrimary, "OnClick", MouseEvent{
-					X:      msg.Event.Mouse().X,
-					Y:      msg.Event.Mouse().Y,
-					Button: msg.Event.Mouse().Button,
-					Mod:    msg.Event.Mouse().Mod,
-				})
+				if msg.Event.Mouse().Button == tea.MouseLeft {
+					a.dispatchToHandler(foundInstance, semanticActionPrimary, "OnClick", MouseEvent{
+						X:      msg.Event.Mouse().X,
+						Y:      msg.Event.Mouse().Y,
+						Button: msg.Event.Mouse().Button,
+						Mod:    msg.Event.Mouse().Mod,
+					})
+				}
 			}
 		}
 		return a, nil
