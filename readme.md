@@ -27,6 +27,42 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
 
 # Examples
 
+### Minimal example
+
+This is the smallest example of a BubbleApp program. A BubbleApp program is a function that takes a 'context' and some props and returns a string.
+
+It can then in turn use other components (read: functions) to build an app. `text.New` is just a helper that is the same as calling the `func Text(c *app.Ctx, props app.Props) string` function.
+
+Everything is just functions that return strings. It is similar to a certain web framework with functional components and hooks.
+
+```go
+package main
+
+import (
+	"os"
+	"github.com/alexanderbh/bubbleapp/app"
+	"github.com/alexanderbh/bubbleapp/component/text"
+	tea "github.com/charmbracelet/bubbletea/v2"
+)
+
+func NewRoot(c *app.Ctx, _ app.Props) string {
+	return text.New(c, "Hello World!")
+}
+
+func main() {
+	ctx := app.NewCtx()
+
+	app := app.New(ctx, NewRoot)
+	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	app.SetTeaProgram(p)
+	if _, err := p.Run(); err != nil {
+		os.Exit(1)
+	}
+}
+```
+
+---
+
 ### [Multiple Views](./examples/multiple-views/main.go)
 
 An example of multiple views with some buttons. The login model is forgotten when navigating away from that view. It is easier to maintain large apps this way instead of a single root model.
