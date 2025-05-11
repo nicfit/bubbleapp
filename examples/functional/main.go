@@ -15,7 +15,6 @@ import (
 )
 
 func NewRoot(c *app.Ctx, _ app.Props) string {
-
 	clicks, setClicks := app.UseState(c, 0)
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
@@ -40,7 +39,6 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 			c.Quit()
 		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
 	}, stack.WithGap(1), stack.WithGrow(true))
-
 }
 
 func main() {

@@ -14,7 +14,7 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
 
 ## Features
 
-- **Functional components**
+- **[Functional components](#functional)**
   - Create large apps in a style familiar to a certain web framework. UseState hook for state and UseEffect hook for... well side-effects.
 - **Mouse support** - using [BubbleZone](https://github.com/lrstanley/bubblezone)
   - Automatic mouse handling and propagation for all components.
@@ -130,7 +130,7 @@ return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
 }, nil)
 ```
 
-## ![form](./examples/form/demo.gif)
+![form](./examples/form/demo.gif)
 
 ### [Markdown](./examples/markdown/main.go)
 
@@ -176,6 +176,41 @@ stack := stack.New(c, func(c *app.Ctx) {
 ---
 
 ## Features
+
+### Functional
+
+Functional components and hooks as you might be familiar with
+
+```go
+func NewRoot(c *app.Ctx, _ app.Props) string {
+	clicks, setClicks := app.UseState(c, 0)
+	greeting, setGreeting := app.UseState(c, "Knock knock!")
+
+	app.UseEffect(c, func() {
+		go func() {
+			time.Sleep(2 * time.Second)
+			setGreeting("Who's there?")
+		}()
+	}, []any{})
+
+	return stack.New(c, func(c *app.Ctx) {
+		button.NewButton(c, "Count clicks here!", func() {
+			setClicks(clicks + 1)
+		}, button.WithType(button.Compact))
+
+		text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
+		text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+
+		box.NewEmpty(c)
+
+		button.NewButton(c, "Quit", func() {
+			c.Quit()
+		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
+	}, stack.WithGap(1), stack.WithGrow(true))
+}
+```
+
+![FC](./examples/functional/demo.gif)
 
 ### [Shaders](./examples/shader/main.go)
 
