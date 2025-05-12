@@ -157,8 +157,8 @@ var (
 	}
 
 	Noise = Spinner{
-		Frames:   []string{"▓", "▒", "░"},
-		Interval: 100 * time.Millisecond,
+		Frames:   []string{"▓", "▒", "░", "▒"},
+		Interval: 200 * time.Millisecond,
 	}
 
 	Bounce = Spinner{
@@ -223,22 +223,22 @@ var (
 
 	Toggle2 = Spinner{
 		Frames:   []string{"▫", "▪"},
-		Interval: 100 * time.Millisecond,
+		Interval: 500 * time.Millisecond,
 	}
 
 	Toggle3 = Spinner{
 		Frames:   []string{"□", "■"},
-		Interval: 100 * time.Millisecond,
+		Interval: 1000 * time.Millisecond,
 	}
 
 	Toggle4 = Spinner{
 		Frames:   []string{"■", "□", "▪", "▫"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle5 = Spinner{
 		Frames:   []string{"▮", "▯"},
-		Interval: 100 * time.Millisecond,
+		Interval: 300 * time.Millisecond,
 	}
 
 	Toggle6 = Spinner{
@@ -248,32 +248,32 @@ var (
 
 	Toggle7 = Spinner{
 		Frames:   []string{"⦾", "⦿"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle8 = Spinner{
 		Frames:   []string{"◍", "◌"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle9 = Spinner{
 		Frames:   []string{"◉", "◎"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle10 = Spinner{
 		Frames:   []string{"㊂", "㊀", "㊁"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle11 = Spinner{
 		Frames:   []string{"⧇", "⧆"},
-		Interval: 100 * time.Millisecond,
+		Interval: 200 * time.Millisecond,
 	}
 
 	Toggle12 = Spinner{
 		Frames:   []string{"☗", "☖"},
-		Interval: 100 * time.Millisecond,
+		Interval: 300 * time.Millisecond,
 	}
 
 	Toggle13 = Spinner{
@@ -357,7 +357,7 @@ var (
 	}
 
 	Weather = Spinner{
-		Frames:   []string{"☀️ ", "☀️ ", "☀️ ", "🌤 ", "⛅️ ", "🌥 ", "☁️ ", "🌧 ", "🌨 ", "🌧 ", "🌨 ", "🌧 ", "🌨 ", "⛈ ", "🌨 ", "🌧 ", "🌨 ", "☁️ ", "🌥 ", "⛅️ ", "🌤 ", "☀️ ", "☀️ "},
+		Frames:   []string{"☀️", "☀️", "☀️", "🌤", "⛅️", "🌥", "☁️", "🌧", "🌨", "🌧", "🌨", "🌧", "🌨", "🌨", "🌧", "🌨", "☁️", "🌥", "⛅️", "🌤", "☀️", "☀️"},
 		Interval: 100 * time.Millisecond,
 	}
 
@@ -377,8 +377,8 @@ var (
 	}
 
 	Layer = Spinner{
-		Frames:   []string{"-", "=", "≡"},
-		Interval: 100 * time.Millisecond,
+		Frames:   []string{"-", "=", "≡", "="},
+		Interval: 300 * time.Millisecond,
 	}
 
 	BetaWave = Spinner{

@@ -30,11 +30,12 @@ func TickFPS(c *app.Ctx, props app.Props) string {
 
 	// app.UseTick registers a function to be called at the interval specified by p.RegisterTicks.
 	app.UseTick(c, p.RegisterTicks, func() {
+		now := time.Now()
 		currentTimes := tickTimesVal // Access state value directly
-		newTimes := append(currentTimes, time.Now())
+		newTimes := append(currentTimes, now)
 
 		var keptTimes []time.Time
-		pruneTimeLimit := time.Now().Add(-10 * time.Second)
+		pruneTimeLimit := now.Add(-10 * time.Second)
 		for _, t := range newTimes {
 			if t.After(pruneTimeLimit) {
 				keptTimes = append(keptTimes, t)

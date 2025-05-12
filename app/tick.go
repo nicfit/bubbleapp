@@ -14,7 +14,7 @@ type TickMsg struct {
 type tickState[T any] struct {
 	tickListeners       *[]tickListener
 	timers              *map[time.Duration]*time.Timer
-	lastTickTimes       map[string]time.Time
+	lastTickTimes       *map[string]time.Time
 	activeTimer         *time.Timer
 	activeTimerDone     chan struct{}
 	activeTimerInterval time.Duration
@@ -29,7 +29,6 @@ type tickListener struct {
 
 func (tick *tickState[T]) init() {
 	tick.tickListeners = &[]tickListener{}
-	tick.lastTickTimes = make(map[string]time.Time)
 }
 
 // Tell BubbleApp that the component with this ID wants to receive tick events at the given interval.
@@ -51,7 +50,7 @@ func (tick *tickState[T]) RegisterTickListener(interval time.Duration, id string
 		tick.timers = &map[time.Duration]*time.Timer{}
 	}
 	if tick.lastTickTimes == nil {
-		tick.lastTickTimes = make(map[string]time.Time)
+		tick.lastTickTimes = &map[string]time.Time{}
 	}
 
 	*tick.tickListeners = append(*tick.tickListeners, tickListener{
@@ -147,7 +146,7 @@ func (tick *tickState[T]) createTimer(ctx *Ctx) {
 	}
 
 	tick.activeTimerDone = make(chan struct{})
-	newTimer := time.NewTimer(gcdInterval)
+	newTimer := time.NewTimer(gcdInterval - 5*time.Millisecond) // 5ms margin to avoid timer drift
 	tick.activeTimer = newTimer
 	tick.activeTimerInterval = gcdInterval
 
@@ -168,12 +167,12 @@ func (tick *tickState[T]) createTimer(ctx *Ctx) {
 				listeners := *tick.tickListeners
 				now := time.Now()
 				for _, listener := range listeners {
-					lastTick, ok := tick.lastTickTimes[listener.id]
-					if !ok || now.Sub(lastTick) >= listener.interval {
+					lastTick, ok := (*tick.lastTickTimes)[listener.id]
+					if !ok || now.Sub(lastTick) >= listener.interval { // Allow a small margin for timing inaccuracies
 						if listener.callback != nil {
-							listener.callback()
+							go listener.callback()
 						}
-						tick.lastTickTimes[listener.id] = now
+						(*tick.lastTickTimes)[listener.id] = now
 					}
 				}
 				tick.mu.Unlock()
@@ -232,7 +231,7 @@ func (tick *tickState[T]) UnregisterTickListener(id string) {
 
 	if found {
 		*tick.tickListeners = newListeners
-		delete(tick.lastTickTimes, id)
+		delete(*tick.lastTickTimes, id)
 
 		if len(*tick.tickListeners) == 0 {
 			tick.StopActiveTimer()

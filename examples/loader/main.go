@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/box"
@@ -23,7 +24,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 		text.New(ctx, "Loaders:", nil)
 		divider.New(ctx)
 		loader.New(ctx, loader.Dots, "With text...", loader.WithColor(ctx.Styles.Colors.InfoLight), loader.WithTextColor(ctx.Styles.Colors.Primary))
-		tickfps.New(ctx) // Used for debugging tick events.
+		tickfps.NewAtInterval(ctx, 100*time.Microsecond) // Used for debugging tick events.
 		stack.New(ctx, func(ctx *app.Ctx) {
 
 			box.New(ctx, func(ctx *app.Ctx) {
