@@ -65,7 +65,7 @@ func main() {
 
 ---
 
-### [Multiple Views](./examples/multiple-views/main.go)
+### [Multiple Views](./examples/multiple-views/login.go)
 
 An example of multiple views with some buttons. The login model is forgotten when navigating away from that view. It is easier to maintain large apps this way instead of a single root model.
 
