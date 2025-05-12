@@ -10,63 +10,62 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-type CustomData struct {
-	LoginingIn  bool
-	LoginFailed string
-	UserID      string
+type appData struct {
+	loggingIn   bool
+	loginFailed string
+	userID      string
 }
 
-func NewLoginRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
-	if ctx.Data.UserID != "" {
-		return NewAuthModel(ctx)
+func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
+	appData, setAppData := app.UseState(ctx, appData{})
+
+	if appData.userID != "" {
+		return NewAuthModel(ctx, authProps{userID: appData.userID})
 	}
 
-	if ctx.Data.LoginingIn {
-		return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-			return []app.Fc[CustomData]{
-				text.New(ctx, "Please wait...", nil),
-				loader.New(ctx, loader.Binary, "Logging in...", nil),
-			}
-		}, nil)
+	if appData.loggingIn {
+		return stack.New(ctx, func(ctx *app.Ctx) {
+			text.New(ctx, "Please wait...")
+			loader.New(ctx, loader.Binary, "Logging in...")
+		})
 	}
 
-	loginButton := button.New(ctx, "Log in", func(ctx *app.Context[CustomData]) {
-		go LoginSuperSecure(ctx.Data, false)
-	}, &button.Options{Variant: button.Primary, Type: button.Compact})
+	return stack.New(ctx, func(ctx *app.Ctx) {
 
-	failButton := button.New(ctx, "Fail log in", func(ctx *app.Context[CustomData]) {
-		go LoginSuperSecure(ctx.Data, true)
-	}, &button.Options{Variant: button.Warning, Type: button.Compact})
+		text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n")
+		text.New(ctx, "Log in or fail! Up to you!")
 
-	quitButton := button.New(ctx, "Quit App", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact})
+		button.New(ctx, "Log in", func() {
+			go LoginSuperSecure(setAppData, false)
+		}, button.WithType(button.Compact), button.WithVariant(button.Primary))
 
-	root := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		views := []app.Fc[CustomData]{
-			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n", nil),
-			text.New(ctx, "Log in or fail! Up to you!", nil),
-			loginButton,
-			failButton,
-			quitButton,
+		button.New(ctx, "Fail log in", func() {
+			go LoginSuperSecure(setAppData, true)
+		}, button.WithType(button.Compact), button.WithVariant(button.Warning))
+
+		button.New(ctx, "Quit App", ctx.Quit, button.WithType(button.Compact), button.WithVariant(button.Danger))
+
+		if appData.loginFailed != "" {
+			text.New(ctx, "\n"+appData.loginFailed, text.WithFg(ctx.Styles.Colors.Danger))
 		}
-		if ctx.Data.LoginFailed != "" {
-			views = append(views, text.New(ctx, "\n"+ctx.Data.LoginFailed, &text.Options{Foreground: ctx.Styles.Colors.Danger}))
-		}
-		return views
-	}, nil)
 
-	return root
+	})
 }
 
-func LoginSuperSecure(data *CustomData, fail bool) {
-	data.LoginFailed = ""
-	data.LoginingIn = true
+func LoginSuperSecure(setData func(new appData), fail bool) {
+	data := appData{}
+	data.loginFailed = ""
+	data.loggingIn = true
+	setData(data)
 	time.Sleep(2 * time.Second)
 	if fail {
-		data.LoginingIn = false
-		data.LoginFailed = "Login failed! Ouch!"
+		data.loggingIn = false
+		data.loginFailed = "Login failed! Ouch!"
+		setData(data)
 		return
 	}
 
 	// Setting global state here. Could be from DB or something else.
-	data.UserID = "1234abc"
+	data.userID = "1234abc"
+	setData(data)
 }

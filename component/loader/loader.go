@@ -56,7 +56,9 @@ func New(c *app.Ctx, variant Spinner, text string, prop ...prop) string {
 		Text:    text,
 	}
 	for _, opt := range prop {
-		opt(&p)
+		if opt != nil {
+			opt(&p)
+		}
 	}
 	return c.Render(Loader, p)
 }

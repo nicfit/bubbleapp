@@ -6,13 +6,18 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func NewAuthModel(ctx *app.Context[CustomData]) app.Fc[CustomData] {
-	root := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		return []app.Fc[CustomData]{
-			text.New(ctx, "You are logged in as: "+ctx.Data.UserID, nil),
-			text.New(ctx, "Press [ctrl-c] to quit.\n", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
-		}
-	}, nil)
+type authProps struct {
+	userID string
+}
 
-	return root
+func NewAuthModel(ctx *app.Ctx, props app.Props) string {
+	authProps, ok := props.(authProps)
+	if !ok {
+		panic("NewAuthModel: props must be of type authProps")
+	}
+
+	return stack.New(ctx, func(ctx *app.Ctx) {
+		text.New(ctx, "You are logged in as: "+authProps.userID)
+		text.New(ctx, "Press [ctrl-c] to quit.\n", text.WithFg(ctx.Styles.Colors.Danger))
+	})
 }

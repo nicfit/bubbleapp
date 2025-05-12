@@ -21,7 +21,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 
 	stack := stack.New(ctx, func(ctx *app.Ctx) {
 
-		text.New(ctx, "Loaders:", nil)
+		text.New(ctx, "Loaders:")
 		divider.New(ctx)
 		loader.New(ctx, loader.Dots, "With text...", loader.WithColor(ctx.Styles.Colors.InfoLight), loader.WithTextColor(ctx.Styles.Colors.Primary))
 		tickfps.NewAtInterval(ctx, 100*time.Microsecond) // Used for debugging tick events.
