@@ -26,7 +26,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 	}, []any{})
 
 	return stack.New(c, func(c *app.Ctx) {
-		button.NewButton(c, "Count clicks here!", func() {
+		button.New(c, "Count clicks here!", func() {
 			setClicks(clicks + 1)
 		}, button.WithType(button.Compact))
 
@@ -35,7 +35,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 
 		box.NewEmpty(c)
 
-		button.NewButton(c, "Quit", func() {
+		button.New(c, "Quit", func() {
 			c.Quit()
 		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
 	}, stack.WithGap(1), stack.WithGrow(true))

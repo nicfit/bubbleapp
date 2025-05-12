@@ -51,7 +51,7 @@ func Button(c *app.Ctx, props app.Props) string {
 	return c.Zone.Mark(id, style.Render(buttonProps.Text))
 }
 
-func NewButton(c *app.Ctx, text string, onAction func(), props ...Prop) string {
+func New(c *app.Ctx, text string, onAction func(), props ...Prop) string {
 	p := Props{
 		Text:     text,
 		OnAction: onAction,

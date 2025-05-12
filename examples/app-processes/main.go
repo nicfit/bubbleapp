@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"sort"
 	"strconv"
 	"time"
 
@@ -18,31 +18,24 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type ProcessInfo struct {
-	PID    int32
-	Name   string
-	CPU    float64
-	Memory uint64
-}
+func NewRoot(ctx *app.Ctx, _ app.Props) string {
+	processes, setProcesses := app.UseState(ctx, []table.Row{})
 
-type AppState struct {
-	Processes []ProcessInfo
-}
+	app.UseEffectWithCleanup(ctx, func() func() {
+		processCtx, cancel := context.WithCancel(context.Background())
+		go monitorProcesses(processCtx, setProcesses)
+		return cancel
+	}, app.RunOnceDeps)
 
-func NewRoot(ctx *app.Context[AppState]) app.Fc[AppState] {
-	return stack.New(ctx, func(ctx *app.Context[AppState]) []app.Fc[AppState] {
-		return []app.Fc[AppState]{
-			text.NewDynamic(ctx, func(ctx *app.Context[AppState]) string {
-				return "# Processes: " + strconv.Itoa(len(ctx.Data.Processes))
-			}, nil),
-			table.NewDynamic(ctx, func(ctx *app.Context[AppState]) ([]table.Column, []table.Row) {
-				rows := generateRowsOfProcesses(ctx.Data)
-				return clms, rows
-			}, nil),
-			tickfps.New(ctx, time.Second),
-			button.New(ctx, "Quit", app.Quit, &button.Options{Variant: button.Danger, Type: button.Compact}),
-		}
-	}, nil)
+	return stack.New(ctx, func(ctx *app.Ctx) {
+		text.New(ctx, "# Processes: "+strconv.Itoa(len(processes)))
+		table.New(ctx, table.WithDataFunc(func(ctx *app.Ctx) ([]table.Column, []table.Row) {
+			return clms, processes
+		}))
+		tickfps.NewAtInterval(ctx, 1*time.Second)
+		button.New(ctx, "Quit", ctx.Quit, button.WithType(button.Compact), button.WithVariant(button.Danger))
+
+	})
 }
 
 func main() {
@@ -51,11 +44,9 @@ func main() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
 
-	ctx := app.NewContext(&AppState{})
+	ctx := app.NewCtx()
 
-	go monitorProcesses(ctx)
-
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
@@ -68,22 +59,4 @@ var clms = []table.Column{
 	{Title: "Name", Width: table.WidthGrow()},
 	{Title: "CPU", Width: table.WidthInt(10)},
 	{Title: "Memory", Width: table.WidthInt(10)},
-}
-
-func generateRowsOfProcesses(state *AppState) []table.Row {
-	rows := make([]table.Row, len(state.Processes))
-
-	sort.Slice(state.Processes, func(i, j int) bool {
-		return state.Processes[i].CPU > state.Processes[j].CPU
-	})
-
-	for i, proc := range state.Processes {
-		rows[i] = table.Row{
-			strconv.Itoa(int(proc.PID)),
-			proc.Name,
-			strconv.FormatFloat(proc.CPU, 'f', 2, 64) + "%",
-			strconv.FormatUint(proc.Memory/1024/1024, 10) + "MB",
-		}
-	}
-	return rows
 }

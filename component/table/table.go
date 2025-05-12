@@ -31,7 +31,6 @@ type tableProp func(*Props)
 // tableState holds the internal state of the Table component.
 type tableState struct {
 	cols     []column
-	rows     []Row
 	cursor   int
 	rowHover int // Currently unused as mouse hover interactions are not fully ported
 	viewport viewport.Model
@@ -137,8 +136,8 @@ func defaultStyles(ctx *app.Ctx) Styles {
 		BaseFocus: base.BorderForeground(ctx.Styles.Colors.White),
 		Selected:  lipgloss.NewStyle().Bold(true).Foreground(ctx.Styles.Colors.PrimaryLight).Background(ctx.Styles.Colors.UIPanelBackground),
 		Hovered:   lipgloss.NewStyle().Bold(true).Foreground(ctx.Styles.Colors.PrimaryLight).Background(ctx.Styles.Colors.HighlightBackground),
-		Header:    lipgloss.NewStyle().Bold(true).Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(ctx.Styles.Colors.GhostLight).BorderBottom(true),
-		Cell:      lipgloss.NewStyle().Padding(0, 1),
+		Header:    lipgloss.NewStyle().Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(ctx.Styles.Colors.GhostLight).BorderBottom(true),
+		Cell:      lipgloss.NewStyle(),
 	}
 }
 
@@ -182,13 +181,13 @@ func Table(ctx *app.Ctx, props app.Props) string {
 		viewport: viewport.New(),
 	})
 
+	rawCols, rows := p.DataFunc(ctx)
+
 	app.UseKeyHandler(ctx, func(keyMsg tea.KeyMsg) bool {
-		return processInternalKeys(keyMsg, p.KeyMap, state, setState)
+		return processInternalKeys(keyMsg, p.KeyMap, rows, state, setState)
 	})
 
 	app.UseEffect(ctx, func() {
-		var rawCols []Column
-		rawCols, state.rows = p.DataFunc(ctx)
 		currentLayoutWidth := ctx.UIState.GetWidth(id)
 		baseStyleToUse := p.Styles.Base
 		if isFocused {
@@ -196,9 +195,9 @@ func Table(ctx *app.Ctx, props app.Props) string {
 		}
 		state.cols = columnMapping(currentLayoutWidth-baseStyleToUse.GetHorizontalFrameSize()-(p.Styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 		setState(state)
-	}, []any{ctx.UIState.GetWidth(id)})
+	}, []any{rawCols, ctx.UIState.GetWidth(id)})
 
-	numRows := len(state.rows)
+	numRows := len(rows)
 
 	// Handle cursor initialization and bounds
 	currentCursor := state.cursor
@@ -240,14 +239,14 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	state.viewport.SetHeight(currentLayoutHeight - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
 	state.viewport.SetWidth(currentLayoutWidth - currentBaseStyle.GetHorizontalFrameSize())
 
-	updateViewportContent(&state.viewport, state, p.Styles, ctx, id)
+	updateViewportContent(&state.viewport, rows, state, p.Styles, ctx, id)
 
 	return currentBaseStyle.Render(headersViewStr + "\n" + state.viewport.View())
 }
 
 // processInternalKeys contains the logic for handling key presses for table navigation.
-func processInternalKeys(keyMsg tea.KeyMsg, km KeyMap, currentTableState tableState, setState func(tableState)) bool {
-	numRows := len(currentTableState.rows)
+func processInternalKeys(keyMsg tea.KeyMsg, km KeyMap, rows []Row, currentTableState tableState, setState func(tableState)) bool {
+	numRows := len(rows)
 
 	if numRows == 0 && !(key.Matches(keyMsg, km.LineUp) || key.Matches(keyMsg, km.LineDown)) {
 		if key.Matches(keyMsg, km.LineUp) || key.Matches(keyMsg, km.LineDown) {
@@ -366,7 +365,7 @@ func generateHeadersView(cols []column, styles Styles) string {
 		if col.Width <= 0 {
 			continue
 		}
-		style := lipgloss.NewStyle().Width(col.Width).MaxWidth(col.Width).Inline(true)
+		style := lipgloss.NewStyle().Width(col.Width).MaxWidth(col.Width)
 		renderedCell := style.Render(runewidth.Truncate(col.Title, col.Width, "…"))
 		s = append(s, styles.Header.Render(renderedCell))
 	}
@@ -379,33 +378,31 @@ func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Sty
 		if i >= len(state.cols) || state.cols[i].Width <= 0 { // Boundary check for cols
 			continue
 		}
-		cellStyle := lipgloss.NewStyle().Width(state.cols[i].Width).MaxWidth(state.cols[i].Width).Inline(true)
-		renderedCell := styles.Cell.Render(cellStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
-		s = append(s, renderedCell)
+		renderedCellStyle := styles.Cell.Width(state.cols[i].Width).MaxWidth(state.cols[i].Width)
+		if rowIndex == state.cursor {
+			renderedCellStyle = renderedCellStyle.Inherit(styles.Selected)
+		}
+		s = append(s, renderedCellStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
 	}
 
 	rowStr := lipgloss.JoinHorizontal(lipgloss.Top, s...)
 	rowElementID := tableID + "_row_" + strconv.Itoa(rowIndex) // Unique ID for mouse events per row
 
-	finalRowStr := rowStr
-	if rowIndex == state.cursor {
-		finalRowStr = styles.Selected.Render(rowStr)
-	}
 	// Hover state not implemented for functional component yet
 	// if rowIndex == state.rowHover {
 	// 	finalRowStr = styles.Hovered.Render(rowStr)
 	// }
-	return ctx.Zone.Mark(rowElementID, finalRowStr)
+	return ctx.Zone.Mark(rowElementID, rowStr)
 }
 
-func updateViewportContent(vp *viewport.Model, state tableState, styles Styles, ctx *app.Ctx, tableID string) {
-	if len(state.rows) == 0 {
+func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, styles Styles, ctx *app.Ctx, tableID string) {
+	if len(rows) == 0 {
 		vp.SetContent("")
 		return
 	}
 
-	renderedRows := make([]string, len(state.rows))
-	for i, rowData := range state.rows {
+	renderedRows := make([]string, len(rows))
+	for i, rowData := range rows {
 		renderedRows[i] = generateRenderedRow(i, rowData, state, styles, ctx, tableID)
 	}
 

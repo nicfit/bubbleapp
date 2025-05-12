@@ -1,6 +1,9 @@
 package app
 
-import "time"
+import (
+	"reflect"
+	"time"
+)
 
 // Returns the component ID
 func UseID(c *Ctx) string {
@@ -109,21 +112,63 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 
 	record := &instance.Effects[hookIndex]
 
-	// Check if dependencies have changed
-	depsChanged := true                    // Assume changed for nil deps (run every time) or first run
-	if record.hasExecuted && deps != nil { // Only check deps if not first run and deps are provided
-		if len(deps) == 0 && len(record.deps) == 0 { // Both empty, no change
+	depsChanged := true // Assume changed for nil deps (run every time) or first run
+	if record.hasExecuted && deps != nil {
+		if len(deps) == 0 && len(record.deps) == 0 { // Both empty (e.g. RunOnceDeps), no change
 			depsChanged = false
-		} else if len(deps) == len(record.deps) {
+		} else if len(deps) == len(record.deps) { // Same length, check elements
 			depsChanged = false // Assume no change until a difference is found
-			for i, d := range deps {
-				if d != record.deps[i] {
+			for i, currentDep := range deps {
+				oldDep := record.deps[i]
+
+				// 1. Handle nil cases for individual dependencies
+				if currentDep == nil && oldDep == nil {
+					continue // Both nil, considered same for this element
+				}
+				if currentDep == nil || oldDep == nil {
+					depsChanged = true // One is nil, the other isn't, so different
+					break
+				}
+
+				// 2. Use reflection for actual comparison
+				valCurrent := reflect.ValueOf(currentDep)
+				valOld := reflect.ValueOf(oldDep)
+
+				// 3. If types are different, dependencies have changed
+				if valCurrent.Type() != valOld.Type() {
 					depsChanged = true
 					break
 				}
+
+				// 4. Compare values based on comparability
+				if valCurrent.Type().Comparable() {
+					// For comparable types, direct value comparison
+					if currentDep != oldDep {
+						depsChanged = true
+						break
+					}
+				} else {
+					// For non-comparable types (e.g., slice, map, func, or struct with non-comparable field)
+					// Compare by pointer for types where it's meaningful (slice, map, func, chan, ptr, unsafeptr)
+					kind := valCurrent.Kind()
+					if kind == reflect.Chan || kind == reflect.Func || kind == reflect.Map || kind == reflect.Ptr || kind == reflect.Slice || kind == reflect.UnsafePointer {
+						if valCurrent.Pointer() != valOld.Pointer() {
+							depsChanged = true
+							break
+						}
+					} else {
+						// For other non-comparable types (e.g., a struct passed by value that contains a slice).
+						// Treat as changed, as new instances won't be pointer-equal.
+						// This mimics React's behavior for new object/array literals in deps.
+						depsChanged = true
+						break
+					}
+				}
 			}
+		} else {
+			// Lengths are different, depsChanged remains true (initial assumption)
+			depsChanged = true
 		}
-		// If lengths are different, depsChanged remains true
 	}
 
 	if depsChanged {
@@ -134,6 +179,8 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 
 		// Execute the effect and store any returned cleanup function
 		record.cleanupFn = effect()
+
+		// Store a snapshot of the dependencies
 		record.deps = deps
 		record.hasExecuted = true
 		c.Update()
@@ -153,6 +200,8 @@ func UseKeyHandler(c *Ctx, handler InternalKeyHandler) {
 	}
 	instance.internalKeyHandler = handler
 }
+
+var RunOnceDeps = []any{}
 
 func UseEffect(c *Ctx, effect func(), deps []any) {
 	UseEffectWithCleanup(c, func() func() {

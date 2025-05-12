@@ -22,7 +22,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 	return stack.New(c, func(c *app.Ctx) {
 		text.New(c, "Tab through the buttons to see focus state!")
 
-		button.NewButton(c, "Button 1", func() {
+		button.New(c, "Button 1", func() {
 			currentLog := log
 			currentPresses := presses
 			newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
@@ -38,7 +38,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 
 		divider.New(c)
 
-		button.NewButton(c, "Quit App", func() {
+		button.New(c, "Quit App", func() {
 			c.Quit()
 		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
 
