@@ -19,6 +19,7 @@ type Ctx struct {
 	Styles           *style.Styles
 	id               *idContext
 	Tick             *tickState[any]
+	invalidate       bool
 	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
 	useEffectCounter map[string]int
@@ -123,11 +124,16 @@ func getFuncName(fn interface{}) string {
 // Requires a tea.Program to be set with app.SetTeaProgram.
 // This is useful for performance optimizations where a tick
 // is too expensive.
-func (ctx *Ctx) Update() {
-	if ctx.teaProgram == nil {
+func (c *Ctx) Update() {
+	if c.teaProgram == nil {
 		panic("teaProgram is nil. Cannot update manually.")
 	}
-	go ctx.teaProgram.Send(InvalidateMsg{})
+	if !c.invalidate {
+		if c.teaProgram != nil {
+			go c.teaProgram.Send(InvalidateMsg{})
+		}
+	}
+	c.invalidate = true
 }
 
 // Quit signals the application to stop, ensuring cleanup like stopping active timers.

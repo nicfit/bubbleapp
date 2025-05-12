@@ -9,7 +9,7 @@ import (
 )
 
 type Props struct {
-	Content    func(*app.Ctx) string
+	Text       string
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
@@ -23,14 +23,6 @@ func Text(c *app.Ctx, props app.Props) string {
 	textProps, ok := props.(Props)
 	if !ok {
 		return ""
-	}
-
-	var renderedContent string
-
-	if textProps.Content != nil {
-		renderedContent = textProps.Content(c)
-	} else {
-		renderedContent = ""
 	}
 
 	s := lipgloss.NewStyle()
@@ -53,16 +45,14 @@ func Text(c *app.Ctx, props app.Props) string {
 
 	s = style.ApplyMargin(s, textProps.Margin)
 
-	return s.Render(renderedContent)
+	return s.Render(textProps.Text)
 }
 
 // New creates a new text element.
 // Content can be a static string or a dynamic function: func(c *app.FCContext) string.
-func New(c *app.Ctx, content string, opts ...prop) string {
+func New(c *app.Ctx, text string, opts ...prop) string {
 	p := Props{
-		Content: func(c *app.Ctx) string {
-			return content
-		},
+		Text:       text,
 		Foreground: lipgloss.NoColor{},
 		Background: lipgloss.NoColor{},
 	}

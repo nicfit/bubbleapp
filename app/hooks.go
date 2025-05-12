@@ -1,5 +1,7 @@
 package app
 
+import "time"
+
 // Returns the component ID
 func UseID(c *Ctx) string {
 	return c.id.getID()
@@ -57,12 +59,28 @@ func UseState[T any](c *Ctx, initialValue T) (T, func(newValue T)) {
 
 	setter := func(newValue T) {
 		instance.States[hookIndex] = newValue
-		if c.teaProgram != nil {
-			go c.teaProgram.Send(InvalidateMsg{})
-		}
+		c.Update()
 	}
 
 	return currentValue, setter
+}
+
+// UseTick schedules a function to be called at a specified interval.
+// The callback will be invoked in a separate goroutine managed by the tick system.
+func UseTick(c *Ctx, interval time.Duration, callback func()) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	c.Tick.RegisterTickListener(interval, instanceID, callback)
+	UseEffectWithCleanup(c, func() func() {
+		// Return the cleanup function.
+		return func() {
+			if c.Tick != nil {
+				c.Tick.UnregisterTickListener(instanceID)
+			}
+		}
+	}, []any{})
 }
 
 type effectRecord struct {
@@ -118,9 +136,7 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 		record.cleanupFn = effect()
 		record.deps = deps
 		record.hasExecuted = true
-		if c.teaProgram != nil {
-			go c.teaProgram.Send(InvalidateMsg{})
-		}
+		c.Update()
 	}
 }
 

@@ -18,20 +18,18 @@ type tickState[T any] struct {
 	activeTimer         *time.Timer
 	activeTimerDone     chan struct{}
 	activeTimerInterval time.Duration
-	mu                  sync.Mutex // Added mutex for thread-safe operations
+	mu                  sync.Mutex
 }
 
 type tickListener struct {
 	interval time.Duration
 	id       string
+	callback func()
 }
 
 func (tick *tickState[T]) init() {
-	// This is usually called during setup, mutex might not be strictly needed here
-	// if called before concurrent operations begin.
 	tick.tickListeners = &[]tickListener{}
 	tick.lastTickTimes = make(map[string]time.Time)
-	// activeTimer, activeTimerDone, and activeTimerInterval will be managed by createTimer
 }
 
 // Tell BubbleApp that the component with this ID wants to receive tick events at the given interval.
@@ -43,7 +41,9 @@ func (tick *tickState[T]) init() {
 // the internal tick will be happen every 1 second.
 // But if you register a tick listener with 80ms and another with 100ms,
 // the internal tick will be happen every 20ms, which might hurt performance.
-func (tick *tickState[T]) RegisterTickListener(interval time.Duration, id string) {
+func (tick *tickState[T]) RegisterTickListener(interval time.Duration, id string, callback func()) {
+	tick.mu.Lock()
+	defer tick.mu.Unlock()
 	if tick.tickListeners == nil {
 		tick.tickListeners = &[]tickListener{}
 	}
@@ -57,6 +57,7 @@ func (tick *tickState[T]) RegisterTickListener(interval time.Duration, id string
 	*tick.tickListeners = append(*tick.tickListeners, tickListener{
 		interval: interval,
 		id:       id,
+		callback: callback, // Store the callback
 	})
 }
 
@@ -108,7 +109,7 @@ func (tick *tickState[T]) createTimer(ctx *Ctx) {
 		intervals = append(intervals, time.Duration(ms)*time.Millisecond)
 	}
 
-	gcdInterval := max(1*time.Millisecond, gcdSlice(intervals)) // 1ms low limit. Maybe too low.
+	gcdInterval := max(12*time.Millisecond, gcdSlice(intervals)) // 12ms low limit. Maybe too low.
 
 	if gcdInterval == 0 {
 		if tick.activeTimer != nil {
@@ -163,9 +164,19 @@ func (tick *tickState[T]) createTimer(ctx *Ctx) {
 		for {
 			select {
 			case <-timer.C:
-				if program != nil {
-					program.Send(TickMsg{OccurredAt: time.Now()})
+				tick.mu.Lock()
+				listeners := *tick.tickListeners
+				now := time.Now()
+				for _, listener := range listeners {
+					lastTick, ok := tick.lastTickTimes[listener.id]
+					if !ok || now.Sub(lastTick) >= listener.interval {
+						if listener.callback != nil {
+							listener.callback()
+						}
+						tick.lastTickTimes[listener.id] = now
+					}
 				}
+				tick.mu.Unlock()
 				select {
 				case <-done:
 					return
@@ -198,6 +209,34 @@ func (tick *tickState[T]) StopActiveTimer() {
 	if tick.activeTimer != nil {
 		tick.activeTimer.Stop()
 		tick.activeTimer = nil
+	}
+}
+
+func (tick *tickState[T]) UnregisterTickListener(id string) {
+	tick.mu.Lock()
+	defer tick.mu.Unlock()
+
+	if tick.tickListeners == nil {
+		return
+	}
+
+	found := false
+	newListeners := []tickListener{}
+	for _, listener := range *tick.tickListeners {
+		if listener.id != id {
+			newListeners = append(newListeners, listener)
+		} else {
+			found = true
+		}
+	}
+
+	if found {
+		*tick.tickListeners = newListeners
+		delete(tick.lastTickTimes, id)
+
+		if len(*tick.tickListeners) == 0 {
+			tick.StopActiveTimer()
+		}
 	}
 }
 

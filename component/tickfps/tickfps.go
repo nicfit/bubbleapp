@@ -5,83 +5,72 @@ import (
 	"time"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type uiState struct {
-	msgCount  map[string]int64
-	tickTimes []time.Time
+// Props for the TickFPS functional component.
+type Props struct {
+	// RegisterTicks specifies the interval at which the component's internal logic
+	// (like updating tick times) should be triggered via app.UseTick.
+	RegisterTicks time.Duration
 }
 
-type tickfps[T any] struct {
-	base *app.Base
-}
-
-// USED FOR DEBUGGING TICK EVENTS.
-func New[T any](ctx *app.Context[T], registerTicks time.Duration, baseOptions ...app.BaseOption) *tickfps[T] {
-	if baseOptions == nil {
-		baseOptions = []app.BaseOption{}
+// TickFPS is a functional component that displays the Tick FPS and the count of processed ticks.
+// It is primarily used for debugging tick events.
+func TickFPS(c *app.Ctx, props app.Props) string {
+	p, ok := props.(Props)
+	if !ok {
+		panic("TickFPS: props must be of type tickfps.Props")
 	}
-	base, cleanup := app.NewBase(ctx, "tickfps", baseOptions...)
-	defer cleanup()
 
-	ctx.Tick.RegisterTickListener(registerTicks, base.ID)
+	// tickTimes stores the timestamps of recent ticks processed by this component.
+	tickTimesVal, setTickTimes := app.UseState(c, []time.Time{})
 
-	return &tickfps[T]{
-		base: base,
-	}
-}
+	// tickMsgCount stores the count of tick messages processed by this component.
+	tickMsgCountVal, setTickMsgCount := app.UseState(c, int64(0))
 
-func (m *tickfps[T]) Update(ctx *app.Context[T], msg tea.Msg) bool {
-	state := m.getState(ctx)
-	switch msgType := msg.(type) {
-	case app.TickMsg:
-		state.tickTimes = append(state.tickTimes, time.Now())
-		cutoff := time.Now().Add(-10 * time.Second)
-		idx := 0
-		for i, t := range state.tickTimes {
-			if t.After(cutoff) {
-				idx = i
-				break
+	// app.UseTick registers a function to be called at the interval specified by p.RegisterTicks.
+	app.UseTick(c, p.RegisterTicks, func() {
+		currentTimes := tickTimesVal // Access state value directly
+		newTimes := append(currentTimes, time.Now())
+
+		var keptTimes []time.Time
+		pruneTimeLimit := time.Now().Add(-10 * time.Second)
+		for _, t := range newTimes {
+			if t.After(pruneTimeLimit) {
+				keptTimes = append(keptTimes, t)
 			}
 		}
-		state.tickTimes = state.tickTimes[idx:]
-		state.msgCount["components.TickMsg"]++
-	default:
-		state.msgCount[fmt.Sprintf("%T", msgType)]++
+
+		setTickTimes(keptTimes)
+		setTickMsgCount(tickMsgCountVal + 1) // Access state value directly and update
+	})
+
+	currentTickTimes := tickTimesVal       // Access state value directly
+	currentTickMsgCount := tickMsgCountVal // Access state value directly
+
+	if len(currentTickTimes) < 2 {
+		return fmt.Sprintf("Tick FPS: 0.00 (%d)", currentTickMsgCount)
 	}
 
-	return false
+	delta := currentTickTimes[len(currentTickTimes)-1].Sub(currentTickTimes[0]).Seconds()
+	if delta <= 0 {
+		return fmt.Sprintf("Tick FPS: 0.00 (%d)", currentTickMsgCount)
+	}
+
+	fps := float64(len(currentTickTimes)-1) / delta
+	return fmt.Sprintf("Tick FPS: %.2f (%d)", fps, currentTickMsgCount)
 }
 
-func (m *tickfps[T]) Render(ctx *app.Context[T]) string {
-	state := m.getState(ctx)
-	if len(state.tickTimes) < 2 {
-		return "Tick FPS: 0.00"
+// New creates an instance of the TickFPS that registers its own tick listener
+// with the specified interval. This is useful for debugging tick events.
+func NewAtInterval(c *app.Ctx, registerTicks time.Duration) string {
+	componentProps := Props{
+		RegisterTicks: registerTicks,
 	}
-	delta := state.tickTimes[len(state.tickTimes)-1].Sub(state.tickTimes[0]).Seconds()
-	if delta == 0 {
-		return "Tick FPS: 0.00"
-	}
-	fps := float64(len(state.tickTimes)-1) / delta
-	return fmt.Sprintf("Tick FPS: %.2f (%d)", fps, state.msgCount["components.TickMsg"])
+	return c.Render(TickFPS, componentProps)
 }
 
-func (m *tickfps[T]) Children(ctx *app.Context[T]) []app.Fc[T] {
-	return nil
-}
-func (m *tickfps[T]) Base() *app.Base {
-	return m.base
-}
-
-func (m *tickfps[T]) getState(ctx *app.Context[T]) *uiState {
-	state := app.GetUIState[T, uiState](ctx, m.base.ID)
-	if state == nil {
-		state = &uiState{
-			msgCount:  make(map[string]int64),
-			tickTimes: make([]time.Time, 0),
-		}
-		app.SetUIState(ctx, m.base.ID, state)
-	}
-	return state
+// New creates an instance of the TickFPS component with a default interval of 1s.
+func New(c *app.Ctx) string {
+	return NewAtInterval(c, 1000*time.Millisecond)
 }
