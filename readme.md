@@ -179,13 +179,17 @@ return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
 Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering.
 
 ```go
-stack := stack.New(ctx, []app.Fc[CustomData]{
-    text.New(ctx, "Markdown example!", nil),
-    divider.New(ctx),
-    box.New(ctx, markdown.New(ctx, mdContent), &box.Options{DisableFollow: true}),
-    divider.New(ctx),
-    text.New(ctx, "Press [ctrl-c] to quit.", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
-}, nil)
+return stack.New(ctx, func(ctx *app.Ctx) {
+	text.New(ctx, "Markdown example!")
+	divider.New(ctx)
+
+	box.New(ctx, func(ctx *app.Ctx) {
+		markdown.New(ctx, mdContent)
+	}, box.WithDisableFollow(true))
+
+	divider.New(ctx)
+	text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+})
 ```
 
 ![Markdown](./examples/markdown/demo.gif)

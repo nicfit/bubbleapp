@@ -3,21 +3,39 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Example: hello-world",
+      "name": "Example: app-processes",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/examples/hello-world/.",
-      "cwd": "${workspaceFolder}/examples/hello-world",
+      "program": "${workspaceFolder}/examples/app-processes/.",
+      "cwd": "${workspaceFolder}/examples/app-processes",
       "console": "integratedTerminal"
     },
     {
-      "name": "Example: shader",
+      "name": "Example: focus-management",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/examples/shader/.",
-      "cwd": "${workspaceFolder}/examples/shader",
+      "program": "${workspaceFolder}/examples/focus-management/.",
+      "cwd": "${workspaceFolder}/examples/focus-management",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: form",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/form/.",
+      "cwd": "${workspaceFolder}/examples/form",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: functional",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/fc/.",
+      "cwd": "${workspaceFolder}/examples/fc",
       "console": "integratedTerminal"
     },
     {
@@ -30,12 +48,57 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "Example: hello-world",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/hello-world/.",
+      "cwd": "${workspaceFolder}/examples/hello-world",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: loader",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/loader/.",
+      "cwd": "${workspaceFolder}/examples/loader",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: markdown",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/markdown/.",
+      "cwd": "${workspaceFolder}/examples/markdown",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "Example: multiple-views",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}/examples/multiple-views/.",
       "cwd": "${workspaceFolder}/examples/multiple-views",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: shader",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/shader/.",
+      "cwd": "${workspaceFolder}/examples/shader",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: stack",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/stack/.",
+      "cwd": "${workspaceFolder}/examples/stack",
       "console": "integratedTerminal"
     },
     {
@@ -54,60 +117,6 @@
       "mode": "auto",
       "program": "${workspaceFolder}/examples/tabs/.",
       "cwd": "${workspaceFolder}/examples/tabs",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: app-processes",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/app-processes/.",
-      "cwd": "${workspaceFolder}/examples/app-processes",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: stack",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/stack/.",
-      "cwd": "${workspaceFolder}/examples/stack",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: focus-management",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/focus-management/.",
-      "cwd": "${workspaceFolder}/examples/focus-management",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: loader",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/loader/.",
-      "cwd": "${workspaceFolder}/examples/loader",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: form",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/form/.",
-      "cwd": "${workspaceFolder}/examples/form",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "Example: fc",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}/examples/fc/.",
-      "cwd": "${workspaceFolder}/examples/fc",
       "console": "integratedTerminal"
     }
   ]

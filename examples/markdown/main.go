@@ -13,27 +13,25 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type CustomData struct{}
+func NewRoot(ctx *app.Ctx, _ app.Props) string {
 
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+	return stack.New(ctx, func(ctx *app.Ctx) {
+		text.New(ctx, "Markdown example!")
+		divider.New(ctx)
 
-	stack := stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		return []app.Fc[CustomData]{
-			text.New(ctx, "Markdown example!", nil),
-			divider.New(ctx),
-			box.New(ctx, func(ctx *app.Context[CustomData]) app.Fc[CustomData] { return markdown.New(ctx, mdContent) }, &box.Options{DisableFollow: true}),
-			divider.New(ctx),
-			text.New(ctx, "Press [ctrl-c] to quit.", &text.Options{Foreground: ctx.Styles.Colors.Danger}),
-		}
-	}, nil)
+		box.New(ctx, func(ctx *app.Ctx) {
+			markdown.New(ctx, mdContent)
+		}, box.WithDisableFollow(true))
 
-	return stack
+		divider.New(ctx)
+		text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+	})
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{})
+	ctx := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
@@ -51,7 +49,17 @@ look like:
 
   * this one
   * that one
-  * the other one
+
+Code example:
+
+~~~python
+import time
+# Quick, count to ten!
+for i in range(10):
+    # (but not *too* quick)
+    time.sleep(0.5)
+    print i
+~~~
 
 Note that --- not considering the asterisk --- the actual text
 content starts at 4-columns in.
