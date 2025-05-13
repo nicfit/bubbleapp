@@ -24,8 +24,6 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
   - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
 - **Global Ticks** IN PROGRESS
   - Adding several Spinners from Bubbles is really slow over SSH since they each start a Tick message. In BubbleTea all components use the same global tick for real time updates.
-- **[Shaders](#shaders)** IN PROGRESS
-  - Attach shaders to components to transform their output. Dynamic Shaders listen for the Global Tick and can react in real time. The possibilities are endless.
 
 # Examples
 
@@ -257,32 +255,6 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 ```
 
 ![FC](./examples/functional/demo.gif)
-
-### [Shaders](./examples/shader/main.go)
-
-Flexible system to add shaders to components. Dynamic shaders are getting the global tick which enables them to update in real time.
-
-Could be used for easy animations or transitions in the future.
-
-```go
-blinkShader := shader.NewBlinkShader(time.Second/3, lipgloss.NewStyle().
-    Foreground(ctx.Styles.Colors.Success).
-    BorderForeground(ctx.Styles.Colors.Success))
-
-stack := stack.New(ctx, []app.Fc[CustomData]{
-    text.New(ctx, "Shader examples:", nil),
-    text.New(ctx, "Small Caps Shader", &text.Options{
-        Foreground: ctx.Styles.Colors.Primary,
-    }, app.WithShader(shader.NewSmallCapsShader())),
-    button.New(ctx, " Blink ", app.Quit, &button.Options{
-        Variant: button.Danger,
-    }, app.WithShader(blinkShader)),
-}, nil)
-```
-
-![Shaders](./examples/shader/demo.gif)
-
----
 
 ### [Focus](./examples/focus-management/main.go)
 
