@@ -4,6 +4,7 @@ package table
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/style"
@@ -32,7 +33,6 @@ type tableProp func(*Props)
 type tableState struct {
 	cols     []column
 	cursor   int
-	rowHover int // Currently unused as mouse hover interactions are not fully ported
 	viewport viewport.Model
 }
 
@@ -173,11 +173,11 @@ func WithDataFunc(f func(ctx *app.Ctx) (clms []Column, rows []Row)) tableProp {
 func Table(ctx *app.Ctx, props app.Props) string {
 	p, _ := props.(Props)
 	id := app.UseID(ctx)
-	isFocused := app.UseFocus(ctx)
+	isFocused := app.UseIsFocused(ctx)
+	_, childHoverID := app.UseIsHovered(ctx)
 
 	state, setState := app.UseState(ctx, tableState{
 		cursor:   -1,
-		rowHover: -1,
 		viewport: viewport.New(),
 	})
 
@@ -185,6 +185,29 @@ func Table(ctx *app.Ctx, props app.Props) string {
 
 	app.UseKeyHandler(ctx, func(keyMsg tea.KeyMsg) bool {
 		return processInternalKeys(keyMsg, p.KeyMap, rows, state, setState)
+	})
+
+	app.UseMouseHandler(ctx, func(msg tea.MouseMsg, childID string) bool {
+		// TODO: Add click for headers to sort
+		if childID == "" || msg.Mouse().Button != tea.MouseLeft {
+			return false
+		}
+		if _, ok := msg.(tea.MouseReleaseMsg); ok {
+
+			rowIDFromChild := strings.Split(childID, ":")
+			if rowIDFromChild[0] == "row" {
+				rowIndex, err := strconv.Atoi(rowIDFromChild[1])
+				if err != nil {
+					return false
+				}
+				if rowIndex >= 0 && rowIndex < len(rows) {
+					state.cursor = rowIndex
+					setState(state)
+				}
+			}
+			return true
+		}
+		return false
 	})
 
 	width, height := app.UseSize(ctx)
@@ -237,7 +260,7 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	state.viewport.SetHeight(height - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
 	state.viewport.SetWidth(width - currentBaseStyle.GetHorizontalFrameSize())
 
-	updateViewportContent(&state.viewport, rows, state, p.Styles, ctx, id)
+	updateViewportContent(&state.viewport, rows, state, childHoverID, p.Styles, ctx, id)
 
 	return currentBaseStyle.Render(headersViewStr + "\n" + state.viewport.View())
 }
@@ -370,7 +393,7 @@ func generateHeadersView(cols []column, styles Styles) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, s...)
 }
 
-func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Styles, ctx *app.Ctx, tableID string) string {
+func generateRenderedRow(rowIndex int, rowData Row, state tableState, childHoverID string, styles Styles, ctx *app.Ctx, tableID string) string {
 	s := make([]string, 0, len(state.cols))
 	for i, value := range rowData {
 		if i >= len(state.cols) || state.cols[i].Width <= 0 { // Boundary check for cols
@@ -382,18 +405,19 @@ func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Sty
 		}
 		s = append(s, renderedCellStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
 	}
+	rowElementID := "row:" + strconv.Itoa(rowIndex) // Unique ID for mouse events per row
 
-	rowStr := lipgloss.JoinHorizontal(lipgloss.Top, s...)
-	rowElementID := tableID + "_row_" + strconv.Itoa(rowIndex) // Unique ID for mouse events per row
+	var rowStr string
 
-	// Hover state not implemented for functional component yet
-	// if rowIndex == state.rowHover {
-	// 	finalRowStr = styles.Hovered.Render(rowStr)
-	// }
-	return ctx.MouseZone(rowElementID, rowStr)
+	if rowElementID == childHoverID {
+		rowStr = styles.Hovered.Render(lipgloss.JoinHorizontal(lipgloss.Top, s...))
+	} else {
+		rowStr = lipgloss.JoinHorizontal(lipgloss.Top, s...)
+	}
+	return ctx.MouseZoneChild(rowElementID, rowStr)
 }
 
-func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, styles Styles, ctx *app.Ctx, tableID string) {
+func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, childHoverID string, styles Styles, ctx *app.Ctx, tableID string) {
 	if len(rows) == 0 {
 		vp.SetContent("")
 		return
@@ -401,7 +425,7 @@ func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, sty
 
 	renderedRows := make([]string, len(rows))
 	for i, rowData := range rows {
-		renderedRows[i] = generateRenderedRow(i, rowData, state, styles, ctx, tableID)
+		renderedRows[i] = generateRenderedRow(i, rowData, state, childHoverID, styles, ctx, tableID)
 	}
 
 	vp.SetContent(

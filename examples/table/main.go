@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/alexanderbh/bubbleapp/app"
@@ -27,6 +29,11 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 }
 
 func main() {
+	// pprof - used for debugging performance - just ignore
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+
 	ctx := app.NewCtx()
 
 	app := app.New(ctx, NewRoot)
@@ -47,7 +54,7 @@ var clms = []table.Column{
 var rows = []table.Row{
 	{"1", "Tokyo", "Japan", "37,274,000"},
 	{"2", "Delhi", "India", "32,065,760"},
-	{"3", "Shanghai Much Longer text", "China", "28,516,904"},
+	{"3", "Shanghai", "China", "28,516,904"},
 	{"4", "Dhaka", "Bangladesh", "22,478,116"},
 	{"5", "São Paulo", "Brazil", "22,429,800"},
 	{"6", "Mexico City", "Mexico", "22,085,140"},

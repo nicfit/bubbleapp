@@ -24,8 +24,6 @@ func Divider(c *app.Ctx, props app.Props) string {
 		return ""
 	}
 
-	id := app.UseID(c)
-
 	finalFGColor := divProps.FGColor
 	if finalFGColor == nil {
 		finalFGColor = c.Styles.Colors.Ghost

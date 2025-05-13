@@ -9,7 +9,7 @@ import (
 type KeyHandler func(keyMsg tea.KeyMsg) bool
 
 // MouseHandler defines the signature for component-internal mouse handlers.
-type MouseHandler func(msg tea.MouseMsg) bool
+type MouseHandler func(msg tea.MouseMsg, childID string) bool
 
 // instanceContext represents an instance of a functional component (FC).
 // It holds the component's ID, focusable state, function reference, props,

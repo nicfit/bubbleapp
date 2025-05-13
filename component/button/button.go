@@ -37,12 +37,10 @@ const (
 func Button(c *app.Ctx, props app.Props) string {
 	buttonProps, _ := props.(Props)
 
-	id := app.UseID(c)
+	focused := app.UseIsFocused(c)
+	hovered, _ := app.UseIsHovered(c)
 
-	focused := app.UseFocus(c)
-	hovered := false
-
-	app.UseAction(c, id, func() {
+	app.UseAction(c, func(_ string) {
 		if buttonProps.OnAction != nil && !buttonProps.Disabled {
 			buttonProps.OnAction()
 		}
@@ -55,7 +53,7 @@ func Button(c *app.Ctx, props app.Props) string {
 		buttonProps.Text = "⟦" + buttonProps.Text + "⟧"
 	}
 
-	return c.MouseZone(id, style.Render(buttonProps.Text))
+	return c.MouseZone(style.Render(buttonProps.Text))
 }
 
 func New(c *app.Ctx, text string, onAction func(), props ...Prop) string {
@@ -84,24 +82,7 @@ func WithType(btnType Type) Prop {
 // This is a mess. I need to think about this more.
 func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hovered bool, disabled bool) lipgloss.Style {
 	if btnType == Compact {
-		if focused {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonCompact.PrimaryFocused
-			case Secondary:
-				return c.Styles.ButtonCompact.SecondaryFocused
-			case Tertiary:
-				return c.Styles.ButtonCompact.TertiaryFocused
-			case Success:
-				return c.Styles.ButtonCompact.SuccessFocused
-			case Danger:
-				return c.Styles.ButtonCompact.DangerFocused
-			case Info:
-				return c.Styles.ButtonCompact.InfoFocused
-			case Warning:
-				return c.Styles.ButtonCompact.WarningFocused
-			}
-		} else if hovered {
+		if hovered {
 			switch variant {
 			case Primary:
 				return c.Styles.ButtonCompact.PrimaryHovered
@@ -117,6 +98,23 @@ func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hove
 				return c.Styles.ButtonCompact.InfoHovered
 			case Warning:
 				return c.Styles.ButtonCompact.WarningHovered
+			}
+		} else if focused {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonCompact.PrimaryFocused
+			case Secondary:
+				return c.Styles.ButtonCompact.SecondaryFocused
+			case Tertiary:
+				return c.Styles.ButtonCompact.TertiaryFocused
+			case Success:
+				return c.Styles.ButtonCompact.SuccessFocused
+			case Danger:
+				return c.Styles.ButtonCompact.DangerFocused
+			case Info:
+				return c.Styles.ButtonCompact.InfoFocused
+			case Warning:
+				return c.Styles.ButtonCompact.WarningFocused
 			}
 		} else {
 			switch variant {
@@ -137,24 +135,7 @@ func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hove
 			}
 		}
 	} else if btnType == Normal {
-		if focused {
-			switch variant {
-			case Primary:
-				return c.Styles.Button.PrimaryFocused
-			case Secondary:
-				return c.Styles.Button.SecondaryFocused
-			case Tertiary:
-				return c.Styles.Button.TertiaryFocused
-			case Success:
-				return c.Styles.Button.SuccessFocused
-			case Danger:
-				return c.Styles.Button.DangerFocused
-			case Info:
-				return c.Styles.Button.InfoFocused
-			case Warning:
-				return c.Styles.Button.WarningFocused
-			}
-		} else if hovered {
+		if hovered {
 			switch variant {
 			case Primary:
 				return c.Styles.Button.PrimaryHovered
@@ -170,6 +151,23 @@ func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hove
 				return c.Styles.Button.InfoHovered
 			case Warning:
 				return c.Styles.Button.WarningHovered
+			}
+		} else if focused {
+			switch variant {
+			case Primary:
+				return c.Styles.Button.PrimaryFocused
+			case Secondary:
+				return c.Styles.Button.SecondaryFocused
+			case Tertiary:
+				return c.Styles.Button.TertiaryFocused
+			case Success:
+				return c.Styles.Button.SuccessFocused
+			case Danger:
+				return c.Styles.Button.DangerFocused
+			case Info:
+				return c.Styles.Button.InfoFocused
+			case Warning:
+				return c.Styles.Button.WarningFocused
 			}
 		} else {
 			switch variant {

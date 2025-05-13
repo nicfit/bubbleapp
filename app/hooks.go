@@ -13,12 +13,22 @@ func UseID(c *Ctx) string {
 }
 
 // Registers component as focusable and returns the focus state
-func UseFocus(c *Ctx) bool {
+func UseIsFocused(c *Ctx) bool {
 	instance, instanceExists := c.componentContext.get(c.id.getID())
 	if instanceExists {
 		instance.focusable = true
 	}
 	return c.UIState.Focused == c.id.getID()
+}
+
+// Returns the ID of the component that is hovered.
+// If the component is hovered, it returns true and any potential child ID.
+func UseIsHovered(c *Ctx) (bool, string) {
+	hoveredID := c.UIState.Hovered == c.id.getID()
+	if hoveredID {
+		return true, c.UIState.HoveredChild
+	}
+	return false, ""
 }
 
 func UseSize(c *Ctx) (int, int) {
@@ -204,9 +214,8 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	}
 }
 
-// UseKeyHandler registers a function to handle key presses internally within a component.
-// This handler is only called if the component is focused and the key event is not
-// handled by a more specific semantic handler (like OnKeyPress for Enter).
+// UseKeyHandler registers a function to handle key presses within a component.
+// This handler is only called if the component is focused.
 // The handler function should return true if it handled the key, false otherwise.
 func UseKeyHandler(c *Ctx, handler KeyHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
@@ -221,9 +230,23 @@ func UseKeyHandler(c *Ctx, handler KeyHandler) {
 	instance.keyHandlers = append(instance.keyHandlers, handler)
 }
 
+// UseMouseHandler registers a function to handle mouse events within a component.
+func UseMouseHandler(c *Ctx, handler MouseHandler) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		panic("UseMouseHandler: component instance not found")
+	}
+	instance.focusable = true
+	instance.mouseHandlers = append(instance.mouseHandlers, handler)
+}
+
 // UseAction registers a function to be called when the component is clicked
 // with left mouse button or Enter is pressed while the component is focused.
-func UseAction(c *Ctx, action string, handler func()) {
+func UseAction(c *Ctx, handler func(childID string)) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
@@ -233,16 +256,16 @@ func UseAction(c *Ctx, action string, handler func()) {
 		panic("UseAction: component instance not found")
 	}
 	instance.focusable = true
-	instance.mouseHandlers = append(instance.mouseHandlers, func(msg tea.MouseMsg) bool {
+	instance.mouseHandlers = append(instance.mouseHandlers, func(msg tea.MouseMsg, childID string) bool {
 		if releaseMsg, ok := msg.(tea.MouseReleaseMsg); ok && releaseMsg.Mouse().Button == tea.MouseLeft {
-			handler()
+			handler(childID)
 			return true
 		}
 		return false
 	})
 	instance.keyHandlers = append(instance.keyHandlers, func(keyMsg tea.KeyMsg) bool {
 		if keyMsg.String() == "enter" {
-			handler()
+			handler("")
 			return true
 		}
 		return false

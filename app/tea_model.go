@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"time"
 
 	"github.com/alexanderbh/bubbleapp/style"
@@ -115,11 +116,26 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, nil
 	case tea.MouseMsg:
 		idsInBounds := a.ctx.zone.IDsInBounds(msg)
+		_, isMotionMsg := msg.(tea.MouseMotionMsg)
+		if isMotionMsg {
+			a.ctx.UIState.Hovered = ""
+			a.ctx.UIState.HoveredChild = ""
+		}
 		for _, id := range idsInBounds {
+			splitID := strings.Split(id, "###")
+			id = splitID[0]
+			childID := ""
+			if len(splitID) > 1 {
+				childID = splitID[1]
+			}
+			if isMotionMsg {
+				a.ctx.UIState.Hovered = id // This will run for each meaning the last one will be the hovered one
+				a.ctx.UIState.HoveredChild = childID
+			}
 			foundInstance, found := a.ctx.componentContext.get(id)
 			if found {
 				for _, handler := range foundInstance.mouseHandlers {
-					if handler(msg) {
+					if handler(msg, childID) {
 						return a, nil // Mouse event was handled by the component's mouse handler
 					}
 				}

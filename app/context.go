@@ -108,10 +108,21 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	return output
 }
 
-func (c *Ctx) MouseZone(id string, content string) string {
+// MouseZone creates a mouse zone for the given content.
+// The ID of the zone is the components ID.
+func (c *Ctx) MouseZone(content string) string {
+	id := c.id.getID()
 	instance, _ := c.componentContext.get(id)
 	c.zoneMap[id] = instance
 	return c.zone.Mark(id, content)
+}
+
+// MouseZoneChild creates a mouse zone for child (sub part) of a component.
+// The ID of the zone is the components ID + "###" + childID.
+// MouseHandlers will receive the childID extracted from the ID mentioned above.
+func (c *Ctx) MouseZoneChild(childID string, content string) string {
+	id := c.id.getID()
+	return c.zone.Mark(id+"###"+childID, content)
 }
 
 type outputCollector struct {

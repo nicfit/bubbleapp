@@ -1,10 +1,11 @@
 package app
 
 type uiStateContext struct {
-	heights map[string]int
-	widths  map[string]int
-	Focused string
-	Hovered string
+	heights      map[string]int
+	widths       map[string]int
+	Focused      string
+	Hovered      string
+	HoveredChild string
 }
 
 func NewUIStateContext() *uiStateContext {
