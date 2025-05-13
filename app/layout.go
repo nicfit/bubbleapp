@@ -110,44 +110,6 @@ func (lm *layoutManager) distributeHeight(c *Ctx) {
 	Visit(lm.componentTree.root, 0, c, distributeAvailableHeightVisitor, PreOrder)
 }
 
-// NOT USED YET IN THE FC SYSTEM
-// Calculate sizes of the component tree
-
-// saved here for reference for later
-
-// func (a *appOld[T]) Layout() {
-// 	a.ctx.id.initIDCollections()
-// 	a.ctx.LayoutPhase = true
-// 	defer func() {
-// 		a.ctx.LayoutPhase = false
-// 	}()
-
-// 	// TODO: Can the Zone manager be reset here? If not why? Otherwise things will live in the zone forever.
-// 	a.ctx.UIState.setWidth(a.ctx.root.Base().ID, a.ctx.Width)
-// 	a.ctx.UIState.setHeight(a.ctx.root.Base().ID, a.ctx.Height)
-
-// 	// --- Pass 0: Collect IDs (Top-Down) ---
-// 	//Visit(a.ctx.root, 0, nil, a.ctx, collectIdsVisitor, PreOrder)
-
-// 	// --- Pass 0.5: Clean up state ---
-// 	a.ctx.UIState.cleanup(a.ctx.id.ids)
-
-// 	// --- Pass 1: Calculate Intrinsic Widths (Bottom-Up) ---
-// 	Visit(a.ctx.root, 0, nil, a.ctx, calculateIntrinsicWidthVisitor, PostOrder)
-
-// 	// --- Pass 2: Distribute Available Width (Top-Down) ---
-// 	Visit(a.ctx.root, 0, nil, a.ctx, distributeAvailableWidthVisitor, PreOrder)
-
-// 	// --- Pass 3: Perform text wrapping (Bottom-Up) ---
-// 	// TODO: Implement text wrapping logic
-
-// 	// --- Pass 4: Calculate Intrinsic Heights (Bottom-Up) ---
-// 	Visit(a.ctx.root, 0, nil, a.ctx, calculateIntrinsicHeightVisitor, PostOrder)
-
-// 	// --- Pass 5: Distribute Available Height (Top-Down) ---
-// 	Visit(a.ctx.root, 0, nil, a.ctx, distributeAvailableHeightVisitor, PreOrder)
-// }
-
 type VisitorFunc func(node *ComponentNode, index int, ctx *Ctx)
 
 type Order int
@@ -174,29 +136,6 @@ func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order 
 		visitor(node, index, ctx)
 	}
 }
-
-// func calculateIntrinsicWidthVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *FCContext) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	if !node.Base().Opts.GrowX {
-// 		renderResult := node.Render(ctx)
-// 		width := lipgloss.Width(renderResult)
-// 		ctx.UIState.setWidth(node.Base().ID, width)
-// 	}
-// }
-
-// func calculateIntrinsicHeightVisitor[T any](node Fc[T], _ int, _ Fc[T], ctx *FCContext) {
-// 	if node == nil {
-// 		return
-// 	}
-// 	if !node.Base().Opts.GrowY {
-// 		renderResult := node.Render(ctx)
-// 		height := lipgloss.Height(renderResult)
-// 		ctx.UIState.setHeight(node.Base().ID, height)
-// 		}
-// 		}
-// }
 
 // extractLayoutFromProps attempts to extract layout information from a props interface.
 // It prioritizes direct type assertion to Layout, then checks for an embedded Layout field,

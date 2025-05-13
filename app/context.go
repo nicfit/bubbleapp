@@ -50,6 +50,8 @@ func (c *Ctx) initView() {
 	c.id.initIDCollections()
 	c.id.initPath()
 	c.tick.init()
+	c.layoutManager.componentTree = newComponentTree()
+	c.collectorStack = []*outputCollector{}
 	c.zoneMap = make(map[string]*instanceContext)
 	for _, cs := range c.componentContext.ctxs {
 		cs.keyHandlers = make([]KeyHandler, 0)
@@ -61,7 +63,7 @@ func (c *Ctx) initView() {
 // This function is responsible for managing the lifecycle of the component,
 // including state management, effect handling, and ID management.
 func (c *Ctx) Render(fc FC, props Props) string {
-	id := c.id.push(getFuncName(fc))
+	id := c.id.push(getKeyName(fc, props))
 	defer c.id.pop()
 
 	var node *ComponentNode
@@ -131,11 +133,11 @@ type outputCollector struct {
 type InvalidateMsg struct{}
 
 // Helper to get function name (can be fragile - consider other approach)
-func getFuncName(fn interface{}) string {
+func getKeyName(fn interface{}, props Props) string {
 	// Ensure fn is a function
 	v := reflect.ValueOf(fn)
 	if v.Kind() != reflect.Func {
-		return "unknownComponent"
+		panic("fn is not a function")
 	}
 	fullName := runtime.FuncForPC(v.Pointer()).Name()
 	parts := strings.Split(fullName, ".")
@@ -143,9 +145,34 @@ func getFuncName(fn interface{}) string {
 	// Clean up common anonymous function suffixes like ".func1"
 	name = strings.Split(name, ".")[0]
 	if name == "" {
-		return "anonymousComponent"
+		panic("function name is empty")
 	}
-	return name
+	var (
+		key    string
+		hasKey bool
+	)
+	if props != nil {
+		vProps := reflect.ValueOf(props)
+		// Dereference pointer if it's a pointer
+		if vProps.Kind() == reflect.Ptr {
+			vProps = vProps.Elem()
+		}
+
+		switch vProps.Kind() {
+		case reflect.Struct:
+			// Handle structs
+			keyField := vProps.FieldByName("Key")
+			if keyField.IsValid() && keyField.Kind() == reflect.String {
+				key = keyField.String()
+				hasKey = key != ""
+			}
+		}
+	}
+	if hasKey {
+		return name + "{" + key + "}"
+	} else {
+		return name
+	}
 }
 
 // Invalidates the UI and forces a re-render.

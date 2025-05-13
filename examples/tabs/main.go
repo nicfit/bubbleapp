@@ -9,26 +9,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-var tabsData = []tabs.TabElement[CustomData]{
-	{Title: "Overview", Content: NewOverview},
-	{Title: "Loaders", Content: NewLoaders},
-	{Title: "Scolling", Content: NewScrolling},
+var tabsData = []tabs.Tab{
+	{Title: "Overview", Content: overview},
+	{Title: "Loaders", Content: loaders},
+	{Title: "Scolling", Content: scrolling},
 }
 
-type CustomData struct {
-	HowCoolIsThis string
-}
-
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+func NewRoot(ctx *app.Ctx, _ app.Props) string {
 	return tabs.New(ctx, tabsData)
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{
-		HowCoolIsThis: "Very cool!",
-	})
+	ctx := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(ctx, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

@@ -32,7 +32,13 @@ func UseIsHovered(c *Ctx) (bool, string) {
 }
 
 func UseSize(c *Ctx) (int, int) {
+	if c.LayoutPhase == LayoutPhaseIntrincintWidth {
+		return c.layoutManager.width, c.layoutManager.height
+	}
 	id := c.id.getID()
+	if c.LayoutPhase == LayoutPhaseIntrincintHeight {
+		return c.UIState.GetWidth(id), c.layoutManager.height
+	}
 	return c.UIState.GetWidth(id), c.UIState.GetHeight(id)
 }
 

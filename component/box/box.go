@@ -11,6 +11,7 @@ import (
 
 // BoxProps defines the properties for the Box component.
 type BoxProps struct {
+	Key           string
 	Bg            color.Color
 	DisableFollow bool
 	Children      app.Children
@@ -24,7 +25,7 @@ type BoxProp func(*BoxProps)
 func Box(c *app.Ctx, props app.Props) string {
 	boxProps, ok := props.(BoxProps)
 	if !ok {
-		return ""
+		panic("Box component requires BoxProps")
 	}
 
 	// Create a new viewport model instance first
@@ -85,6 +86,12 @@ func NewEmpty(c *app.Ctx, opts ...BoxProp) string {
 }
 
 // --- Prop Option Functions ---
+
+func WithKey(key string) BoxProp {
+	return func(props *BoxProps) {
+		props.Key = key
+	}
+}
 
 // WithBg sets the background color for the box.
 func WithBg(bg color.Color) BoxProp {
