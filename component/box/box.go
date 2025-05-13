@@ -27,8 +27,6 @@ func Box(c *app.Ctx, props app.Props) string {
 		return ""
 	}
 
-	id := app.UseID(c)
-
 	// Create a new viewport model instance first
 	initialViewport := viewport.New()
 	// Then pass its address to UseState to store a pointer
@@ -38,9 +36,7 @@ func Box(c *app.Ctx, props app.Props) string {
 	childrenContent := app.UseChildren(c, boxProps.Children)
 	renderedChildren := strings.Join(childrenContent, "\n")
 
-	// Get dimensions from the UI state (populated by the layout system)
-	width := c.UIState.GetWidth(id)
-	height := c.UIState.GetHeight(id)
+	width, height := app.UseSize(c)
 
 	if width <= 0 || height <= 0 {
 		return ""
@@ -62,7 +58,7 @@ func Box(c *app.Ctx, props app.Props) string {
 
 	finalRender := style.Width(width).Height(height).Render(vp.View())
 
-	return c.Zone.Mark(id, finalRender)
+	return finalRender
 }
 
 // New creates a new Box component.

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/alexanderbh/bubbleapp/style"
-	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
@@ -42,8 +41,8 @@ func New(ctx *Ctx, root FC, options ...AppOption) *app {
 	if options == nil {
 		options = []AppOption{}
 	}
-	if ctx.ZoneMap == nil {
-		ctx.ZoneMap = make(map[string]*instanceContext)
+	if ctx.zoneMap == nil {
+		ctx.zoneMap = make(map[string]*instanceContext)
 	}
 	if ctx.Styles == nil {
 		ctx.Styles = style.DefaultStyles()
@@ -84,25 +83,13 @@ func (a *app) Init() tea.Cmd {
 }
 
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		focusedInstance, focusedInstanceExists := a.ctx.componentContext.get(a.ctx.UIState.Focused)
 		if focusedInstanceExists {
-			// First, try to dispatch to a semantic handler like OnKeyPress for Enter
-			switch msg.String() {
-			case "enter":
-				if a.dispatchToHandler(focusedInstance, semanticActionPrimary, "OnKeyPress", KeyEvent{
-					Key: msg.Key(),
-				}) {
-					return a, nil
-				}
-			}
-
-			// If not handled by a specific semantic handler, try the internal key handler
-			if focusedInstance.internalKeyHandler != nil {
-				if focusedInstance.internalKeyHandler(msg) {
+			for _, handler := range focusedInstance.keyHandlers {
+				if handler(msg) {
 					return a, nil // Key was handled by the component's internal handler
 				}
 			}
@@ -113,7 +100,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			a.ctx.Quit()
-			return a, nil // Use the new Quit method
+			return a, nil
 		case "tab":
 			a.ctx.FocusNext()
 			return a, nil
@@ -121,72 +108,36 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.ctx.FocusPrev()
 			return a, nil
 		}
-		return a, tea.Batch(cmds...)
+		return a, nil
 	case tea.WindowSizeMsg:
 		a.ctx.layoutManager.width = msg.Width
 		a.ctx.layoutManager.height = msg.Height
-		return a, tea.Batch(cmds...)
+		return a, nil
 	case tea.MouseMsg:
-		a.ctx.Zone.AnyInBounds(a, msg)
-		return a, tea.Batch(cmds...)
-	case zone.MsgZoneInBounds:
-		foundInstance, foundInstanceExists := a.ctx.componentContext.get(a.ctx.Zone.GetReverse(msg.Zone.Id))
-		if foundInstanceExists {
-			switch msg.Event.(type) {
-			case tea.MouseClickMsg:
-				if msg.Event.Mouse().Button == tea.MouseLeft {
-					a.dispatchToHandler(foundInstance, semanticActionPrimary, "OnClick", MouseEvent{
-						X:      msg.Event.Mouse().X,
-						Y:      msg.Event.Mouse().Y,
-						Button: msg.Event.Mouse().Button,
-						Mod:    msg.Event.Mouse().Mod,
-					})
+		idsInBounds := a.ctx.zone.IDsInBounds(msg)
+		for _, id := range idsInBounds {
+			foundInstance, found := a.ctx.componentContext.get(id)
+			if found {
+				for _, handler := range foundInstance.mouseHandlers {
+					if handler(msg) {
+						return a, nil // Mouse event was handled by the component's mouse handler
+					}
 				}
 			}
 		}
 		return a, nil
-		// case TickMsg:
-		// 	now := msg.OccurredAt
-		// 	for _, listener := range *a.ctx.Tick.tickListeners {
-		// 		l := a.ctx.id.getNode(listener.id)
-		// 		if l != nil {
-		// 			lastTick, ok := a.ctx.Tick.lastTickTimes[listener.id]
-		// 			if !ok || now.Sub(lastTick) >= listener.interval {
-		// 				l.Update(a.ctx, msg)
-		// 				a.ctx.Tick.lastTickTimes[listener.id] = now
-		// 			}
-		// 		}
-		// 	}
-		// 	if a.tickFPS > 0 {
-		// 		cmds = append(cmds, tickCommand(a.tickFPS))
-		// 	}
-		// 	return a, tea.Batch(cmds...)
+
 	}
 
-	//a.propagatedFocused(msg)
-
-	return a, tea.Batch(cmds...)
+	return a, nil
 
 }
-
-// func (a *app) propagatedFocused(msg tea.Msg) bool {
-// 	if a.ctx.UIState.Focused != "" {
-// 		focused := a.ctx.id.getNode(a.ctx.UIState.Focused)
-// 		if focused != nil {
-// 			handled := focused.Update(a.ctx, msg)
-// 			return handled
-// 		}
-// 	}
-// 	return false
-// }
 
 func (a *app) View() string {
 	// Get all component IDs before rendering (current state)
 	prevIDs := a.ctx.componentContext.getAllIDs()
 
-	a.ctx.id.initIDCollections()
-	a.ctx.id.initPath()
-	a.ctx.Tick.init()
+	a.ctx.initView()
 
 	defaultRootProps := rootProps{
 		Layout: Layout{
@@ -210,10 +161,10 @@ func (a *app) View() string {
 	a.ctx.invalidate = false
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	renderedView := a.ctx.Zone.Scan(a.ctx.Render(a.root, defaultRootProps))
+	renderedView := a.ctx.zone.Scan(a.ctx.Render(a.root, defaultRootProps))
 
 	// Create or update the timer based on the current set of tick listeners
-	a.ctx.Tick.createTimer(a.ctx)
+	a.ctx.tick.createTimer(a.ctx)
 
 	// Get all component IDs after rendering (new state)
 	currentIDs := a.ctx.id.ids // These are the IDs that were actually rendered

@@ -187,15 +187,16 @@ func Table(ctx *app.Ctx, props app.Props) string {
 		return processInternalKeys(keyMsg, p.KeyMap, rows, state, setState)
 	})
 
+	width, height := app.UseSize(ctx)
+
 	app.UseEffect(ctx, func() {
-		currentLayoutWidth := ctx.UIState.GetWidth(id)
 		baseStyleToUse := p.Styles.Base
 		if isFocused {
 			baseStyleToUse = p.Styles.BaseFocus
 		}
-		state.cols = columnMapping(currentLayoutWidth-baseStyleToUse.GetHorizontalFrameSize()-(p.Styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
+		state.cols = columnMapping(width-baseStyleToUse.GetHorizontalFrameSize()-(p.Styles.Header.GetHorizontalFrameSize()*len(rawCols)), rawCols)
 		setState(state)
-	}, []any{rawCols, ctx.UIState.GetWidth(id)})
+	}, []any{rawCols, width})
 
 	numRows := len(rows)
 
@@ -228,16 +229,13 @@ func Table(ctx *app.Ctx, props app.Props) string {
 
 	headersViewStr := generateHeadersView(state.cols, p.Styles)
 
-	currentLayoutWidth := ctx.UIState.GetWidth(id)
-	currentLayoutHeight := ctx.UIState.GetHeight(id)
-
 	currentBaseStyle := p.Styles.Base
 	if isFocused {
 		currentBaseStyle = p.Styles.BaseFocus
 	}
 
-	state.viewport.SetHeight(currentLayoutHeight - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
-	state.viewport.SetWidth(currentLayoutWidth - currentBaseStyle.GetHorizontalFrameSize())
+	state.viewport.SetHeight(height - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
+	state.viewport.SetWidth(width - currentBaseStyle.GetHorizontalFrameSize())
 
 	updateViewportContent(&state.viewport, rows, state, p.Styles, ctx, id)
 
@@ -392,7 +390,7 @@ func generateRenderedRow(rowIndex int, rowData Row, state tableState, styles Sty
 	// if rowIndex == state.rowHover {
 	// 	finalRowStr = styles.Hovered.Render(rowStr)
 	// }
-	return ctx.Zone.Mark(rowElementID, rowStr)
+	return ctx.MouseZone(rowElementID, rowStr)
 }
 
 func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, styles Styles, ctx *app.Ctx, tableID string) {

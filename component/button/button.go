@@ -36,10 +36,17 @@ const (
 
 func Button(c *app.Ctx, props app.Props) string {
 	buttonProps, _ := props.(Props)
+
 	id := app.UseID(c)
 
 	focused := app.UseFocus(c)
 	hovered := false
+
+	app.UseAction(c, id, func() {
+		if buttonProps.OnAction != nil && !buttonProps.Disabled {
+			buttonProps.OnAction()
+		}
+	})
 
 	style := styleResolver(c, buttonProps.Variant, buttonProps.Type, focused, hovered, buttonProps.Disabled)
 
@@ -48,7 +55,7 @@ func Button(c *app.Ctx, props app.Props) string {
 		buttonProps.Text = "⟦" + buttonProps.Text + "⟧"
 	}
 
-	return c.Zone.Mark(id, style.Render(buttonProps.Text))
+	return c.MouseZone(id, style.Render(buttonProps.Text))
 }
 
 func New(c *app.Ctx, text string, onAction func(), props ...Prop) string {

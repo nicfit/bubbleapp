@@ -13,12 +13,12 @@ import (
 
 type Ctx struct {
 	UIState          *uiStateContext
-	Zone             *zone.Manager
-	ZoneMap          map[string]*instanceContext
+	zone             *zone.Manager
+	zoneMap          map[string]*instanceContext
 	teaProgram       *tea.Program
 	Styles           *style.Styles
 	id               *idContext
-	Tick             *tickState[any]
+	tick             *tickState[any]
 	invalidate       bool
 	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
@@ -33,16 +33,27 @@ type Ctx struct {
 func NewCtx() *Ctx {
 	return &Ctx{
 		UIState:          NewUIStateContext(),
-		Zone:             zone.New(),
-		ZoneMap:          make(map[string]*instanceContext),
+		zone:             zone.New(),
+		zoneMap:          make(map[string]*instanceContext),
 		Styles:           style.DefaultStyles(),
 		id:               newIdContext(),
-		Tick:             &tickState[any]{},
+		tick:             &tickState[any]{},
 		collectorStack:   []*outputCollector{},
 		componentContext: newInstanceContext(),
 		layoutManager:    newLayoutManager(),
 		useEffectCounter: make(map[string]int),
 		useStateCounter:  make(map[string]int),
+	}
+}
+
+func (c *Ctx) initView() {
+	c.id.initIDCollections()
+	c.id.initPath()
+	c.tick.init()
+	c.zoneMap = make(map[string]*instanceContext)
+	for _, cs := range c.componentContext.ctxs {
+		cs.keyHandlers = make([]KeyHandler, 0)
+		cs.mouseHandlers = make([]MouseHandler, 0)
 	}
 }
 
@@ -97,6 +108,12 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	return output
 }
 
+func (c *Ctx) MouseZone(id string, content string) string {
+	instance, _ := c.componentContext.get(id)
+	c.zoneMap[id] = instance
+	return c.zone.Mark(id, content)
+}
+
 type outputCollector struct {
 	outputs []string
 }
@@ -138,8 +155,8 @@ func (c *Ctx) Update() {
 
 // Quit signals the application to stop, ensuring cleanup like stopping active timers.
 func (ctx *Ctx) Quit() {
-	if ctx.Tick != nil {
-		ctx.Tick.StopActiveTimer()
+	if ctx.tick != nil {
+		ctx.tick.StopActiveTimer()
 	}
 	go ctx.teaProgram.Quit()
 }

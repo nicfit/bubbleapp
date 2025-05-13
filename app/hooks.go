@@ -3,6 +3,8 @@ package app
 import (
 	"reflect"
 	"time"
+
+	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
 // Returns the component ID
@@ -17,6 +19,11 @@ func UseFocus(c *Ctx) bool {
 		instance.focusable = true
 	}
 	return c.UIState.Focused == c.id.getID()
+}
+
+func UseSize(c *Ctx) (int, int) {
+	id := c.id.getID()
+	return c.UIState.GetWidth(id), c.UIState.GetHeight(id)
 }
 
 func UseChildren(c *Ctx, children Children) []string {
@@ -49,19 +56,19 @@ func UseState[T any](c *Ctx, initialValue T) (T, func(newValue T)) {
 	hookIndex := c.useStateCounter[instanceID]
 	c.useStateCounter[instanceID]++
 
-	if hookIndex >= len(instance.States) {
+	if hookIndex >= len(instance.states) {
 		// This is the first render for this hook in this component instance,
 		// or the States slice needs to grow.
-		instance.States = append(instance.States, initialValue)
+		instance.states = append(instance.states, initialValue)
 	}
 	// If hookIndex < len(instance.States), the state already exists from a previous render.
 
 	// Type assertion. This could panic if the type T changes for a given hookIndex
 	// between renders, which would be a misuse of the hook.
-	currentValue := instance.States[hookIndex].(T)
+	currentValue := instance.states[hookIndex].(T)
 
 	setter := func(newValue T) {
-		instance.States[hookIndex] = newValue
+		instance.states[hookIndex] = newValue
 		c.Update()
 	}
 
@@ -75,12 +82,12 @@ func UseTick(c *Ctx, interval time.Duration, callback func()) {
 		return
 	}
 	instanceID := c.id.getID()
-	c.Tick.RegisterTickListener(interval, instanceID, callback)
+	c.tick.RegisterTickListener(interval, instanceID, callback)
 	UseEffectWithCleanup(c, func() func() {
 		// Return the cleanup function.
 		return func() {
-			if c.Tick != nil {
-				c.Tick.UnregisterTickListener(instanceID)
+			if c.tick != nil {
+				c.tick.UnregisterTickListener(instanceID)
 			}
 		}
 	}, []any{})
@@ -90,6 +97,16 @@ type effectRecord struct {
 	cleanupFn   func() // The cleanup function returned by the effect.
 	deps        []any  // Dependencies for the effect.
 	hasExecuted bool   // Tracks if the effect has executed at least once.
+}
+
+var RunOnceDeps = []any{}
+
+// UseEffect is the same as UseEffectWithCleanup but without a cleanup function.
+func UseEffect(c *Ctx, effect func(), deps []any) {
+	UseEffectWithCleanup(c, func() func() {
+		effect()
+		return nil
+	}, deps)
 }
 
 // UseEffect schedules a function to run after render, and optionally clean up.
@@ -106,11 +123,11 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	hookIndex := c.useEffectCounter[instanceID]
 	c.useEffectCounter[instanceID]++
 
-	if hookIndex >= len(instance.Effects) {
-		instance.Effects = append(instance.Effects, effectRecord{})
+	if hookIndex >= len(instance.effects) {
+		instance.effects = append(instance.effects, effectRecord{})
 	}
 
-	record := &instance.Effects[hookIndex]
+	record := &instance.effects[hookIndex]
 
 	depsChanged := true // Assume changed for nil deps (run every time) or first run
 	if record.hasExecuted && deps != nil {
@@ -191,21 +208,43 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 // This handler is only called if the component is focused and the key event is not
 // handled by a more specific semantic handler (like OnKeyPress for Enter).
 // The handler function should return true if it handled the key, false otherwise.
-func UseKeyHandler(c *Ctx, handler InternalKeyHandler) {
+func UseKeyHandler(c *Ctx, handler KeyHandler) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
 	instanceID := c.id.getID()
 	instance, exists := c.componentContext.get(instanceID)
 	if !exists {
-		// This should ideally not happen if hooks are called correctly within a component's lifecycle
-		return
+		panic("UseKeyHandler: component instance not found")
 	}
-	instance.internalKeyHandler = handler
+	instance.focusable = true
+	instance.keyHandlers = append(instance.keyHandlers, handler)
 }
 
-var RunOnceDeps = []any{}
-
-func UseEffect(c *Ctx, effect func(), deps []any) {
-	UseEffectWithCleanup(c, func() func() {
-		effect()
-		return nil
-	}, deps)
+// UseAction registers a function to be called when the component is clicked
+// with left mouse button or Enter is pressed while the component is focused.
+func UseAction(c *Ctx, action string, handler func()) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		panic("UseAction: component instance not found")
+	}
+	instance.focusable = true
+	instance.mouseHandlers = append(instance.mouseHandlers, func(msg tea.MouseMsg) bool {
+		if releaseMsg, ok := msg.(tea.MouseReleaseMsg); ok && releaseMsg.Mouse().Button == tea.MouseLeft {
+			handler()
+			return true
+		}
+		return false
+	})
+	instance.keyHandlers = append(instance.keyHandlers, func(keyMsg tea.KeyMsg) bool {
+		if keyMsg.String() == "enter" {
+			handler()
+			return true
+		}
+		return false
+	})
 }
