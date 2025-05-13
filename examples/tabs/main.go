@@ -12,7 +12,7 @@ import (
 var tabsData = []tabs.Tab{
 	{Title: "Overview", Content: overview},
 	{Title: "Loaders", Content: loaders},
-	{Title: "Scolling", Content: scrolling},
+	{Title: "Boxes 🟨", Content: boxes},
 }
 
 func NewRoot(ctx *app.Ctx, _ app.Props) string {

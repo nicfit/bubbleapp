@@ -63,10 +63,11 @@ func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID i
 func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 	p, _ := componentProps.(Props)
 
-	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(lipgloss.Color("#0188a5")).Padding(0, 1)
+	// TODO: UseMemo for this
+	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(ctx.Styles.Colors.Secondary).Padding(0, 1)
 	inactiveStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")).Padding(0, 1)
 	inactiveStyleFocused := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")).Padding(0, 1)
-	hoveredStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#FF00FF")).Foreground(lipgloss.Color("#FF00FF")).Padding(0, 1)
+	hoveredStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.Primary).Padding(0, 1)
 	unusedStyle := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC"))
 	unusedStyleFocused := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF"))
 
@@ -89,9 +90,14 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 
 		newIndex := currentIndex
 		switch keypress := msg.String(); keypress {
-		case "right", "tab":
+		// Tab is hard to use as "change tab" so arrows are used.
+		// The problem is if tab is used to change tab then it cannot
+		// be used to change focus as well. So it will not be possible
+		// to change focus to number 2 of 3 tabs for example. Since "Tab"
+		// will just change the active tab
+		case "right":
 			newIndex = (currentIndex + 1) % numTitles
-		case "left", "shift+tab":
+		case "left":
 			newIndex = (currentIndex - 1 + numTitles) % numTitles
 		default:
 			return false
@@ -132,12 +138,12 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 		isTabHovered := hoveredChildID == tabChildGid
 
 		var currentStyle lipgloss.Style
-		if isTabActive {
+		if isTabHovered {
+			currentStyle = hoveredStyle
+		} else if isTabActive {
 			currentStyle = activeStyle
 		} else {
-			if isTabHovered {
-				currentStyle = hoveredStyle
-			} else if focused {
+			if focused {
 				currentStyle = inactiveStyleFocused
 			} else {
 				currentStyle = inactiveStyle

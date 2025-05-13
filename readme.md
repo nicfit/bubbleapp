@@ -86,18 +86,15 @@ There is not a lot of code here for the UI. Take a look.
 ### [Tabs](./examples/tabs/main.go)
 
 ```go
-var tabsData = []tabs.TabElement[CustomData]{
-	{Title: "Overview", Content: NewOverview},
-	{Title: "Loaders", Content: NewLoaders},
-	{Title: "Scolling", Content: NewScrolling},
+var tabsData = []tabs.Tab{
+	{Title: "Overview", Content: overview},
+	{Title: "Loaders", Content: loaders},
+	{Title: "Boxes 🟨", Content: boxes},
 }
-```
 
-```go
-tabs := tabs.New(ctx, tabsData)
-
-base := app.New(ctx, app.AsRoot())
-base.AddChild(tabs)
+func NewRoot(ctx *app.Ctx, _ app.Props) string {
+	return tabs.New(ctx, tabsData)
+}
 ```
 
 ![Tabs](./examples/tabs/demo.gif)

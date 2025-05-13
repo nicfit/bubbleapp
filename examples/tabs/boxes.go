@@ -7,11 +7,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func NewScrolling(c *app.Ctx, _ app.Props) string {
-	return c.Render(scrolling, nil)
-}
-
-func scrolling(c *app.Ctx, _ app.Props) string {
+func boxes(c *app.Ctx, _ app.Props) string {
 	return stack.New(c, func(c *app.Ctx) {
 		box.New(c, func(c *app.Ctx) {
 			text.New(c, "This\nis\na\nbox\nwith\na\nbackground\ncolor!")
