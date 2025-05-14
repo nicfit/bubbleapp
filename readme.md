@@ -7,6 +7,8 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
 
 ## Components
 
+- **[Router](#router)**
+  - Easy navigation with nested routes and outlets
 - **[Layout Components](#layout-components)**
   - [Stack](#stack) and (Flex) Box makes it easy to create flexible layouts
 - **[Widget Components](#widget-components)**
@@ -78,6 +80,47 @@ List all running processes in a table. This shows how to utilize the Global Data
 There is not a lot of code here for the UI. Take a look.
 
 ![Process list](./examples/app-processes/demo.gif)
+
+---
+
+## Router
+
+### [Router](./examples/router/main.go)
+
+Set up a router:
+
+```go
+func MainRouter(ctx *app.Ctx, _ app.Props) string {
+	return router.NewRouter(ctx, router.RouterProps{
+		Routes: []router.Route{
+			{Path: "/", Component: dashboard},
+			{Path: "/shop", Component: shop},
+
+			{Path: "/account", Component: account, Children: []router.Route{
+				{Path: "/overview", Component: accountOverview},
+				{Path: "/settings", Component: accountSettings},
+				{Path: "/orders", Component: accountOrders},
+			}},
+		},
+	})
+}
+```
+
+How to navigate to a different route:
+
+```go
+button.New(ctx, "My Account", func() {
+	router.Push("/account/overview")
+})
+```
+
+Nested routes are rendered in an Outlet:
+
+```go
+router.NewOutlet(ctx)
+```
+
+![Router](./examples/router/demo.gif)
 
 ---
 
