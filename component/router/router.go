@@ -135,7 +135,7 @@ type CurrentMatchContextData struct {
 
 // CurrentMatchContext holds data for the current route match.
 // We store a pointer to CurrentMatchContextData.
-var CurrentMatchContext = context.Create[CurrentMatchContextData](CurrentMatchContextData{})
+var CurrentMatchContext = context.Create(CurrentMatchContextData{})
 
 // UseCurrentMatch is a hook to get the current route match data.
 func UseCurrentMatch(c *app.Ctx) CurrentMatchContextData {
@@ -155,16 +155,12 @@ func NewRouter(c *app.Ctx, props RouterProps) string {
 	return context.NewProvider(c, RouterContext, routerControllerInstance, func(providerCtx *app.Ctx) {
 		// Render RouterView as the child of the provider.
 		// RouterView will use UseRouterController to get the routerControllerInstance.
-		c.Render(RouterView, routerViewProps{routerControllerInstance.currentPath}) // RouterView doesn't take props directly
+		c.Render(routerView, nil) // RouterView doesn't take props directly
 	})
 }
 
-type routerViewProps struct {
-	Key string
-}
-
-// RouterView is an internal component that listens to path changes and renders the matched route.
-func RouterView(c *app.Ctx, rawProps app.Props) string {
+// routerView is an internal component that listens to path changes and renders the matched route.
+func routerView(c *app.Ctx, rawProps app.Props) string {
 	routerCtrl := UseRouterController(c)
 	if routerCtrl == nil {
 		log.Println("RouterView: RouterController is nil. Ensure NewRouter wraps this component.")
@@ -266,6 +262,10 @@ func matchRoute(routeDefPath, currentUrlSegment string) (map[string]string, bool
 	return params, true, consumedPath, remainingPath
 }
 
+type keyProps struct {
+	Key string
+}
+
 // matchAndRender recursively matches routes and renders the component.
 // fullUrl: The complete current URL from the RouterController.
 // pathSegmentToMatch: The part of the fullUrl that this level is trying to match.
@@ -299,9 +299,12 @@ func matchAndRender(
 
 			// Provide this specific newMatchData to the matched component and its children (e.g., Outlet)
 			// via CurrentMatchContext.
-			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(matchCtx *app.Ctx) {
+			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) {
 				if routeCopy.Component != nil {
-					routeCopy.Component(matchCtx, nil)
+					ps := keyProps{
+						Key: routeCopy.Path,
+					}
+					routeCopy.Component(c, ps)
 				} else {
 					// If no component, but has children, it's a layout/group route.
 					// An Outlet component should be used explicitly within the parent's render flow
@@ -314,12 +317,10 @@ func matchAndRender(
 		}
 	}
 
-	// No route matched at this level
 	if notFoundFC != nil {
-		// Render NotFound component within the current context (c, not matchCtx)
 		return notFoundFC(c, nil)
 	}
-	return "" // Or a default "Not Found" message
+	return "route not found" // Or a default "Not Found" message
 }
 
 // --- Outlet ---
@@ -344,16 +345,13 @@ func outlet(c *app.Ctx, _ app.Props) string {
 		return ""
 	}
 	if len(currentMatch.MatchedRoute.Children) == 0 {
-		// log.Println("Outlet: Matched route has no children.", currentMatch.MatchedPathPrefix)
 		return "" // No children to render
 	}
 
-	// The Outlet continues matching using the RemainingPath from its parent's match context.
-	// The accumulated prefix is what its parent already matched.
 	return matchAndRender(
 		c,
 		currentMatch.MatchedRoute.Children,
-		routerCtrl.Current(), // Full original URL
+		routerCtrl.Current(),
 		currentMatch.RemainingPath,
 		currentMatch.MatchedPathPrefix,
 		routerCtrl.notFoundFC,
