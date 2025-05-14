@@ -24,6 +24,7 @@ type Ctx struct {
 	componentContext *fcInstanceContext
 	useEffectCounter map[string]int
 	useStateCounter  map[string]int
+	contextValues    map[uint64][]any // Added for Context API
 
 	// Layout
 	LayoutPhase   layoutPhase
@@ -43,6 +44,7 @@ func NewCtx() *Ctx {
 		layoutManager:    newLayoutManager(),
 		useEffectCounter: make(map[string]int),
 		useStateCounter:  make(map[string]int),
+		contextValues:    make(map[uint64][]any), // Initialize contextValues
 	}
 }
 
@@ -60,6 +62,7 @@ func (c *Ctx) initView() {
 		cs.messageHandlers = make([]MsgHandler, 0)
 		cs.onFocused = nil
 	}
+	// c.contextValues = make(map[uint64][]any) // No need to reset here, should persist across renders unless specifically cleared
 }
 
 // Render a functional component with the given props.
@@ -213,4 +216,32 @@ func (ctx *Ctx) Quit() {
 		ctx.tick.StopActiveTimer()
 	}
 	go ctx.teaProgram.Quit()
+}
+
+// pushContextValue adds a value to the stack for a given context ID.
+func (c *Ctx) PushContextValue(contextID uint64, value any) {
+	c.contextValues[contextID] = append(c.contextValues[contextID], value)
+}
+
+// popContextValue removes the top value from the stack for a given context ID.
+func (c *Ctx) PopContextValue(contextID uint64) {
+	stack, ok := c.contextValues[contextID]
+	if !ok || len(stack) == 0 {
+		// This should ideally not happen if push/pop are balanced.
+		// Consider logging an error or panicking if it's a critical issue.
+		return
+	}
+	c.contextValues[contextID] = stack[:len(stack)-1]
+	if len(c.contextValues[contextID]) == 0 {
+		delete(c.contextValues, contextID)
+	}
+}
+
+// getContextValue retrieves the current value for a given context ID from the top of its stack.
+func (c *Ctx) GetContextValue(contextID uint64) (any, bool) {
+	stack, ok := c.contextValues[contextID]
+	if !ok || len(stack) == 0 {
+		return nil, false
+	}
+	return stack[len(stack)-1], true
 }

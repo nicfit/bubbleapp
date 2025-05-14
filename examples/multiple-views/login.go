@@ -5,6 +5,7 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/button"
+	"github.com/alexanderbh/bubbleapp/component/context"
 	"github.com/alexanderbh/bubbleapp/component/loader"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
@@ -16,8 +17,16 @@ type appData struct {
 	userID      string
 }
 
+var AppDataContext = context.Create(&appData{})
+
 func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
-	appData, setAppData := app.UseState(ctx, appData{})
+	return context.NewProvider(ctx, AppDataContext, func(ctx *app.Ctx) {
+		base(ctx, nil)
+	})
+}
+
+func base(ctx *app.Ctx, _ app.Props) string {
+	appData := context.UseContext(ctx, AppDataContext)
 
 	if appData.userID != "" {
 		return NewAuthModel(ctx, authProps{userID: appData.userID})
@@ -36,11 +45,11 @@ func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
 		text.New(ctx, "Log in or fail! Up to you!")
 
 		button.New(ctx, "Log in", func() {
-			go LoginSuperSecure(setAppData, false)
+			go LoginSuperSecure(ctx, appData, false)
 		}, button.WithVariant(button.Primary))
 
 		button.New(ctx, "Fail log in", func() {
-			go LoginSuperSecure(setAppData, true)
+			go LoginSuperSecure(ctx, appData, true)
 		}, button.WithVariant(button.Warning))
 
 		button.New(ctx, "Quit App", ctx.Quit, button.WithVariant(button.Danger))
@@ -52,20 +61,19 @@ func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
 	})
 }
 
-func LoginSuperSecure(setData func(new appData), fail bool) {
-	data := appData{}
+func LoginSuperSecure(c *app.Ctx, data *appData, fail bool) {
 	data.loginFailed = ""
 	data.loggingIn = true
-	setData(data)
+	c.Update()
 	time.Sleep(2 * time.Second)
 	if fail {
 		data.loggingIn = false
 		data.loginFailed = "Login failed! Ouch!"
-		setData(data)
+		c.Update()
 		return
 	}
 
 	// Setting global state here. Could be from DB or something else.
 	data.userID = "1234abc"
-	setData(data)
+	c.Update()
 }

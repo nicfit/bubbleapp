@@ -2,7 +2,6 @@ package app
 
 import (
 	"strings"
-	"time"
 
 	"github.com/alexanderbh/bubbleapp/style"
 	tea "github.com/charmbracelet/bubbletea/v2"
@@ -17,31 +16,15 @@ type Children func(ctx *Ctx)
 
 // _____________________
 
-type AppOptions struct {
-	TickFPS time.Duration
-}
+type AppOptions struct{}
 type AppOption func(*AppOptions)
 
-// This registers a constant global tick
-// Use with caution. Most components should have registered
-// their own tick listener.
-// Use ctx.Update() invalidate the UI form the outside.
-func WithTickFPS(fps time.Duration) AppOption {
-	return func(o *AppOptions) {
-		o.TickFPS = fps
-	}
-}
-
 type app struct {
-	root    FC
-	ctx     *Ctx
-	tickFPS time.Duration
+	root FC
+	ctx  *Ctx
 }
 
 func New(ctx *Ctx, root FC, options ...AppOption) *app {
-	if options == nil {
-		options = []AppOption{}
-	}
 	if ctx.zoneMap == nil {
 		ctx.zoneMap = make(map[string]*instanceContext)
 	}
@@ -49,17 +32,14 @@ func New(ctx *Ctx, root FC, options ...AppOption) *app {
 		ctx.Styles = style.DefaultStyles()
 	}
 
-	opts := &AppOptions{
-		TickFPS: 0,
-	}
+	opts := &AppOptions{}
 	for _, opt := range options {
 		opt(opts)
 	}
 
 	return &app{
-		root:    root,
-		ctx:     ctx,
-		tickFPS: opts.TickFPS,
+		root: root,
+		ctx:  ctx,
 	}
 }
 
@@ -71,16 +51,7 @@ func (a *app) Init() tea.Cmd {
 	if a.ctx.teaProgram == nil {
 		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
 	}
-
-	var (
-		cmds []tea.Cmd
-	)
-
-	if a.tickFPS > 0 {
-		cmds = append(cmds, tickCommand(a.tickFPS))
-	}
-
-	return tea.Batch(cmds...)
+	return nil
 }
 
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
