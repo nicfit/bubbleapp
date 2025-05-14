@@ -11,18 +11,23 @@ type KeyHandler func(keyMsg tea.KeyMsg) bool
 // MouseHandler defines the signature for component-internal mouse handlers.
 type MouseHandler func(msg tea.MouseMsg, childID string) bool
 
+// MsgHandler is for receiving raw tea.Msg messages.
+type MsgHandler func(msg tea.Msg) tea.Cmd
+
 // instanceContext represents an instance of a functional component (FC).
 // It holds the component's ID, focusable state, function reference, props,
 // event handlers, and state management for both state and effects.
 type instanceContext struct {
-	id            string
-	focusable     bool
-	fc            FC
-	props         Props
-	states        []any
-	effects       []effectRecord
-	keyHandlers   []KeyHandler
-	mouseHandlers []MouseHandler
+	id              string
+	focusable       bool
+	fc              FC
+	props           Props
+	states          []any
+	effects         []effectRecord
+	keyHandlers     []KeyHandler
+	mouseHandlers   []MouseHandler
+	messageHandlers []MsgHandler
+	onFocused       func(isReverse bool)
 }
 
 type fcInstanceContext struct {
@@ -44,11 +49,12 @@ func (c *fcInstanceContext) set(id string, fc FC, props Props) *instanceContext 
 	instance, ok := c.ctxs[id]
 	if !ok {
 		instance = &instanceContext{
-			id:            id,
-			states:        make([]any, 0),
-			effects:       make([]effectRecord, 0),
-			mouseHandlers: make([]MouseHandler, 0),
-			keyHandlers:   make([]KeyHandler, 0),
+			id:              id,
+			states:          make([]any, 0),
+			effects:         make([]effectRecord, 0),
+			mouseHandlers:   make([]MouseHandler, 0),
+			keyHandlers:     make([]KeyHandler, 0),
+			messageHandlers: make([]MsgHandler, 0),
 		}
 		c.ctxs[id] = instance
 	}

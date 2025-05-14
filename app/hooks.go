@@ -21,6 +21,19 @@ func UseIsFocused(c *Ctx) bool {
 	return c.UIState.Focused == c.id.getID()
 }
 
+func UseOnFocused(c *Ctx, onFocused func(isReverse bool)) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		panic("UseOnFocused: component instance not found")
+	}
+	instance.focusable = true
+	instance.onFocused = onFocused
+}
+
 // Returns the ID of the component that is hovered.
 // If the component is hovered, it returns true and any potential child ID.
 func UseIsHovered(c *Ctx) (bool, string) {
@@ -276,4 +289,16 @@ func UseAction(c *Ctx, handler func(childID string)) {
 		}
 		return false
 	})
+}
+
+func UseMsgHandler(c *Ctx, handler MsgHandler) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		panic("UseMsgHandler: component instance not found")
+	}
+	instance.messageHandlers = append(instance.messageHandlers, handler)
 }

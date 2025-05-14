@@ -28,7 +28,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 			newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
 			setLog(newLog)
 			setPresses(currentPresses + 1)
-		}, button.WithVariant(button.Primary), button.WithType(button.Compact))
+		}, button.WithVariant(button.Primary))
 
 		divider.New(c)
 
@@ -40,7 +40,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 
 		button.New(c, "Quit App", func() {
 			c.Quit()
-		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
+		}, button.WithVariant(button.Danger))
 
 	}, stack.WithGrow(true))
 }

@@ -132,7 +132,7 @@ stack := stack.New(ctx, func(ctx *app.Ctx) {
 
 ### [Form](./examples/form/main.go)
 
-Using [huh](https://github.com/charmbracelet/huh) for form rendering.
+Using [huh](https://github.com/charmbracelet/huh) for form rendering. Perhaps a native BubbleApp form will be created in the future for easier composability.
 
 ```go
 var loginForm = huh.NewForm(
@@ -145,26 +145,33 @@ var loginForm = huh.NewForm(
 ```
 
 ```go
-return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-  view := []app.Fc[CustomData]{
-    text.New(ctx, loginLogo(ctx), nil),
-    divider.New(ctx),
-    form.New(ctx, loginForm, func(ctx *app.Context[CustomData]) {
-      ctx.Data.email = loginForm.GetString("email")
-      ctx.Data.password = loginForm.GetString("password")
-      ctx.Data.remember = loginForm.GetString("rememberme")
-      ctx.Update()
-    }, nil),
-  }
+func NewRoot(c *app.Ctx, _ app.Props) string {
+	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-  if ctx.Data.email != "" {
-    view = append(view, text.New(ctx, "Email: "+ctx.Data.email, nil))
-    view = append(view, text.New(ctx, "Password 🙈: "+ctx.Data.password, nil))
-    view = append(view, text.New(ctx, "Remember me: "+ctx.Data.remember, nil))
-  }
+	return stack.New(c, func(c *app.Ctx) {
+		c.Render(loginLogo, nil)
 
-  return view
-}, nil)
+		if formSubmit == nil {
+			form.New(c, loginForm, func() {
+				setFormSubmit(&FormData{
+					email:    loginForm.GetString("email"),
+					password: loginForm.GetString("password"),
+					remember: loginForm.GetString("rememberme"),
+				})
+			})
+		}
+
+		if formSubmit != nil {
+			text.New(c, "Email: "+formSubmit.email, nil)
+			text.New(c, "Password 🙈: "+formSubmit.password, nil)
+			text.New(c, "Remember me: "+formSubmit.remember, nil)
+		}
+
+		box.NewEmpty(c)
+		divider.New(c)
+		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
+	})
+}
 ```
 
 ![form](./examples/form/demo.gif)

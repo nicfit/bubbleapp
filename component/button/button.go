@@ -19,7 +19,7 @@ type Type int
 
 const (
 	Normal Type = iota
-	Compact
+	Bordered
 )
 
 type Variant int
@@ -48,7 +48,7 @@ func Button(c *app.Ctx, props app.Props) string {
 
 	style := styleResolver(c, buttonProps.Variant, buttonProps.Type, focused, hovered, buttonProps.Disabled)
 
-	if buttonProps.Type == Compact {
+	if buttonProps.Type == Bordered {
 		// Can this be part of theming somehow?
 		buttonProps.Text = "⟦" + buttonProps.Text + "⟧"
 	}
@@ -60,6 +60,7 @@ func New(c *app.Ctx, text string, onAction func(), props ...Prop) string {
 	p := Props{
 		Text:     text,
 		OnAction: onAction,
+		Type:     Bordered,
 	}
 	for _, prop := range props {
 		prop(&p)
@@ -81,7 +82,7 @@ func WithType(btnType Type) Prop {
 // OMG I hate this. How to make a nice design system that maybe can also work for custom components?
 // This is a mess. I need to think about this more.
 func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hovered bool, disabled bool) lipgloss.Style {
-	if btnType == Compact {
+	if btnType == Bordered {
 		if hovered {
 			switch variant {
 			case Primary:

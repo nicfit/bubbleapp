@@ -53,9 +53,12 @@ func (c *Ctx) initView() {
 	c.layoutManager.componentTree = newComponentTree()
 	c.collectorStack = []*outputCollector{}
 	c.zoneMap = make(map[string]*instanceContext)
+	// Is this the right way to clean up here?
 	for _, cs := range c.componentContext.ctxs {
 		cs.keyHandlers = make([]KeyHandler, 0)
 		cs.mouseHandlers = make([]MouseHandler, 0)
+		cs.messageHandlers = make([]MsgHandler, 0)
+		cs.onFocused = nil
 	}
 }
 
@@ -102,7 +105,11 @@ func (c *Ctx) Render(fc FC, props Props) string {
 			if node.Parent == nil {
 				c.UIState.setHeight(id, c.layoutManager.height)
 			} else if !node.Layout.GrowY {
-				c.UIState.setHeight(id, lipgloss.Height(output))
+				if output == "" {
+					c.UIState.setHeight(id, 0)
+				} else {
+					c.UIState.setHeight(id, lipgloss.Height(output))
+				}
 			}
 		}
 	}
@@ -189,6 +196,15 @@ func (c *Ctx) Update() {
 		}
 	}
 	c.invalidate = true
+}
+
+func (c *Ctx) ExecuteCmd(cmd tea.Cmd) {
+	if c.teaProgram == nil {
+		panic("teaProgram is nil. Cannot execute command.")
+	}
+	if cmd != nil {
+		go c.teaProgram.Send(cmd())
+	}
 }
 
 // Quit signals the application to stop, ensuring cleanup like stopping active timers.

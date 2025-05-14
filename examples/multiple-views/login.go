@@ -37,13 +37,13 @@ func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
 
 		button.New(ctx, "Log in", func() {
 			go LoginSuperSecure(setAppData, false)
-		}, button.WithType(button.Compact), button.WithVariant(button.Primary))
+		}, button.WithVariant(button.Primary))
 
 		button.New(ctx, "Fail log in", func() {
 			go LoginSuperSecure(setAppData, true)
-		}, button.WithType(button.Compact), button.WithVariant(button.Warning))
+		}, button.WithVariant(button.Warning))
 
-		button.New(ctx, "Quit App", ctx.Quit, button.WithType(button.Compact), button.WithVariant(button.Danger))
+		button.New(ctx, "Quit App", ctx.Quit, button.WithVariant(button.Danger))
 
 		if appData.loginFailed != "" {
 			text.New(ctx, "\n"+appData.loginFailed, text.WithFg(ctx.Styles.Colors.Danger))

@@ -33,7 +33,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 			return clms, processes
 		}))
 		tickfps.NewAtInterval(ctx, 1*time.Second)
-		button.New(ctx, "Quit", ctx.Quit, button.WithType(button.Compact), button.WithVariant(button.Danger))
+		button.New(ctx, "Quit", ctx.Quit, button.WithVariant(button.Danger))
 
 	})
 }

@@ -86,6 +86,8 @@ func (a *app) Init() tea.Cmd {
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
+	case InvalidateMsg:
+		return a, nil
 	case tea.KeyMsg:
 		focusedInstance, focusedInstanceExists := a.ctx.componentContext.get(a.ctx.UIState.Focused)
 		if focusedInstanceExists {
@@ -142,6 +144,18 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return a, nil
+	default:
+		if a.ctx.UIState.Focused != "" {
+			foundInstance, found := a.ctx.componentContext.get(a.ctx.UIState.Focused)
+			if found {
+				for _, handler := range foundInstance.messageHandlers {
+					cmd := handler(msg)
+					if cmd != nil {
+						return a, cmd
+					}
+				}
+			}
+		}
 
 	}
 

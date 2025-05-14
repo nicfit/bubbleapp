@@ -50,6 +50,10 @@ func (c *Ctx) FocusNext() string {
 
 	nextIDToFocus := focusableIDs[nextIndex]
 	c.UIState.Focused = nextIDToFocus
+	// If the component has an onFocused function, call it
+	if instance, ok := c.componentContext.get(nextIDToFocus); ok && instance.onFocused != nil {
+		instance.onFocused(false)
+	}
 	return nextIDToFocus
 }
 
@@ -75,5 +79,8 @@ func (c *Ctx) FocusPrev() string {
 
 	prevIDToFocus := focusableIDs[prevIndex]
 	c.UIState.Focused = prevIDToFocus
+	if instance, ok := c.componentContext.get(prevIDToFocus); ok && instance.onFocused != nil {
+		instance.onFocused(true)
+	}
 	return prevIDToFocus
 }

@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"github.com/alexanderbh/bubbleapp/app"
+	"github.com/alexanderbh/bubbleapp/component/box"
+	"github.com/alexanderbh/bubbleapp/component/button"
 	"github.com/alexanderbh/bubbleapp/component/divider"
 	"github.com/alexanderbh/bubbleapp/component/form"
 	"github.com/alexanderbh/bubbleapp/component/stack"
@@ -14,7 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-type CustomData struct {
+type FormData struct {
 	email    string
 	password string
 	remember string
@@ -28,34 +30,38 @@ var loginForm = huh.NewForm(
 	),
 ).WithTheme(huh.ThemeFunc(huh.ThemeDracula)).WithShowHelp(false)
 
-func NewRoot(ctx *app.Context[CustomData]) app.Fc[CustomData] {
+func NewRoot(c *app.Ctx, _ app.Props) string {
+	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-	return stack.New(ctx, func(ctx *app.Context[CustomData]) []app.Fc[CustomData] {
-		view := []app.Fc[CustomData]{
-			text.New(ctx, loginLogo(ctx), nil),
-			divider.New(ctx),
-			form.New(ctx, loginForm, func(ctx *app.Context[CustomData]) {
-				ctx.Data.email = loginForm.GetString("email")
-				ctx.Data.password = loginForm.GetString("password")
-				ctx.Data.remember = loginForm.GetString("rememberme")
-				ctx.Update()
-			}, nil),
+	return stack.New(c, func(c *app.Ctx) {
+		c.Render(loginLogo, nil)
+
+		if formSubmit == nil {
+			form.New(c, loginForm, func() {
+				setFormSubmit(&FormData{
+					email:    loginForm.GetString("email"),
+					password: loginForm.GetString("password"),
+					remember: loginForm.GetString("rememberme"),
+				})
+			})
 		}
 
-		if ctx.Data.email != "" {
-			view = append(view, text.New(ctx, "Email: "+ctx.Data.email, nil))
-			view = append(view, text.New(ctx, "Password 🙈: "+ctx.Data.password, nil))
-			view = append(view, text.New(ctx, "Remember me: "+ctx.Data.remember, nil))
+		if formSubmit != nil {
+			text.New(c, "Email: "+formSubmit.email, nil)
+			text.New(c, "Password 🙈: "+formSubmit.password, nil)
+			text.New(c, "Remember me: "+formSubmit.remember, nil)
 		}
 
-		return view
-	}, nil)
+		box.NewEmpty(c)
+		divider.New(c)
+		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
+	})
 }
 
 func main() {
-	ctx := app.NewContext(&CustomData{})
+	c := app.NewCtx()
 
-	app := app.NewApp(ctx, NewRoot)
+	app := app.New(c, NewRoot)
 	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	app.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
@@ -63,9 +69,9 @@ func main() {
 	}
 }
 
-var loginLogo = func(ctx *app.Context[CustomData]) string {
-	f := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.Primary)
-	b := lipgloss.NewStyle().Foreground(ctx.Styles.Colors.GhostDark)
+func loginLogo(c *app.Ctx, _ app.Props) string {
+	f := lipgloss.NewStyle().Foreground(c.Styles.Colors.Secondary)
+	b := lipgloss.NewStyle().Foreground(c.Styles.Colors.GhostDark)
 	return f.Render("██") + b.Render("╗      ") + f.Render("██████") + b.Render("╗  ") + f.Render("██████") + b.Render("╗ ") + f.Render("██") + b.Render("╗") + f.Render("███") + b.Render("╗   ") + f.Render("██") + b.Render("╗") + "\n" +
 		f.Render("██") + b.Render("║     ") + f.Render("██") + b.Render("╔═══") + f.Render("██") + b.Render("╗") + f.Render("██") + b.Render("╔════╝ ") + f.Render("██") + b.Render("║") + f.Render("████") + b.Render("╗  ") + f.Render("██") + b.Render("║") + "\n" +
 		f.Render("██") + b.Render("║     ") + f.Render("██") + b.Render("║   ") + f.Render("██") + b.Render("║") + f.Render("██") + b.Render("║  ") + f.Render("███") + b.Render("╗") + f.Render("██") + b.Render("║") + f.Render("██") + b.Render("╔") + f.Render("██") + b.Render("╗ ") + f.Render("██") + b.Render("║") + "\n" +
