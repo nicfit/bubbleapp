@@ -41,25 +41,25 @@ Everything is just functions that return strings. It is similar to a certain web
 package main
 
 import (
-	"os"
-	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/component/text"
-	tea "github.com/charmbracelet/bubbletea/v2"
+  "os"
+  "github.com/alexanderbh/bubbleapp/app"
+  "github.com/alexanderbh/bubbleapp/component/text"
+  tea "github.com/charmbracelet/bubbletea/v2"
 )
 
 func NewRoot(c *app.Ctx, _ app.Props) string {
-	return text.New(c, "Hello World!")
+  return text.New(c, "Hello World!")
 }
 
 func main() {
-	ctx := app.NewCtx()
+  ctx := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
-	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
-	bubbleApp.SetTeaProgram(p)
-	if _, err := p.Run(); err != nil {
-		os.Exit(1)
-	}
+  bubbleApp := app.New(ctx, NewRoot)
+  p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
+  bubbleApp.SetTeaProgram(p)
+  if _, err := p.Run(); err != nil {
+    os.Exit(1)
+  }
 }
 ```
 
@@ -91,18 +91,18 @@ Set up a router:
 
 ```go
 func MainRouter(ctx *app.Ctx, _ app.Props) string {
-	return router.NewRouter(ctx, router.RouterProps{
-		Routes: []router.Route{
-			{Path: "/", Component: dashboard},
-			{Path: "/shop", Component: shop},
+  return router.NewRouter(ctx, router.RouterProps{
+    Routes: []router.Route{
+      {Path: "/", Component: dashboard},
+      {Path: "/shop", Component: shop},
 
-			{Path: "/account", Component: account, Children: []router.Route{
-				{Path: "/overview", Component: accountOverview},
-				{Path: "/settings", Component: accountSettings},
-				{Path: "/orders", Component: accountOrders},
-			}},
-		},
-	})
+      {Path: "/account", Component: account, Children: []router.Route{
+        {Path: "/overview", Component: accountOverview},
+        {Path: "/settings", Component: accountSettings},
+        {Path: "/orders", Component: accountOrders},
+      }},
+    },
+  })
 }
 ```
 
@@ -110,7 +110,7 @@ How to navigate to a different route:
 
 ```go
 button.New(ctx, "My Account", func() {
-	router.Push("/account/overview")
+  router.Push("/account/overview")
 })
 ```
 
@@ -130,13 +130,13 @@ router.NewOutlet(ctx)
 
 ```go
 var tabsData = []tabs.Tab{
-	{Title: "Overview", Content: overview},
-	{Title: "Loaders", Content: loaders},
-	{Title: "Boxes 🟨", Content: boxes},
+  {Title: "Overview", Content: overview},
+  {Title: "Loaders", Content: loaders},
+  {Title: "Boxes 🟨", Content: boxes},
 }
 
 func NewRoot(ctx *app.Ctx, _ app.Props) string {
-	return tabs.New(ctx, tabsData)
+  return tabs.New(ctx, tabsData)
 }
 ```
 
@@ -179,41 +179,41 @@ Using [huh](https://github.com/charmbracelet/huh) for form rendering. Perhaps a 
 
 ```go
 var loginForm = huh.NewForm(
-	huh.NewGroup(
-		huh.NewInput().Key("email").Title("Email"),
-		huh.NewInput().Key("password").Title("Password").EchoMode(huh.EchoModePassword),
-		huh.NewSelect[string]().Key("rememberme").Title("Remember me").Description("Log in automatically when using this SSH key").Options(huh.NewOptions("Yes", "No")...),
-	),
+  huh.NewGroup(
+    huh.NewInput().Key("email").Title("Email"),
+    huh.NewInput().Key("password").Title("Password").EchoMode(huh.EchoModePassword),
+    huh.NewSelect[string]().Key("rememberme").Title("Remember me").Description("Log in automatically when using this SSH key").Options(huh.NewOptions("Yes", "No")...),
+  ),
 )
 ```
 
 ```go
 func NewRoot(c *app.Ctx, _ app.Props) string {
-	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
+  formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-	return stack.New(c, func(c *app.Ctx) {
-		c.Render(loginLogo, nil)
+  return stack.New(c, func(c *app.Ctx) {
+    c.Render(loginLogo, nil)
 
-		if formSubmit == nil {
-			form.New(c, loginForm, func() {
-				setFormSubmit(&FormData{
-					email:    loginForm.GetString("email"),
-					password: loginForm.GetString("password"),
-					remember: loginForm.GetString("rememberme"),
-				})
-			})
-		}
+    if formSubmit == nil {
+      form.New(c, loginForm, func() {
+        setFormSubmit(&FormData{
+          email:    loginForm.GetString("email"),
+          password: loginForm.GetString("password"),
+          remember: loginForm.GetString("rememberme"),
+        })
+      })
+    }
 
-		if formSubmit != nil {
-			text.New(c, "Email: "+formSubmit.email, nil)
-			text.New(c, "Password 🙈: "+formSubmit.password, nil)
-			text.New(c, "Remember me: "+formSubmit.remember, nil)
-		}
+    if formSubmit != nil {
+      text.New(c, "Email: "+formSubmit.email, nil)
+      text.New(c, "Password 🙈: "+formSubmit.password, nil)
+      text.New(c, "Remember me: "+formSubmit.remember, nil)
+    }
 
-		box.NewEmpty(c)
-		divider.New(c)
-		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
-	})
+    box.NewEmpty(c)
+    divider.New(c)
+    button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
+  })
 }
 ```
 
@@ -225,15 +225,15 @@ Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering
 
 ```go
 return stack.New(ctx, func(ctx *app.Ctx) {
-	text.New(ctx, "Markdown example!")
-	divider.New(ctx)
+  text.New(ctx, "Markdown example!")
+  divider.New(ctx)
 
-	box.New(ctx, func(ctx *app.Ctx) {
-		markdown.New(ctx, mdContent)
-	}, box.WithDisableFollow(true))
+  box.New(ctx, func(ctx *app.Ctx) {
+    markdown.New(ctx, mdContent)
+  }, box.WithDisableFollow(true))
 
-	divider.New(ctx)
-	text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+  divider.New(ctx)
+  text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
 })
 ```
 
@@ -274,30 +274,30 @@ Functional components and hooks as you might be familiar with
 
 ```go
 func NewRoot(c *app.Ctx, _ app.Props) string {
-	clicks, setClicks := app.UseState(c, 0)
-	greeting, setGreeting := app.UseState(c, "Knock knock!")
+  clicks, setClicks := app.UseState(c, 0)
+  greeting, setGreeting := app.UseState(c, "Knock knock!")
 
-	app.UseEffect(c, func() {
-		go func() {
-			time.Sleep(2 * time.Second)
-			setGreeting("Who's there?")
-		}()
-	}, []any{})
+  app.UseEffect(c, func() {
+    go func() {
+      time.Sleep(2 * time.Second)
+      setGreeting("Who's there?")
+    }()
+  }, []any{})
 
-	return stack.New(c, func(c *app.Ctx) {
-		button.NewButton(c, "Count clicks here!", func() {
-			setClicks(clicks + 1)
-		}, button.WithType(button.Compact))
+  return stack.New(c, func(c *app.Ctx) {
+    button.NewButton(c, "Count clicks here!", func() {
+      setClicks(clicks + 1)
+    }, button.WithType(button.Compact))
 
-		text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
-		text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+    text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
+    text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
 
-		box.NewEmpty(c)
+    box.NewEmpty(c)
 
-		button.NewButton(c, "Quit", func() {
-			c.Quit()
-		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
-	}, stack.WithGap(1), stack.WithGrow(true))
+    button.NewButton(c, "Quit", func() {
+      c.Quit()
+    }, button.WithVariant(button.Danger), button.WithType(button.Compact))
+  }, stack.WithGap(1), stack.WithGrow(true))
 }
 ```
 
@@ -309,33 +309,33 @@ Global tab management without any extra code. All focusable components are autom
 
 ```go
 func NewRoot(c *app.Ctx, _ app.Props) string {
-	presses, setPresses := app.UseState(c, 0)
-	log, setLog := app.UseState(c, []string{})
+  presses, setPresses := app.UseState(c, 0)
+  log, setLog := app.UseState(c, []string{})
 
-	return stack.New(c, func(c *app.Ctx) {
-		text.New(c, "Tab through the buttons to see focus state!")
+  return stack.New(c, func(c *app.Ctx) {
+    text.New(c, "Tab through the buttons to see focus state!")
 
-		button.NewButton(c, "Button 1", func() {
-			currentLog := log
-			currentPresses := presses
-			newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
-			setLog(newLog)
-			setPresses(currentPresses + 1)
-		}, button.WithVariant(button.Primary), button.WithType(button.Compact))
+    button.NewButton(c, "Button 1", func() {
+      currentLog := log
+      currentPresses := presses
+      newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
+      setLog(newLog)
+      setPresses(currentPresses + 1)
+    }, button.WithVariant(button.Primary), button.WithType(button.Compact))
 
-		divider.New(c)
+    divider.New(c)
 
-		box.New(c, func(c *app.Ctx) {
-			text.New(c, strings.Join(log, "\n"))
-		})
+    box.New(c, func(c *app.Ctx) {
+      text.New(c, strings.Join(log, "\n"))
+    })
 
-		divider.New(c)
+    divider.New(c)
 
-		button.NewButton(c, "Quit App", func() {
-			c.Quit()
-		}, button.WithVariant(button.Danger), button.WithType(button.Compact))
+    button.NewButton(c, "Quit App", func() {
+      c.Quit()
+    }, button.WithVariant(button.Danger), button.WithType(button.Compact))
 
-	}, stack.WithGrow(true))
+  }, stack.WithGrow(true))
 }
 ```
 
