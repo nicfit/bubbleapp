@@ -61,9 +61,9 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 func main() {
 	c := app.NewCtx()
 
-	app := app.New(c, NewRoot)
-	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
-	app.SetTeaProgram(p)
+	bubbleApp := app.New(c, NewRoot)
+	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

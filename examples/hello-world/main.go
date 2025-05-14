@@ -27,9 +27,9 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 func main() {
 	ctx := app.NewCtx()
 
-	app := app.New(ctx, NewRoot)
-	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
-	app.SetTeaProgram(p)
+	bubbleApp := app.New(ctx, NewRoot)
+	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}

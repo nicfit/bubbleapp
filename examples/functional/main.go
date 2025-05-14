@@ -35,18 +35,16 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 
 		box.NewEmpty(c)
 
-		button.New(c, "Quit", func() {
-			c.Quit()
-		}, button.WithVariant(button.Danger))
+		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
 	}, stack.WithGap(1), stack.WithGrow(true))
 }
 
 func main() {
 	ctx := app.NewCtx()
 
-	app := app.New(ctx, NewRoot)
-	p := tea.NewProgram(app, tea.WithAltScreen(), tea.WithMouseAllMotion())
-	app.SetTeaProgram(p)
+	bubbleApp := app.New(ctx, NewRoot)
+	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
+	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {
 		os.Exit(1)
 	}
