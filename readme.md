@@ -83,9 +83,7 @@ There is not a lot of code here for the UI. Take a look.
 
 ---
 
-## Router
-
-### [Router](./examples/router/router.go)
+## [Router](./examples/router/router.go)
 
 Set up a router:
 
