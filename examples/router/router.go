@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alexanderbh/bubbleapp/app"
+	"github.com/alexanderbh/bubbleapp/component/box"
 	"github.com/alexanderbh/bubbleapp/component/button"
 	"github.com/alexanderbh/bubbleapp/component/divider"
 	"github.com/alexanderbh/bubbleapp/component/router"
@@ -60,13 +61,13 @@ func account(ctx *app.Ctx, _ app.Props) string {
 			button.New(ctx, "Settings", func() {
 				r.Push("/account/settings")
 			})
-		}, stack.WithDirection(app.Horizontal), stack.WithGap(3), stack.WithGrow(false))
+		}, stack.WithDirection(app.Horizontal), stack.WithGap(3), stack.WithGrowY(false))
 
 		divider.New(ctx)
 
 		router.NewOutlet(ctx)
 
-		//box.NewEmpty(ctx, box.WithBg(ctx.Styles.Colors.Tertiary))
+		box.NewEmpty(ctx)
 
 		button.New(ctx, "Back to Dashboard", func() {
 			r.Push("/")

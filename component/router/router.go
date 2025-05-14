@@ -147,15 +147,13 @@ func UseCurrentMatch(c *app.Ctx) CurrentMatchContextData {
 // NewRouter is the entry point to set up the router.
 // It provides the RouterController to its children.
 func NewRouter(c *app.Ctx, props RouterProps) string {
-	// Create a new RouterController instance based on the provided props.
-	// This instance will be specific to this Router setup.
 	routerControllerInstance, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
 
-	// Provide this specific routerControllerInstance to the children via RouterContext.
 	return context.NewProvider(c, RouterContext, routerControllerInstance, func(providerCtx *app.Ctx) {
-		// Render RouterView as the child of the provider.
-		// RouterView will use UseRouterController to get the routerControllerInstance.
-		c.Render(routerView, nil) // RouterView doesn't take props directly
+		c.Render(routerView, keyProps{Key: routerControllerInstance.currentPath, Layout: app.Layout{
+			GrowX: true,
+			GrowY: true,
+		}})
 	})
 }
 
@@ -171,8 +169,6 @@ func routerView(c *app.Ctx, rawProps app.Props) string {
 	// so the controller can trigger re-renders on this instance.
 	routerCtrl.RegisterView(c)
 
-	// Perform route matching and render.
-	// Initial match is against the full current path, with no parent prefix.
 	return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFoundFC)
 }
 
@@ -264,6 +260,7 @@ func matchRoute(routeDefPath, currentUrlSegment string) (map[string]string, bool
 
 type keyProps struct {
 	Key string
+	app.Layout
 }
 
 // matchAndRender recursively matches routes and renders the component.
@@ -302,7 +299,11 @@ func matchAndRender(
 			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) {
 				if routeCopy.Component != nil {
 					ps := keyProps{
-						Key: routeCopy.Path,
+						Key: newMatchData.RemainingPath,
+						Layout: app.Layout{
+							GrowX: true,
+							GrowY: true,
+						},
 					}
 					routeCopy.Component(c, ps)
 				} else {

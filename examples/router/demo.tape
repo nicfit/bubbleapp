@@ -12,18 +12,48 @@ Show
 
 Sleep 1s
 
-Tab@200ms 2
+Tab@200ms 1
 
 Sleep 2s
 
 Enter
 
-Sleep 5s
+Sleep 1s
 
-Shift+Tab
+Tab
 
 Sleep 1s
 
 Enter
 
-Sleep 5s
+Sleep 1s
+
+Tab@200ms 2
+
+Sleep 1s
+
+Enter
+
+Sleep 1s
+
+Tab@200ms 2
+
+Sleep 1s
+
+Enter
+
+Sleep 1s
+
+Tab@200ms 3
+
+Sleep 1s
+
+Enter
+
+Sleep 1s
+
+Tab@200ms 4
+
+Sleep 1s
+
+Enter

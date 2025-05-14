@@ -63,16 +63,15 @@ func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 	c.PushContextValue(p.Context.id, p.Value)
 	defer c.PopContextValue(p.Context.id)
 
-	// Render children. The UseChildren hook will execute p.Children(c),
-	// and any output from components rendered within p.Children will be collected.
-	// Assuming UseChildren correctly handles collecting output from app.Children.
-	childrenOutputs := app.UseChildren(c, p.Children) // This was missing in the thought process but is standard
-
-	var builder strings.Builder
-	for _, childStr := range childrenOutputs {
-		builder.WriteString(childStr)
+	// Process children and collect their rendered outputs
+	// ContextProvider returns the concatenated output of all its children
+	if p.Children != nil {
+		childOutputs := app.UseChildren(c, p.Children)
+		// Join all child outputs together - this makes the provider visually represent its children
+		return strings.Join(childOutputs, "")
 	}
-	return builder.String()
+
+	return "ContextProvider" // Return a non-empty string to avoid layout issues
 }
 
 // UseContext is a hook that allows components to subscribe to a context's value.
