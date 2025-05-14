@@ -14,8 +14,6 @@ type rootProps struct {
 type FC = func(ctx *Ctx, props Props) string
 type Children func(ctx *Ctx)
 
-// _____________________
-
 type AppOptions struct{}
 type AppOption func(*AppOptions)
 

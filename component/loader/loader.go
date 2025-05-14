@@ -26,7 +26,7 @@ func Loader(c *app.Ctx, props app.Props) string {
 	frame, setFrame := app.UseState(c, 0)
 
 	app.UseTick(c, loaderProps.Spinner.Interval, func() {
-		setFrame((frame + 1) % len(loaderProps.Spinner.Frames))
+		setFrame(func(prev int) int { return (prev + 1) % len(loaderProps.Spinner.Frames) })
 	})
 
 	styleText := lipgloss.NewStyle().Padding(0, 0, 0, 1)

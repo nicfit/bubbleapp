@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt" // Added import for error formatting
 	"reflect"
 	"time"
 
@@ -77,26 +78,33 @@ func UseChildren(c *Ctx, children Children) []string {
 // It's analogous to React's useState hook.
 // IMPORTANT: Hooks must be called in the same order on every render,
 // and they must not be called conditionally.
-func UseState[T any](c *Ctx, initialValue T) (T, func(newValue T)) {
+func UseState[T any](c *Ctx, initialValue T) (T, func(valueOrUpdater interface{})) {
 	instanceID := c.id.getID()
-	// FCContext.Render guarantees that the instance exists by calling componentContext.set
 	instance, _ := c.componentContext.get(instanceID)
 
 	hookIndex := c.useStateCounter[instanceID]
 	c.useStateCounter[instanceID]++
 
 	if hookIndex >= len(instance.states) {
-		// This is the first render for this hook in this component instance,
-		// or the States slice needs to grow.
 		instance.states = append(instance.states, initialValue)
 	}
-	// If hookIndex < len(instance.States), the state already exists from a previous render.
 
-	// Type assertion. This could panic if the type T changes for a given hookIndex
-	// between renders, which would be a misuse of the hook.
 	currentValue := instance.states[hookIndex].(T)
 
-	setter := func(newValue T) {
+	setter := func(valueOrUpdater interface{}) {
+		var newValue T
+		previousValueFromState := instance.states[hookIndex].(T)
+
+		switch updater := valueOrUpdater.(type) {
+		case func(prevValue T) T:
+			newValue = updater(previousValueFromState)
+		case T:
+			newValue = updater
+		default:
+			typeName := reflect.TypeOf(initialValue).String()
+			panic(fmt.Sprintf("UseState setter: unexpected type %T passed. Expected %s or func(prevValue %s) %s",
+				valueOrUpdater, typeName, typeName, typeName))
+		}
 		instance.states[hookIndex] = newValue
 		c.Update()
 	}

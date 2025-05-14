@@ -23,7 +23,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 
 	app.UseEffectWithCleanup(ctx, func() func() {
 		processCtx, cancel := context.WithCancel(context.Background())
-		go monitorProcesses(processCtx, setProcesses)
+		go monitorProcesses(processCtx, func(r []table.Row) { setProcesses(r) })
 		return cancel
 	}, app.RunOnceDeps)
 

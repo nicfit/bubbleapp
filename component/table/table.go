@@ -184,7 +184,9 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	rawCols, rows := p.DataFunc(ctx)
 
 	app.UseKeyHandler(ctx, func(keyMsg tea.KeyMsg) bool {
-		return processInternalKeys(keyMsg, p.KeyMap, rows, state, setState)
+		return processInternalKeys(keyMsg, p.KeyMap, rows, state, func(t tableState) {
+			setState(t)
+		})
 	})
 
 	app.UseMouseHandler(ctx, func(msg tea.MouseMsg, childID string) bool {

@@ -8,42 +8,40 @@ import (
 	"github.com/alexanderbh/bubbleapp/app"
 )
 
-// Not sure if this code belongs in App or not. It depends on Context methods on Ctx.
-
 var nextContextID uint64
 
 // Context is a generic type representing a context object.
 type Context[T any] struct {
 	id           uint64
-	defaultValue *T
+	initialValue T // This is only returned if no Provider is found in the ancestry.
 }
 
-// Create creates a new context object with an optional default value.
-// The default value is returned by UseContext if no Provider is found in the ancestry.
-func Create[T any](defaultValue *T) *Context[T] {
+// Create creates a new context object with an initial reference value.
+// This initialValue is returned by UseContext if no Provider is found in the ancestry.
+func Create[T any](initialValue T) *Context[T] {
 	return &Context[T]{
 		id:           atomic.AddUint64(&nextContextID, 1),
-		defaultValue: defaultValue,
+		initialValue: initialValue,
 	}
 }
 
 // ProviderProps are the props for the ContextProvider component.
-// The Children field is a function that will render the child components.
-// This function will be called by the UseChildren hook within the ContextProvider.
 type ProviderProps[T any] struct {
 	Context  *Context[T]
-	Value    *T
-	Children app.Children // Children is of type func(ctx *Ctx)
+	Value    T // This is the specific value this provider instance will make available
+	Children app.Children
 }
 
-func NewProvider[T any](c *app.Ctx, context *Context[T], children app.Children) string {
+// NewProvider creates a new ContextProvider component.
+// It takes the context object, the specific value to provide, and children.
+func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, children app.Children) string {
 	if context == nil {
-		panic("NewContextProvider called with nil Context object")
+		panic("NewProvider called with nil Context object")
 	}
 
 	p := ProviderProps[T]{
 		Context:  context,
-		Value:    context.defaultValue,
+		Value:    valueToProvide, // Use the explicitly passed valueToProvide
 		Children: children,
 	}
 
@@ -55,28 +53,21 @@ func NewProvider[T any](c *app.Ctx, context *Context[T], children app.Children) 
 func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 	p, ok := props.(ProviderProps[T])
 	if !ok {
-		// This case should ideally be prevented by correct Go typing,
-		// but as Props is 'any', a runtime check is good.
-		// Consider logging this error appropriately in a real application.
-		return "[Error: Invalid props type for ContextProvider]"
+		panic(fmt.Sprintf("ContextProvider: Invalid props type. Expected ProviderProps[%T], got %T", *new(T), props))
 	}
 
 	if p.Context == nil {
-		return "[Error: Context object is nil in Provider]"
+		panic("ContextProvider: Context object is nil in ProviderProps")
 	}
 
-	// Push the context value onto the stack for this specific context ID.
-	// This makes the value available to UseContext calls in descendant components.
 	c.PushContextValue(p.Context.id, p.Value)
-	// Ensure the context value is popped when this provider's rendering is complete,
-	// restoring the context state for sibling or parent components.
 	defer c.PopContextValue(p.Context.id)
 
 	// Render children. The UseChildren hook will execute p.Children(c),
 	// and any output from components rendered within p.Children will be collected.
-	childrenOutputs := app.UseChildren(c, p.Children)
+	// Assuming UseChildren correctly handles collecting output from app.Children.
+	childrenOutputs := app.UseChildren(c, p.Children) // This was missing in the thought process but is standard
 
-	// Concatenate the string outputs from all child components.
 	var builder strings.Builder
 	for _, childStr := range childrenOutputs {
 		builder.WriteString(childStr)
@@ -87,24 +78,22 @@ func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 // UseContext is a hook that allows components to subscribe to a context's value.
 // It returns the current value for the given context, searching upwards through
 // component ancestors for the nearest Provider. If no Provider is found,
-// it returns the default value specified when the context was created.
-func UseContext[T any](c *app.Ctx, context *Context[T]) *T {
+// it returns the initialValue specified when the context was created.
+func UseContext[T any](c *app.Ctx, context *Context[T]) T {
 	if context == nil {
-		// This is a programming error: UseContext called with a nil context object.
 		panic("UseContext called with nil Context object")
 	}
 
 	value, found := c.GetContextValue(context.id)
 	if found {
-		// Value found from a Provider. Attempt to cast it to the expected type T.
-		if typedValue, ok := value.(*T); ok {
+		if typedValue, ok := value.(T); ok {
 			return typedValue
 		}
-		// Type mismatch: the value stored in the context by a Provider
-		// is not of the type expected by this consumer. This is a programming error.
-		panic(fmt.Sprintf("Context value type mismatch for context ID %d. Expected type %T (based on default value), but found type %T in provider.", context.id, context.defaultValue, value))
+		// This panic indicates a type mismatch between what a Provider stored
+		// and what UseContext expected. This is a critical programming error.
+		panic(fmt.Sprintf("Context value type mismatch for context ID %d. Expected type *%T, but found type %T in provider.", context.id, *new(T), value))
 	}
 
-	// No Provider found in the ancestry, return the default value for this context.
-	return context.defaultValue
+	// No Provider found in the ancestry, return the initialValue for this context.
+	return context.initialValue
 }

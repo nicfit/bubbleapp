@@ -84,12 +84,12 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Example: shader",
+      "name": "Example: router",
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/examples/shader/.",
-      "cwd": "${workspaceFolder}/examples/shader",
+      "program": "${workspaceFolder}/examples/router/.",
+      "cwd": "${workspaceFolder}/examples/router",
       "console": "integratedTerminal"
     },
     {
