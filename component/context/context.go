@@ -2,7 +2,6 @@ package context
 
 import (
 	"fmt"
-	"strings"
 	"sync/atomic"
 
 	"github.com/alexanderbh/bubbleapp/app"
@@ -27,22 +26,22 @@ func Create[T any](initialValue T) *Context[T] {
 
 // ProviderProps are the props for the ContextProvider component.
 type ProviderProps[T any] struct {
-	Context  *Context[T]
-	Value    T // This is the specific value this provider instance will make available
-	Children app.Children
+	Context *Context[T]
+	Value   T // This is the specific value this provider instance will make available
+	Child   func(c *app.Ctx) string
 }
 
 // NewProvider creates a new ContextProvider component.
 // It takes the context object, the specific value to provide, and children.
-func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, children app.Children) string {
+func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child func(c *app.Ctx) string) string {
 	if context == nil {
 		panic("NewProvider called with nil Context object")
 	}
 
 	p := ProviderProps[T]{
-		Context:  context,
-		Value:    valueToProvide, // Use the explicitly passed valueToProvide
-		Children: children,
+		Context: context,
+		Value:   valueToProvide, // Use the explicitly passed valueToProvide
+		Child:   child,
 	}
 
 	return ContextProvider[T](c, p)
@@ -63,15 +62,7 @@ func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 	c.PushContextValue(p.Context.id, p.Value)
 	defer c.PopContextValue(p.Context.id)
 
-	// Process children and collect their rendered outputs
-	// ContextProvider returns the concatenated output of all its children
-	if p.Children != nil {
-		childOutputs := app.UseChildren(c, p.Children)
-		// Join all child outputs together - this makes the provider visually represent its children
-		return strings.Join(childOutputs, "")
-	}
-
-	return "ContextProvider" // Return a non-empty string to avoid layout issues
+	return p.Child(c)
 }
 
 // UseContext is a hook that allows components to subscribe to a context's value.
