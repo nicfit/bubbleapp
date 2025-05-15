@@ -8,18 +8,18 @@ import (
 )
 
 type Props any
-type rootProps struct {
-	Layout Layout
-}
 type FC = func(ctx *Ctx, props Props) string
 type Children func(ctx *Ctx)
 
-type AppOptions struct{}
+type AppOptions struct {
+	rootProps Props
+}
 type AppOption func(*AppOptions)
 
 type app struct {
-	root FC
-	ctx  *Ctx
+	root      FC
+	rootProps Props
+	ctx       *Ctx
 }
 
 func New(ctx *Ctx, root FC, options ...AppOption) *app {
@@ -36,8 +36,15 @@ func New(ctx *Ctx, root FC, options ...AppOption) *app {
 	}
 
 	return &app{
-		root: root,
-		ctx:  ctx,
+		root:      root,
+		rootProps: opts.rootProps,
+		ctx:       ctx,
+	}
+}
+
+func WithRootProps(props any) AppOption {
+	return func(opts *AppOptions) {
+		opts.rootProps = props
 	}
 }
 
@@ -138,29 +145,22 @@ func (a *app) View() string {
 
 	a.ctx.initView()
 
-	defaultRootProps := rootProps{
-		Layout: Layout{
-			GrowX: true,
-			GrowY: true,
-		},
-	}
-
 	a.ctx.UIState.resetSizes()
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
-	a.ctx.Render(a.root, defaultRootProps)
+	a.ctx.Render(a.root, a.rootProps)
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	a.ctx.Render(a.root, defaultRootProps)
+	a.ctx.Render(a.root, a.rootProps)
 	a.ctx.layoutManager.distributeHeight(a.ctx)
 
 	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.invalidate = false
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	renderedView := a.ctx.zone.Scan(a.ctx.Render(a.root, defaultRootProps))
+	renderedView := a.ctx.zone.Scan(a.ctx.Render(a.root, a.rootProps))
 
 	// Create or update the timer based on the current set of tick listeners
 	a.ctx.tick.createTimer(a.ctx)
