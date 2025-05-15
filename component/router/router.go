@@ -27,7 +27,6 @@ type RouterProps struct {
 
 // RouterController manages routing state and navigation.
 type RouterController struct {
-	viewCtx     *app.Ctx
 	History     []string
 	Routes      []Route
 	currentPath string
@@ -49,40 +48,25 @@ func NewRouterController(initialPath string, routes []Route, notFoundFC app.FC) 
 	return rc
 }
 
-// RegisterView allows RouterView to register its context for re-rendering.
-func (rc *RouterController) RegisterView(ctx *app.Ctx) {
-	rc.viewCtx = ctx
-}
-
-func (rc *RouterController) triggerRender() {
-	if rc.viewCtx != nil {
-		// Ensure re-render happens in the UI thread if necessary,
-		// though bubbletea's model update cycle usually handles this.
-		rc.viewCtx.Update()
-	} else {
-		log.Println("RouterController: viewCtx is nil, cannot trigger render. Ensure RouterView registers itself.")
-	}
-}
-
 // Push navigates to a new path and adds it to history.
-func (rc *RouterController) Push(newPath string) {
+func (rc *RouterController) Push(c *app.Ctx, newPath string) {
 	cleanedPath := path.Clean(newPath)
 	if rc.currentPath == cleanedPath {
 		return
 	}
 	rc.currentPath = cleanedPath
 	rc.History = append(rc.History, rc.currentPath)
-	rc.triggerRender()
+	c.Update()
 }
 
 // Pop navigates to the previous path in history.
-func (rc *RouterController) Pop() {
+func (rc *RouterController) Pop(c *app.Ctx) {
 	if len(rc.History) <= 1 { // Can't pop the last/initial entry
 		return
 	}
 	rc.History = rc.History[:len(rc.History)-1]
 	rc.currentPath = rc.History[len(rc.History)-1]
-	rc.triggerRender()
+	c.Update()
 }
 
 // Current returns the current active path.
@@ -91,7 +75,7 @@ func (rc *RouterController) Current() string {
 }
 
 // Replace replaces the current path in history with a new one.
-func (rc *RouterController) Replace(newPath string) {
+func (rc *RouterController) Replace(c *app.Ctx, newPath string) {
 	cleanedPath := path.Clean(newPath)
 	if rc.currentPath == cleanedPath && len(rc.History) > 0 {
 		return
@@ -102,16 +86,16 @@ func (rc *RouterController) Replace(newPath string) {
 	} else {
 		rc.History = append(rc.History, rc.currentPath)
 	}
-	rc.triggerRender()
+	c.Update()
 }
 
 // ReplaceRoot clears history and navigates to a new root path.
-func (rc *RouterController) ReplaceRoot(newPath string) {
+func (rc *RouterController) ReplaceRoot(c *app.Ctx, newPath string) {
 	cleanedPath := path.Clean(newPath)
 	rc.currentPath = cleanedPath
 	rc.History = make([]string, 1)
 	rc.History[0] = rc.currentPath
-	rc.triggerRender()
+	c.Update()
 }
 
 // --- Contexts ---
@@ -147,29 +131,33 @@ func UseCurrentMatch(c *app.Ctx) CurrentMatchContextData {
 // NewRouter is the entry point to set up the router.
 // It provides the RouterController to its children.
 func NewRouter(c *app.Ctx, props RouterProps) string {
-	routerControllerInstance, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
 
-	return context.NewProvider(c, RouterContext, routerControllerInstance, func(providerCtx *app.Ctx) {
-		c.Render(routerView, keyProps{Key: routerControllerInstance.currentPath, Layout: app.Layout{
+	routerCtrl, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
+
+	ps := RouterViewProps{
+		routerCtrl: routerCtrl,
+		Key:        routerCtrl.Current(),
+		Layout: app.Layout{
 			GrowX: true,
 			GrowY: true,
-		}})
-	})
+		},
+	}
+	return c.Render(routerView, ps)
+}
+
+type RouterViewProps struct {
+	app.Layout
+	routerCtrl *RouterController
+	Key        string
 }
 
 // routerView is an internal component that listens to path changes and renders the matched route.
 func routerView(c *app.Ctx, rawProps app.Props) string {
-	routerCtrl := UseRouterController(c)
-	if routerCtrl == nil {
-		log.Println("RouterView: RouterController is nil. Ensure NewRouter wraps this component.")
-		return "Error: Router not initialized."
-	}
+	props, _ := rawProps.(RouterViewProps)
 
-	// Register this RouterView instance's context with the controller
-	// so the controller can trigger re-renders on this instance.
-	routerCtrl.RegisterView(c)
-
-	return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFoundFC)
+	return context.NewProvider(c, RouterContext, props.routerCtrl, func(c *app.Ctx) string {
+		return matchAndRender(c, props.routerCtrl.Routes, props.routerCtrl.currentPath, props.routerCtrl.currentPath, "", props.routerCtrl.notFoundFC)
+	})
 }
 
 // --- Matching Logic ---
@@ -296,21 +284,13 @@ func matchAndRender(
 
 			// Provide this specific newMatchData to the matched component and its children (e.g., Outlet)
 			// via CurrentMatchContext.
-			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) {
+			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) string {
 				if routeCopy.Component != nil {
-					ps := keyProps{
-						Key: newMatchData.RemainingPath,
-						Layout: app.Layout{
-							GrowX: true,
-							GrowY: true,
-						},
-					}
-					routeCopy.Component(c, ps)
+					return routeCopy.Component(c, nil)
 				} else {
 					// If no component, but has children, it's a layout/group route.
 					// An Outlet component should be used explicitly within the parent's render flow
 					// if children are meant to be rendered.
-					// This router doesn't implicitly render an Outlet.
 					log.Printf("Route matched (%s) but has no component. If it has children, ensure an <Outlet /> is used in its layout if it were a layout component, or provide a component.", newMatchData.MatchedPathPrefix)
 					panic("Route matched but no component provided.")
 				}
@@ -327,36 +307,37 @@ func matchAndRender(
 // --- Outlet ---
 
 func NewOutlet(c *app.Ctx) string {
-	routerCtrl := UseRouterController(c)
+	routerCtrl := UseCurrentMatch(c)
 
-	return c.Render(outlet, outletProps{Key: routerCtrl.currentPath})
+	return c.Render(outlet, outletProps{Key: routerCtrl.RemainingPath})
 }
 
 type outletProps struct {
 	Key string
+	app.Layout
 }
 
 // outlet is a component that renders the matched child route.
 func outlet(c *app.Ctx, _ app.Props) string {
 	currentMatch := UseCurrentMatch(c)
-	routerCtrl := UseRouterController(c) // For NotFoundFC and full URL if needed
+	routerCtrl := UseRouterController(c)
 
-	if currentMatch.MatchedRoute == nil {
-		log.Println("Outlet: No current match context found. Outlet must be a child of a matched route component.")
+	if currentMatch.MatchedRoute == nil || len(currentMatch.MatchedRoute.Children) == 0 {
 		return ""
 	}
-	if len(currentMatch.MatchedRoute.Children) == 0 {
-		return "" // No children to render
-	}
 
-	return matchAndRender(
-		c,
-		currentMatch.MatchedRoute.Children,
-		routerCtrl.Current(),
-		currentMatch.RemainingPath,
-		currentMatch.MatchedPathPrefix,
-		routerCtrl.notFoundFC,
-	)
+	childrenFunc := func(c *app.Ctx) {
+		_ = matchAndRender(
+			c,
+			currentMatch.MatchedRoute.Children,
+			routerCtrl.Current(),
+			currentMatch.RemainingPath,
+			currentMatch.MatchedPathPrefix,
+			routerCtrl.notFoundFC,
+		)
+	}
+	outputs := app.UseChildren(c, childrenFunc)
+	return strings.Join(outputs, "")
 }
 
 // --- Navigation Components/Functions ---
@@ -377,7 +358,7 @@ func Link(c *app.Ctx, props LinkProps) string {
 	}
 
 	app.UseAction(c, func(_ string) {
-		routerCtrl.Push(props.To)
+		routerCtrl.Push(c, props.To)
 	})
 
 	// Basic clickable text. Styling would be applied by parent or via props.
@@ -408,7 +389,7 @@ func Link(c *app.Ctx, props LinkProps) string {
 // NavigateOptions provides options for programmatic navigation.
 type NavigateOptions struct {
 	Replace bool
-	// TODO: State any // For history state, if ever implemented
+	Reset   bool
 }
 
 // NavigateOption defines a function that modifies NavigateOptions.
@@ -418,6 +399,12 @@ type NavigateOption func(*NavigateOptions)
 func WithReplace(replace bool) NavigateOption {
 	return func(o *NavigateOptions) {
 		o.Replace = replace
+	}
+}
+
+func WithReset(reset bool) NavigateOption {
+	return func(o *NavigateOptions) {
+		o.Reset = reset
 	}
 }
 
@@ -434,9 +421,11 @@ func Navigate(c *app.Ctx, to string, opts ...NavigateOption) {
 		opt(&options)
 	}
 
-	if options.Replace {
-		routerCtrl.Replace(to)
+	if options.Reset {
+		routerCtrl.ReplaceRoot(c, to)
+	} else if options.Replace {
+		routerCtrl.Replace(c, to)
 	} else {
-		routerCtrl.Push(to)
+		routerCtrl.Push(c, to)
 	}
 }

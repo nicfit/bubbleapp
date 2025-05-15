@@ -49,7 +49,7 @@ func mainRoute(ctx *app.Ctx, _ app.Props) string {
 	router := router.UseRouterController(ctx)
 
 	if appAuthData.userID == "" {
-		router.ReplaceRoot("/login")
+		router.ReplaceRoot(ctx, "/login")
 		return ""
 	}
 
@@ -81,7 +81,7 @@ func loginRoute(ctx *app.Ctx, _ app.Props) string {
 		appData.data.userID = userID
 		appData.setData(appData.data)
 
-		router.ReplaceRoot("/")
+		router.ReplaceRoot(ctx, "/")
 	}
 
 	return stack.New(ctx, func(ctx *app.Ctx) {

@@ -10,8 +10,8 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func MainRouter(ctx *app.Ctx, _ app.Props) string {
-	return router.NewRouter(ctx, router.RouterProps{
+func MainRouter(c *app.Ctx, _ app.Props) string {
+	return router.NewRouter(c, router.RouterProps{
 		Routes: []router.Route{
 			{Path: "/", Component: dashboard},
 			{Path: "/shop", Component: shop},
@@ -25,84 +25,84 @@ func MainRouter(ctx *app.Ctx, _ app.Props) string {
 	})
 }
 
-func dashboard(ctx *app.Ctx, _ app.Props) string {
-	router := router.UseRouterController(ctx)
+func dashboard(c *app.Ctx, _ app.Props) string {
+	router := router.UseRouterController(c)
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
-		text.New(ctx, "Welcome to the dashboard! ")
-		text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+	return stack.New(c, func(c *app.Ctx) {
+		text.New(c, "Welcome to the dashboard! ")
+		text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger))
 
-		divider.New(ctx)
+		divider.New(c)
 
-		button.New(ctx, "Shop", func() {
-			router.Push("/shop")
+		button.New(c, "Shop", func() {
+			router.Push(c, "/shop")
 		})
 
-		button.New(ctx, "My Account", func() {
-			router.Push("/account/overview")
+		button.New(c, "My Account", func() {
+			router.Push(c, "/account/overview")
 		})
 
 	})
 }
 
-func account(ctx *app.Ctx, _ app.Props) string {
-	r := router.UseRouterController(ctx)
+func account(c *app.Ctx, _ app.Props) string {
+	r := router.UseRouterController(c)
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
-		text.New(ctx, "My Account")
-		text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
-		stack.New(ctx, func(ctx *app.Ctx) {
-			button.New(ctx, "Overview", func() {
-				r.Push("/account/overview")
+	return stack.New(c, func(c *app.Ctx) {
+		text.New(c, "My Account")
+		text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger))
+		stack.New(c, func(c *app.Ctx) {
+			button.New(c, "Overview", func() {
+				r.Push(c, "/account/overview")
 			})
-			button.New(ctx, "My Orders", func() {
-				r.Push("/account/orders")
+			button.New(c, "My Orders", func() {
+				r.Push(c, "/account/orders")
 			})
-			button.New(ctx, "Settings", func() {
-				r.Push("/account/settings")
+			button.New(c, "Settings", func() {
+				r.Push(c, "/account/settings")
 			})
 		}, stack.WithDirection(app.Horizontal), stack.WithGap(3), stack.WithGrowY(false))
 
-		divider.New(ctx)
+		divider.New(c)
 
-		router.NewOutlet(ctx)
+		router.NewOutlet(c)
 
-		box.NewEmpty(ctx)
+		box.NewEmpty(c)
 
-		button.New(ctx, "Back to Dashboard", func() {
-			r.Push("/")
+		button.New(c, "Back to Dashboard", func() {
+			r.Push(c, "/")
 		})
 	})
 }
 
-func accountOverview(ctx *app.Ctx, _ app.Props) string {
-	return text.New(ctx, "Account Overview")
+func accountOverview(c *app.Ctx, _ app.Props) string {
+	return text.New(c, "Account Overview")
 }
 
-func accountSettings(ctx *app.Ctx, _ app.Props) string {
-	return text.New(ctx, "Account Settings")
+func accountSettings(c *app.Ctx, _ app.Props) string {
+	return text.New(c, "Account Settings")
 }
-func accountOrders(ctx *app.Ctx, _ app.Props) string {
-	return text.New(ctx, "Account Orders")
+func accountOrders(c *app.Ctx, _ app.Props) string {
+	return text.New(c, "Account Orders")
 }
 
-func shop(ctx *app.Ctx, _ app.Props) string {
-	router := router.UseRouterController(ctx)
+func shop(c *app.Ctx, _ app.Props) string {
+	router := router.UseRouterController(c)
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
-		text.New(ctx, "Welcome to the shop!")
-		text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+	return stack.New(c, func(c *app.Ctx) {
+		text.New(c, "Welcome to the shop!")
+		text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger))
 
-		divider.New(ctx)
+		divider.New(c)
 
-		button.New(ctx, "Back to Dashboard", func() {
-			router.Push("/")
+		button.New(c, "Back to Dashboard", func() {
+			router.Push(c, "/")
 		})
 
-		stack.New(ctx, func(ctx *app.Ctx) {
-			text.New(ctx, "Shop Item 1 - $10", text.WithFg(ctx.Styles.Colors.Tertiary))
-			text.New(ctx, "Shop Item 2 - $12", text.WithFg(ctx.Styles.Colors.Tertiary))
-			text.New(ctx, "This is just for show", text.WithFg(ctx.Styles.Colors.Warning))
+		stack.New(c, func(c *app.Ctx) {
+			text.New(c, "Shop Item 1 - $10", text.WithFg(c.Styles.Colors.Tertiary))
+			text.New(c, "Shop Item 2 - $12", text.WithFg(c.Styles.Colors.Tertiary))
+			text.New(c, "This is just for show", text.WithFg(c.Styles.Colors.Warning))
 		})
 	})
 }
