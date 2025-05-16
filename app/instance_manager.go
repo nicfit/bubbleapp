@@ -20,8 +20,6 @@ type MsgHandler func(msg tea.Msg) tea.Cmd
 type instanceContext struct {
 	id              string
 	focusable       bool
-	fc              FC
-	props           Props
 	states          []any
 	effects         []effectRecord
 	keyHandlers     []KeyHandler
@@ -45,7 +43,7 @@ func (c *fcInstanceContext) get(id string) (*instanceContext, bool) {
 	return instance, ok
 }
 
-func (c *fcInstanceContext) set(id string, fc FC, props Props) *instanceContext {
+func (c *fcInstanceContext) set(id string) *instanceContext {
 	instance, ok := c.ctxs[id]
 	if !ok {
 		instance = &instanceContext{
@@ -58,8 +56,6 @@ func (c *fcInstanceContext) set(id string, fc FC, props Props) *instanceContext 
 		}
 		c.ctxs[id] = instance
 	}
-	instance.fc = fc
-	instance.props = props
 
 	return instance
 }

@@ -14,7 +14,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx, _ app.Props) string {
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
 	clicks, setClicks := app.UseState(c, 0)
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
@@ -25,17 +25,19 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 		}()
 	}, []any{})
 
-	return stack.New(c, func(c *app.Ctx) {
-		button.New(c, "Count clicks here!", func() {
-			setClicks(clicks + 1)
-		})
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			button.New(c, "Count clicks here!", func() {
+				setClicks(clicks + 1)
+			}),
 
-		text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
-		text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning)),
+			text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning)),
 
-		box.NewEmpty(c)
+			box.NewEmpty(c),
 
-		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
+			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+		}
 	}, stack.WithGap(1), stack.WithGrow(true))
 }
 

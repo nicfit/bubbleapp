@@ -142,7 +142,7 @@ func defaultStyles(ctx *app.Ctx) Styles {
 }
 
 // NewTable creates a new table component instance.
-func New(ctx *app.Ctx, props ...tableProp) string {
+func New(ctx *app.Ctx, props ...tableProp) app.C {
 	p := Props{
 		KeyMap: defaultKeyMap(),
 		Styles: defaultStyles(ctx),

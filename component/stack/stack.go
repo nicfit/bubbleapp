@@ -41,14 +41,17 @@ func Stack(c *app.Ctx, props app.Props) string {
 		}
 	}
 
+	var result string
 	if stackProps.Layout.Direction == app.Horizontal {
-		return lipgloss.JoinHorizontal(lipgloss.Top, processedChildren...)
+		result = lipgloss.JoinHorizontal(lipgloss.Top, processedChildren...)
+	} else {
+		result = lipgloss.JoinVertical(lipgloss.Left, processedChildren...)
 	}
-	return lipgloss.JoinVertical(lipgloss.Left, processedChildren...)
 
+	return result
 }
 
-func New(c *app.Ctx, children app.Children, props ...StackProp) string {
+func New(c *app.Ctx, children app.Children, props ...StackProp) app.C {
 	appliedProps := StackProps{
 		Children: children,
 		Layout: app.Layout{

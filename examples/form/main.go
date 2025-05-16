@@ -30,31 +30,38 @@ var loginForm = huh.NewForm(
 	),
 ).WithTheme(huh.ThemeFunc(huh.ThemeDracula)).WithShowHelp(false)
 
-func NewRoot(c *app.Ctx, _ app.Props) string {
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
 	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-	return stack.New(c, func(c *app.Ctx) {
-		c.Render(loginLogo, nil)
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		cs := []app.C{}
+		cs = append(cs, c.Render(loginLogo, nil))
 
 		if formSubmit == nil {
-			form.New(c, loginForm, func() {
+			cs = append(cs, form.New(c, loginForm, func() {
 				setFormSubmit(&FormData{
 					email:    loginForm.GetString("email"),
 					password: loginForm.GetString("password"),
 					remember: loginForm.GetString("rememberme"),
 				})
-			})
+			}))
 		}
 
 		if formSubmit != nil {
-			text.New(c, "Email: "+formSubmit.email, nil)
-			text.New(c, "Password 🙈: "+formSubmit.password, nil)
-			text.New(c, "Remember me: "+formSubmit.remember, nil)
+			cs = append(cs,
+				text.New(c, "Email: "+formSubmit.email, nil),
+				text.New(c, "Password 🙈: "+formSubmit.password, nil),
+				text.New(c, "Remember me: "+formSubmit.remember, nil),
+			)
 		}
 
-		box.NewEmpty(c)
-		divider.New(c)
-		button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
+		cs = append(cs,
+			box.NewEmpty(c),
+			divider.New(c),
+			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+		)
+
+		return cs
 	})
 }
 

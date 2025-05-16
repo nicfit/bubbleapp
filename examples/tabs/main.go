@@ -15,7 +15,7 @@ var tabsData = []tabs.Tab{
 	{Title: "Boxes 🟨", Content: boxes},
 }
 
-func NewRoot(ctx *app.Ctx, _ app.Props) string {
+func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
 	return tabs.New(ctx, tabsData)
 }
 

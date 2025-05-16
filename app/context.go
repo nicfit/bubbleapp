@@ -20,7 +20,6 @@ type Ctx struct {
 	id               *idContext
 	tick             *tickState[any]
 	invalidate       bool
-	collectorStack   []*outputCollector
 	componentContext *fcInstanceContext
 	useEffectCounter map[string]int
 	useStateCounter  map[string]int
@@ -39,7 +38,6 @@ func NewCtx() *Ctx {
 		Styles:           style.DefaultStyles(),
 		id:               newIdContext(),
 		tick:             &tickState[any]{},
-		collectorStack:   []*outputCollector{},
 		componentContext: newInstanceContext(),
 		layoutManager:    newLayoutManager(),
 		useEffectCounter: make(map[string]int),
@@ -53,7 +51,6 @@ func (c *Ctx) initView() {
 	c.id.initPath()
 	c.tick.init()
 	c.layoutManager.componentTree = newComponentTree()
-	c.collectorStack = []*outputCollector{}
 	c.zoneMap = make(map[string]*instanceContext)
 	// Is this the right way to clean up here?
 	for _, cs := range c.componentContext.ctxs {
@@ -62,19 +59,15 @@ func (c *Ctx) initView() {
 		cs.messageHandlers = make([]MsgHandler, 0)
 		cs.onFocused = nil
 	}
-	// c.contextValues = make(map[uint64][]any) // No need to reset here, should persist across renders unless specifically cleared
 }
 
-// Render a functional component with the given props.
-// This function is responsible for managing the lifecycle of the component,
-// including state management, effect handling, and ID management.
-func (c *Ctx) Render(fc FC, props Props) string {
-	id := c.id.push(getKeyName(fc, props))
+func (c *Ctx) RenderWithName(fc func(c *Ctx, props Props) string, props Props, name string) C {
+	id := c.id.push(name)
 	defer c.id.pop()
 
 	var node *ComponentNode
 	if c.LayoutPhase == LayoutPhaseIntrincintWidth {
-		node = c.layoutManager.addComponent(id, fc, props)
+		node = c.layoutManager.addComponent(id, props)
 		defer c.layoutManager.pop()
 	} else {
 		node = c.layoutManager.getComponent(id)
@@ -82,36 +75,37 @@ func (c *Ctx) Render(fc FC, props Props) string {
 
 	c.id.ids = append(c.id.ids, id)
 
-	c.componentContext.set(id, fc, props)
+	c.componentContext.set(id)
 
 	c.useStateCounter[id] = 0
 	c.useEffectCounter[id] = 0
 
-	output := fc(c, props)
+	// FC now returns a string, not Component
+	outputStr := fc(c, props)
 
-	// If there is an active output collector, append the output to it
-	if len(c.collectorStack) > 0 {
-		currentCollector := c.collectorStack[len(c.collectorStack)-1]
-		currentCollector.outputs = append(currentCollector.outputs, output)
+	// Create the Component here
+	output := C{
+		content: outputStr,
+		id:      id,
 	}
 
 	if node != nil {
-		node.LastRender = output
+		node.LastRender = output.String()
 		if c.LayoutPhase == LayoutPhaseIntrincintWidth {
 			if node.Parent == nil {
 				c.UIState.setWidth(id, c.layoutManager.width)
 			} else if !node.Layout.GrowX {
-				c.UIState.setWidth(id, lipgloss.Width(output))
+				c.UIState.setWidth(id, lipgloss.Width(output.String()))
 			}
 		}
 		if c.LayoutPhase == LayoutPhaseIntrincintHeight {
 			if node.Parent == nil {
 				c.UIState.setHeight(id, c.layoutManager.height)
 			} else if !node.Layout.GrowY {
-				if output == "" {
+				if output.String() == "" {
 					c.UIState.setHeight(id, 0)
 				} else {
-					c.UIState.setHeight(id, lipgloss.Height(output))
+					c.UIState.setHeight(id, lipgloss.Height(output.String()))
 				}
 			}
 		}
@@ -120,13 +114,21 @@ func (c *Ctx) Render(fc FC, props Props) string {
 	return output
 }
 
+// Render a functional component with the given props.
+// This function is responsible for managing the lifecycle of the component,
+// including state management, effect handling, and ID management.
+func (c *Ctx) Render(fc func(c *Ctx, props Props) string, props Props) C {
+	return c.RenderWithName(fc, props, getKeyName(fc, props))
+}
+
 // MouseZone creates a mouse zone for the given content.
 // The ID of the zone is the components ID.
 func (c *Ctx) MouseZone(content string) string {
 	id := c.id.getID()
 	instance, _ := c.componentContext.get(id)
 	c.zoneMap[id] = instance
-	return c.zone.Mark(id, content)
+	markedContent := c.zone.Mark(id, content)
+	return markedContent
 }
 
 // MouseZoneChild creates a mouse zone for child (sub part) of a component.
@@ -134,7 +136,8 @@ func (c *Ctx) MouseZone(content string) string {
 // MouseHandlers will receive the childID extracted from the ID mentioned above.
 func (c *Ctx) MouseZoneChild(childID string, content string) string {
 	id := c.id.getID()
-	return c.zone.Mark(id+"###"+childID, content)
+	markedContent := c.zone.Mark(id+"###"+childID, content)
+	return markedContent
 }
 
 type outputCollector struct {

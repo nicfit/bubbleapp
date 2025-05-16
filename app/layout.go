@@ -56,18 +56,16 @@ func newLayoutManager() *layoutManager {
 type ComponentNode struct {
 	ID         string
 	Parent     *ComponentNode
-	Fc         FC // The component function
 	LastRender string
 	Props      Props            // Props passed to this instance
 	Children   []*ComponentNode // Children in rendered order
 	Layout     Layout
 }
 
-func (lm *layoutManager) addComponent(id string, fc FC, props Props) *ComponentNode {
+func (lm *layoutManager) addComponent(id string, props Props) *ComponentNode {
 
 	node := &ComponentNode{
 		ID:     id,
-		Fc:     fc,
 		Props:  props,
 		Layout: extractLayoutFromProps(props),
 	}

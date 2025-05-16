@@ -50,7 +50,7 @@ func Text(c *app.Ctx, props app.Props) string {
 
 // New creates a new text element.
 // Content can be a static string or a dynamic function: func(c *app.FCContext) string.
-func New(c *app.Ctx, text string, opts ...prop) string {
+func New(c *app.Ctx, text string, opts ...prop) app.C {
 	p := Props{
 		Text:       text,
 		Foreground: lipgloss.NoColor{},

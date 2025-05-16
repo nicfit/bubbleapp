@@ -14,18 +14,17 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(ctx *app.Ctx, _ app.Props) string {
-
-	stack := stack.New(ctx, func(ctx *app.Ctx) {
-		table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
-			return clms, rows
-		}))
-		table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
-			return clms, rows
-		}))
+func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
+	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+		return []app.C{
+			table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+				return clms, rows
+			})),
+			table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+				return clms, rows
+			})),
+		}
 	}, stack.WithDirection(app.Horizontal))
-
-	return stack
 }
 
 func main() {

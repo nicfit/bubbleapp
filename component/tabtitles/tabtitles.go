@@ -37,7 +37,7 @@ type Props struct {
 type Prop func(*Props)
 
 // New creates a new TabTitles component.
-func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID int), opts ...Prop) string {
+func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID int), opts ...Prop) app.C {
 	p := Props{
 		Titles:      titles,
 		ActiveTab:   activeTab,

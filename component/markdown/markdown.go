@@ -14,7 +14,7 @@ type Props struct {
 	app.Layout
 }
 
-func New(ctx *app.Ctx, text string) string {
+func New(ctx *app.Ctx, text string) app.C {
 	props := Props{
 		Text: text,
 		Layout: app.Layout{

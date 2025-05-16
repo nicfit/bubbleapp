@@ -28,12 +28,13 @@ func Create[T any](initialValue T) *Context[T] {
 type ProviderProps[T any] struct {
 	Context *Context[T]
 	Value   T // This is the specific value this provider instance will make available
-	Child   func(c *app.Ctx) string
+	Child   app.Child
+	app.Layout
 }
 
 // NewProvider creates a new ContextProvider component.
 // It takes the context object, the specific value to provide, and children.
-func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child func(c *app.Ctx) string) string {
+func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child app.Child) app.C {
 	if context == nil {
 		panic("NewProvider called with nil Context object")
 	}
@@ -42,9 +43,13 @@ func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child
 		Context: context,
 		Value:   valueToProvide, // Use the explicitly passed valueToProvide
 		Child:   child,
+		Layout: app.Layout{
+			GrowX: true,
+			GrowY: true,
+		},
 	}
 
-	return ContextProvider[T](c, p)
+	return c.RenderWithName(ContextProvider[T], p, "CtxProvider{"+fmt.Sprintf("%T", valueToProvide)+"}")
 }
 
 // ContextProvider is a component that makes a value available to all components
@@ -52,7 +57,7 @@ func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child
 func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 	p, ok := props.(ProviderProps[T])
 	if !ok {
-		panic(fmt.Sprintf("ContextProvider: Invalid props type. Expected ProviderProps[%T], got %T", *new(T), props))
+		panic(`ContextProvider: Invalid props type.`)
 	}
 
 	if p.Context == nil {
@@ -62,7 +67,7 @@ func ContextProvider[T any](c *app.Ctx, props app.Props) string {
 	c.PushContextValue(p.Context.id, p.Value)
 	defer c.PopContextValue(p.Context.id)
 
-	return p.Child(c)
+	return p.Child(c).String()
 }
 
 // UseContext is a hook that allows components to subscribe to a context's value.

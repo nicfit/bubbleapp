@@ -7,6 +7,7 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/context"
+	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
 // Route defines the structure for a single route.
@@ -130,34 +131,32 @@ func UseCurrentMatch(c *app.Ctx) CurrentMatchContextData {
 
 // NewRouter is the entry point to set up the router.
 // It provides the RouterController to its children.
-func NewRouter(c *app.Ctx, props RouterProps) string {
-
-	routerCtrl, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
+func NewRouter(c *app.Ctx, props RouterProps) app.C {
 
 	ps := RouterViewProps{
-		routerCtrl: routerCtrl,
-		Key:        routerCtrl.Current(),
 		Layout: app.Layout{
 			GrowX: true,
 			GrowY: true,
 		},
+		RouterProps: props,
 	}
 	return c.Render(routerView, ps)
 }
 
 type RouterViewProps struct {
 	app.Layout
-	routerCtrl *RouterController
-	Key        string
+	RouterProps
 }
 
 // routerView is an internal component that listens to path changes and renders the matched route.
 func routerView(c *app.Ctx, rawProps app.Props) string {
 	props, _ := rawProps.(RouterViewProps)
 
-	return context.NewProvider(c, RouterContext, props.routerCtrl, func(c *app.Ctx) string {
-		return matchAndRender(c, props.routerCtrl.Routes, props.routerCtrl.currentPath, props.routerCtrl.currentPath, "", props.routerCtrl.notFoundFC)
-	})
+	routerCtrl, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
+
+	return context.NewProvider(c, RouterContext, routerCtrl, func(c *app.Ctx) app.C {
+		return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFoundFC)
+	}).String()
 }
 
 // --- Matching Logic ---
@@ -262,7 +261,7 @@ func matchAndRender(
 	pathSegmentToMatch string,
 	accumulatedParentPrefix string,
 	notFoundFC app.FC,
-) string {
+) app.C {
 	normalizedPathSegmentToMatch := path.Clean(pathSegmentToMatch)
 	if normalizedPathSegmentToMatch == "." { // path.Clean can return "." for empty or "/"
 		normalizedPathSegmentToMatch = "/"
@@ -284,7 +283,7 @@ func matchAndRender(
 
 			// Provide this specific newMatchData to the matched component and its children (e.g., Outlet)
 			// via CurrentMatchContext.
-			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) string {
+			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) app.C {
 				if routeCopy.Component != nil {
 					return routeCopy.Component(c, nil)
 				} else {
@@ -301,12 +300,12 @@ func matchAndRender(
 	if notFoundFC != nil {
 		return notFoundFC(c, nil)
 	}
-	return "route not found" // Or a default "Not Found" message
+	return text.New(c, "404 Not Found", text.WithFg(c.Styles.Colors.White), text.WithBg(c.Styles.Colors.Danger))
 }
 
 // --- Outlet ---
 
-func NewOutlet(c *app.Ctx) string {
+func NewOutlet(c *app.Ctx) app.C {
 	routerCtrl := UseCurrentMatch(c)
 
 	return c.Render(outlet, outletProps{Key: routerCtrl.RemainingPath})
@@ -326,65 +325,17 @@ func outlet(c *app.Ctx, _ app.Props) string {
 		return ""
 	}
 
-	childrenFunc := func(c *app.Ctx) {
-		_ = matchAndRender(
-			c,
-			currentMatch.MatchedRoute.Children,
-			routerCtrl.Current(),
-			currentMatch.RemainingPath,
-			currentMatch.MatchedPathPrefix,
-			routerCtrl.notFoundFC,
-		)
-	}
-	outputs := app.UseChildren(c, childrenFunc)
-	return strings.Join(outputs, "")
+	return matchAndRender(
+		c,
+		currentMatch.MatchedRoute.Children,
+		routerCtrl.Current(),
+		currentMatch.RemainingPath,
+		currentMatch.MatchedPathPrefix,
+		routerCtrl.notFoundFC,
+	).String()
 }
 
 // --- Navigation Components/Functions ---
-
-// LinkProps defines properties for the Link component.
-type LinkProps struct {
-	To       string
-	Children app.FC // Content of the link
-	// TODO: Add 'replace bool' option
-}
-
-// Link creates a navigational link.
-func Link(c *app.Ctx, props LinkProps) string {
-	routerCtrl := UseRouterController(c)
-	if routerCtrl == nil {
-		log.Println("Link: RouterController not found.")
-		return "Error: Link cannot function."
-	}
-
-	app.UseAction(c, func(_ string) {
-		routerCtrl.Push(c, props.To)
-	})
-
-	// Basic clickable text. Styling would be applied by parent or via props.
-	// For now, just render children or the "To" path as text.
-	// This assumes the UI layer can make this clickable and trigger actionID.
-	// In a bubbletea context, this might be a styled string that, when selected,
-	// posts a tea.Msg that eventually calls the action.
-	// For simplicity, we assume the app.FC children know how to be clickable
-	// or this is wrapped by a clickable primitive.
-
-	var content string
-	if props.Children != nil {
-		content = c.Render(props.Children, nil)
-	} else {
-		content = props.To // Default link text
-	}
-
-	// This is a conceptual representation. Actual clickable behavior
-	// depends on how `app.Ctx.UseAction` integrates with the UI elements.
-	// We'll assume for now that rendering the content is enough, and
-	// the parent context handles making it interactive.
-	// A more complete solution might involve returning a specific component type
-	// that the rendering engine knows how to make interactive.
-	// E.g., return c.RenderClickable(content, actionID)
-	return content // Placeholder: actual rendering of a clickable element needed
-}
 
 // NavigateOptions provides options for programmatic navigation.
 type NavigateOptions struct {

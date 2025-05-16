@@ -13,18 +13,20 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(ctx *app.Ctx, _ app.Props) string {
+func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
-		text.New(ctx, "Markdown example!")
-		divider.New(ctx)
+	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+		return []app.C{
+			text.New(ctx, "Markdown example!"),
+			divider.New(ctx),
 
-		box.New(ctx, func(ctx *app.Ctx) {
-			markdown.New(ctx, mdContent)
-		}, box.WithDisableFollow(true))
+			box.New(ctx, func(ctx *app.Ctx) app.C {
+				return markdown.New(ctx, mdContent)
+			}, box.WithDisableFollow(true)),
 
-		divider.New(ctx)
-		text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+			divider.New(ctx),
+			text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger)),
+		}
 	})
 }
 

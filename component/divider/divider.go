@@ -48,7 +48,7 @@ func Divider(c *app.Ctx, props app.Props) string {
 }
 
 // New creates a new divider element.
-func New(c *app.Ctx, opts ...prop) string {
+func New(c *app.Ctx, opts ...prop) app.C {
 	p := Props{
 		Char:    "─",
 		FGColor: c.Styles.Colors.Ghost,

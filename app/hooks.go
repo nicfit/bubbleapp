@@ -8,6 +8,16 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+// ChildMissingRenderError is the error thrown when a component
+// in a layout isn't properly registered with c.Render
+type ChildMissingRenderError struct {
+	ComponentPath string
+}
+
+func (e ChildMissingRenderError) Error() string {
+	return fmt.Sprintf("Component at path '%s' was not properly registered with c.Render - always use c.Render for components in layouts", e.ComponentPath)
+}
+
 // Returns the component ID
 func UseID(c *Ctx) string {
 	return c.id.getID()
@@ -56,22 +66,28 @@ func UseSize(c *Ctx) (int, int) {
 	return c.UIState.GetWidth(id), c.UIState.GetHeight(id)
 }
 
-func UseChildren(c *Ctx, children Children) []string {
-	newCollector := &outputCollector{}
-	c.collectorStack = append(c.collectorStack, newCollector)
+// UseChildren executes the children function to get pre-rendered Components
+// and returns their string contents for layout component consumption
+func UseChildren(c *Ctx, childrenFn Children) []string {
+	if childrenFn == nil {
+		return []string{}
+	}
+	// Execute the children function to get the components
+	components := childrenFn(c)
 
-	if children != nil {
-		children(c)
+	// Allocate space for outputs
+	outputs := make([]string, 0, len(components))
+
+	// Extract the content from each pre-rendered Component
+	for _, component := range components {
+		outputs = append(outputs, component.String())
 	}
 
-	c.collectorStack = c.collectorStack[:len(c.collectorStack)-1]
-
-	childOutputs := newCollector.outputs
-	if len(childOutputs) == 0 {
+	if len(outputs) == 0 {
 		return []string{""}
 	}
 
-	return childOutputs
+	return outputs
 }
 
 // UseState provides stateful value and a function to update it.

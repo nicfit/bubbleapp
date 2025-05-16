@@ -2,7 +2,6 @@ package box
 
 import (
 	"image/color"
-	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/charmbracelet/bubbles/v2/viewport"
@@ -14,7 +13,7 @@ type BoxProps struct {
 	Key           string
 	Bg            color.Color
 	DisableFollow bool
-	Children      app.Children
+	Child         app.Child
 	app.Layout
 }
 
@@ -28,14 +27,8 @@ func Box(c *app.Ctx, props app.Props) string {
 		panic("Box component requires BoxProps")
 	}
 
-	// Create a new viewport model instance first
 	initialViewport := viewport.New()
-	// Then pass its address to UseState to store a pointer
 	vp, _ := app.UseState(c, &initialViewport)
-
-	// Get children
-	childrenContent := app.UseChildren(c, boxProps.Children)
-	renderedChildren := strings.Join(childrenContent, "\n")
 
 	width, height := app.UseSize(c)
 
@@ -47,9 +40,12 @@ func Box(c *app.Ctx, props app.Props) string {
 	vp.SetWidth(width)
 	vp.SetHeight(height)
 
-	vp.SetContent(renderedChildren)
-	if !boxProps.DisableFollow {
-		vp.GotoBottom()
+	if boxProps.Child != nil {
+		renderedChildren := boxProps.Child(c).String()
+		vp.SetContent(renderedChildren)
+		if !boxProps.DisableFollow {
+			vp.GotoBottom()
+		}
 	}
 
 	style := lipgloss.NewStyle()
@@ -63,9 +59,9 @@ func Box(c *app.Ctx, props app.Props) string {
 }
 
 // New creates a new Box component.
-func New(c *app.Ctx, children app.Children, opts ...BoxProp) string {
+func New(c *app.Ctx, child app.Child, opts ...BoxProp) app.C {
 	appliedProps := BoxProps{
-		Children:      children,
+		Child:         child,
 		DisableFollow: false,
 		Layout: app.Layout{
 			GrowX: true,
@@ -81,7 +77,7 @@ func New(c *app.Ctx, children app.Children, opts ...BoxProp) string {
 }
 
 // NewEmpty creates a new Box component with no children.
-func NewEmpty(c *app.Ctx, opts ...BoxProp) string {
+func NewEmpty(c *app.Ctx, opts ...BoxProp) app.C {
 	return New(c, nil, opts...)
 }
 

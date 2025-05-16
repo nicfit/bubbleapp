@@ -21,7 +21,7 @@ type Props struct {
 
 type Prop func(*Props)
 
-func New(c *app.Ctx, ts []Tab, prop ...Prop) string {
+func New(c *app.Ctx, ts []Tab, prop ...Prop) app.C {
 	p := Props{
 		Tabs: ts,
 		Layout: app.Layout{
@@ -50,12 +50,15 @@ func Tabs(c *app.Ctx, props app.Props) string {
 		titles[i] = t.Title
 	}
 
-	return stack.New(c, func(c *app.Ctx) {
-		tabtitles.New(c, titles, activeTab, func(activeTab int) {
-			setActiveTab(activeTab)
-		})
-		box.New(c, func(c *app.Ctx) {
-			p.Tabs[activeTab].Content(c, nil)
-		}, box.WithKey(strconv.Itoa(activeTab)), box.WithDisableFollow(true))
-	})
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			tabtitles.New(c, titles, activeTab, func(activeTab int) {
+				setActiveTab(activeTab)
+			}),
+			box.New(c, func(c *app.Ctx) app.C {
+				return p.Tabs[activeTab].Content(c, nil)
+			}, box.WithKey(strconv.Itoa(activeTab)), box.WithDisableFollow(true)),
+		}
+	}).String()
+
 }

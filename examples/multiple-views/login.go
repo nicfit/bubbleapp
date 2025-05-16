@@ -24,7 +24,7 @@ type MainApp struct {
 
 var AppDataContext = context.Create(MainApp{})
 
-func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
+func NewLoginRoot(ctx *app.Ctx, _ app.Props) app.C {
 	data, setData := app.UseState(ctx, authData{})
 
 	mainApp := MainApp{
@@ -32,17 +32,18 @@ func NewLoginRoot(ctx *app.Ctx, _ app.Props) string {
 		setData: func(ad authData) { setData(ad) },
 	}
 
-	return context.NewProvider(ctx, AppDataContext, mainApp, func(ctx *app.Ctx) {
-		router.NewRouter(ctx, router.RouterProps{
+	return context.NewProvider(ctx, AppDataContext, mainApp, func(ctx *app.Ctx) app.C {
+		return router.NewRouter(ctx, router.RouterProps{
 			Routes: []router.Route{
 				{Path: "/", Component: mainRoute},
 				{Path: "/login", Component: loginRoute},
 			},
 		})
 	})
+
 }
 
-func mainRoute(ctx *app.Ctx, _ app.Props) string {
+func mainRoute(ctx *app.Ctx, _ app.Props) app.C {
 	// UseContext returns AppContextValue.
 	contextValue := context.UseContext(ctx, AppDataContext)
 	appAuthData := contextValue.data // This is *authData
@@ -50,13 +51,13 @@ func mainRoute(ctx *app.Ctx, _ app.Props) string {
 
 	if appAuthData.userID == "" {
 		router.ReplaceRoot(ctx, "/login")
-		return ""
+		return text.New(ctx, "No user logged in")
 	}
 
 	return NewAuthModel(ctx, nil)
 }
 
-func loginRoute(ctx *app.Ctx, _ app.Props) string {
+func loginRoute(ctx *app.Ctx, _ app.Props) app.C {
 	appData := context.UseContext(ctx, AppDataContext)
 
 	loggingIn, setLogginIn := app.UseState(ctx, false)
@@ -64,9 +65,11 @@ func loginRoute(ctx *app.Ctx, _ app.Props) string {
 	router := router.UseRouterController(ctx)
 
 	if loggingIn {
-		return stack.New(ctx, func(ctx *app.Ctx) {
-			text.New(ctx, "Please wait...")
-			loader.New(ctx, loader.Binary, "Logging in...")
+		return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+			return []app.C{
+				text.New(ctx, "Please wait..."),
+				loader.New(ctx, loader.Binary, "Logging in..."),
+			}
 		})
 	}
 
@@ -84,29 +87,30 @@ func loginRoute(ctx *app.Ctx, _ app.Props) string {
 		router.ReplaceRoot(ctx, "/")
 	}
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
+	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+		views := []app.C{
+			text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n"),
+			text.New(ctx, "Log in or fail! Up to you!"),
 
-		text.New(ctx, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n")
-		text.New(ctx, "Log in or fail! Up to you!")
+			button.New(ctx, "Log in", func() {
+				setLoginError("")
+				setLogginIn(true)
+				go loginFunc(false)
+			}, button.WithVariant(button.Primary)),
 
-		button.New(ctx, "Log in", func() {
-			setLoginError("")
-			setLogginIn(true)
-			go loginFunc(false)
-		}, button.WithVariant(button.Primary))
+			button.New(ctx, "Fail log in", func() {
+				setLoginError("")
+				setLogginIn(true)
+				go loginFunc(true)
+			}, button.WithVariant(button.Warning)),
 
-		button.New(ctx, "Fail log in", func() {
-			setLoginError("")
-			setLogginIn(true)
-			go loginFunc(true)
-		}, button.WithVariant(button.Warning))
-
-		button.New(ctx, "Quit App", ctx.Quit, button.WithVariant(button.Danger))
-
+			button.New(ctx, "Quit App", ctx.Quit, button.WithVariant(button.Danger)),
+		}
 		if loginError != "" {
-			text.New(ctx, "\n"+loginError, text.WithFg(ctx.Styles.Colors.Danger))
+			views = append(views, text.New(ctx, "\n"+loginError, text.WithFg(ctx.Styles.Colors.Danger)))
 		}
 
+		return views
 	})
 }
 

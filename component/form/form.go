@@ -17,7 +17,7 @@ type Props struct {
 
 type prop func(*Props)
 
-func New(c *app.Ctx, huhForm *huh.Form, onSubmit func(), opts ...prop) string {
+func New(c *app.Ctx, huhForm *huh.Form, onSubmit func(), opts ...prop) app.C {
 	appliedProps := Props{
 		HuhForm:  huhForm,
 		OnSubmit: onSubmit,

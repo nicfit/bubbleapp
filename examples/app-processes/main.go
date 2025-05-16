@@ -18,7 +18,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(ctx *app.Ctx, _ app.Props) string {
+func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
 	processes, setProcesses := app.UseState(ctx, []table.Row{})
 
 	app.UseEffectWithCleanup(ctx, func() func() {
@@ -27,14 +27,15 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 		return cancel
 	}, app.RunOnceDeps)
 
-	return stack.New(ctx, func(ctx *app.Ctx) {
-		text.New(ctx, "# Processes: "+strconv.Itoa(len(processes)))
-		table.New(ctx, table.WithDataFunc(func(ctx *app.Ctx) ([]table.Column, []table.Row) {
-			return clms, processes
-		}))
-		tickfps.NewAtInterval(ctx, 1*time.Second)
-		button.New(ctx, "Quit", ctx.Quit, button.WithVariant(button.Danger))
-
+	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+		return []app.C{
+			text.New(ctx, "# Processes: "+strconv.Itoa(len(processes))),
+			table.New(ctx, table.WithDataFunc(func(ctx *app.Ctx) ([]table.Column, []table.Row) {
+				return clms, processes
+			})),
+			tickfps.NewAtInterval(ctx, 1*time.Second),
+			button.New(ctx, "Quit", ctx.Quit, button.WithVariant(button.Danger)),
+		}
 	})
 }
 

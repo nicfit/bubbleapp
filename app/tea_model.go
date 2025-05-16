@@ -7,9 +7,40 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+// C (Component) is a special type that can only be created via c.Render.
+// This ensures all components are properly registered with the rendering system.
+type C struct {
+	content string
+	id      string
+}
+
+// String allows the Component to be used in contexts where a string is expected
+func (c C) String() string {
+	return c.content
+}
+
+// Props is the generic type for component properties
 type Props any
-type FC = func(ctx *Ctx, props Props) string
-type Children func(ctx *Ctx)
+
+// FC (Function Component) returns a Component.
+// This ensures that component functions MUST be wrapped with c.Render
+// to create proper Components that can be used in layouts.
+//
+// Example:
+//
+//	func MyComponent(c *Ctx, props Props) string {  // Returns string
+//	  return "Hello world"
+//	}
+//
+//	// Usage always requires c.Render to create a Component:
+//	result := c.Render(MyComponent, props)
+type FC = func(ctx *Ctx, props Props) C
+
+// Children is a function that returns a slice of pre-rendered Components.
+// This ensures that all child elements must be created via c.Render while
+// allowing for conditional logic when rendering children.
+type Children = func(c *Ctx) []C
+type Child = func(c *Ctx) C
 
 type AppOptions struct {
 	rootProps Props
@@ -147,20 +178,21 @@ func (a *app) View() string {
 
 	a.ctx.UIState.resetSizes()
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
-	a.ctx.Render(a.root, a.rootProps)
+	a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	a.ctx.Render(a.root, a.rootProps)
+	a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
 	a.ctx.layoutManager.distributeHeight(a.ctx)
 
 	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.invalidate = false
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	renderedView := a.ctx.zone.Scan(a.ctx.Render(a.root, a.rootProps))
+	component := a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
+	renderedView := a.ctx.zone.Scan(component.String())
 
 	// Create or update the timer based on the current set of tick listeners
 	a.ctx.tick.createTimer(a.ctx)

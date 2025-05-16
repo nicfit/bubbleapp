@@ -45,11 +45,11 @@ func Loader(c *app.Ctx, props app.Props) string {
 	return styleSpinner.Render(loaderProps.Spinner.Frames[frame]) + styleText.Render(loaderProps.Text)
 }
 
-func NewWithoutText(c *app.Ctx, variant Spinner, prop ...prop) string {
+func NewWithoutText(c *app.Ctx, variant Spinner, prop ...prop) app.C {
 	return New(c, variant, "", prop...)
 }
 
-func New(c *app.Ctx, variant Spinner, text string, prop ...prop) string {
+func New(c *app.Ctx, variant Spinner, text string, prop ...prop) app.C {
 	p := Props{
 		Color:   c.Styles.Colors.Primary,
 		Spinner: variant,
