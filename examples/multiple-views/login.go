@@ -43,7 +43,7 @@ func NewLoginRoot(c *app.Ctx, _ app.Props) app.C {
 
 }
 
-func mainRoute(c *app.Ctx, _ app.Props) app.C {
+func mainRoute(c *app.Ctx) app.C {
 	// UseContext returns AppContextValue.
 	contextValue := context.UseContext(c, AppDataContext)
 	appAuthData := contextValue.data // This is *authData
@@ -57,7 +57,7 @@ func mainRoute(c *app.Ctx, _ app.Props) app.C {
 	return NewAuthModel(c, nil)
 }
 
-func loginRoute(c *app.Ctx, _ app.Props) app.C {
+func loginRoute(c *app.Ctx) app.C {
 	appData := context.UseContext(c, AppDataContext)
 
 	loggingIn, setLogginIn := app.UseState(c, false)
