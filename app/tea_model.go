@@ -22,35 +22,18 @@ func (c C) String() string {
 // Props is the generic type for component properties
 type Props any
 
-// FC (Function Component) returns a Component.
-// This ensures that component functions MUST be wrapped with c.Render
-// to create proper Components that can be used in layouts.
-//
-// Example:
-//
-//	func MyComponent(c *Ctx, props Props) string {  // Returns string
-//	  return "Hello world"
-//	}
-//
-//	// Usage always requires c.Render to create a Component:
-//	result := c.Render(MyComponent, props)
-type FC = func(ctx *Ctx, props Props) C
-
-// Children is a function that returns a slice of pre-rendered Components.
+// FCs is a function that returns a slice of pre-rendered Components.
 // This ensures that all child elements must be created via c.Render while
 // allowing for conditional logic when rendering children.
-type Children = func(c *Ctx) []C
-type Child = func(c *Ctx) C
+type FCs = func(c *Ctx) []C
+type FC = func(c *Ctx) C
 
-type AppOptions struct {
-	rootProps Props
-}
+type AppOptions struct{}
 type AppOption func(*AppOptions)
 
 type app struct {
-	root      FC
-	rootProps Props
-	ctx       *Ctx
+	root FC
+	ctx  *Ctx
 }
 
 func New(ctx *Ctx, root FC, options ...AppOption) *app {
@@ -67,15 +50,8 @@ func New(ctx *Ctx, root FC, options ...AppOption) *app {
 	}
 
 	return &app{
-		root:      root,
-		rootProps: opts.rootProps,
-		ctx:       ctx,
-	}
-}
-
-func WithRootProps(props any) AppOption {
-	return func(opts *AppOptions) {
-		opts.rootProps = props
+		root: root,
+		ctx:  ctx,
 	}
 }
 
@@ -178,21 +154,28 @@ func (a *app) View() string {
 
 	a.ctx.UIState.resetSizes()
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
-	a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
+	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
+		return a.root(c).String()
+	}, nil, "Root")
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
+	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
+		return a.root(c).String()
+	}, nil, "Root")
 	a.ctx.layoutManager.distributeHeight(a.ctx)
 
 	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.invalidate = false
 	a.ctx.id.initIDCollections()
 	a.ctx.id.initPath()
-	component := a.ctx.RenderWithName(func(c *Ctx, props Props) string { return a.root(a.ctx, props).String() }, a.rootProps, "Root")
-	renderedView := a.ctx.zone.Scan(component.String())
+
+	rootComponent := a.ctx.RenderWithName(func(c *Ctx, props Props) string {
+		return a.root(c).String()
+	}, nil, "Root")
+	renderedView := a.ctx.zone.Scan(rootComponent.String())
 
 	// Create or update the timer based on the current set of tick listeners
 	a.ctx.tick.createTimer(a.ctx)

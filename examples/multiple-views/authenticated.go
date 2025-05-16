@@ -7,7 +7,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func NewAuthModel(c *app.Ctx, _ app.Props) app.C {
+func NewAuthModel(c *app.Ctx) app.C {
 	appData := context.UseContext(c, AppDataContext)
 
 	return stack.New(c, func(c *app.Ctx) []app.C {

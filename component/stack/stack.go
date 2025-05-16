@@ -8,34 +8,34 @@ import (
 )
 
 type StackProps struct {
-	Children app.Children
+	FCs app.FCs
 	app.Layout
 }
 
 func Stack(c *app.Ctx, props app.Props) string {
 	stackProps, _ := props.(StackProps)
 
-	children := app.UseChildren(c, stackProps.Children)
+	fcs := app.UseFCs(c, stackProps.FCs)
 
-	var processedChildren []string
+	var processedFCs []string
 	if stackProps.Layout.Direction == app.Horizontal {
 		gap := strings.Repeat(" ", stackProps.Layout.GapX)
-		for i, child := range children {
-			if child != "" {
-				processedChildren = append(processedChildren, child)
+		for i, fc := range fcs {
+			if fc != "" {
+				processedFCs = append(processedFCs, fc)
 				// Add gap after each child except the last
-				if stackProps.GapX > 0 && i < len(children)-1 {
-					processedChildren = append(processedChildren, gap)
+				if stackProps.GapX > 0 && i < len(fcs)-1 {
+					processedFCs = append(processedFCs, gap)
 				}
 			}
 		}
 	} else {
-		for i, child := range children {
-			if child != "" {
-				processedChildren = append(processedChildren, child)
+		for i, fc := range fcs {
+			if fc != "" {
+				processedFCs = append(processedFCs, fc)
 				// Add vertical gap after each child except the last
-				if stackProps.GapY > 0 && i < len(children)-1 {
-					processedChildren = append(processedChildren, " ")
+				if stackProps.GapY > 0 && i < len(fcs)-1 {
+					processedFCs = append(processedFCs, " ")
 				}
 			}
 		}
@@ -43,17 +43,17 @@ func Stack(c *app.Ctx, props app.Props) string {
 
 	var result string
 	if stackProps.Layout.Direction == app.Horizontal {
-		result = lipgloss.JoinHorizontal(lipgloss.Top, processedChildren...)
+		result = lipgloss.JoinHorizontal(lipgloss.Top, processedFCs...)
 	} else {
-		result = lipgloss.JoinVertical(lipgloss.Left, processedChildren...)
+		result = lipgloss.JoinVertical(lipgloss.Left, processedFCs...)
 	}
 
 	return result
 }
 
-func New(c *app.Ctx, children app.Children, props ...StackProp) app.C {
+func New(c *app.Ctx, fcs app.FCs, props ...StackProp) app.C {
 	appliedProps := StackProps{
-		Children: children,
+		FCs: fcs,
 		Layout: app.Layout{
 			Direction: app.Vertical,
 			GrowX:     true,

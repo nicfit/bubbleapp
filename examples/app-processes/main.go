@@ -18,7 +18,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx, _ app.Props) app.C {
+func NewRoot(c *app.Ctx) app.C {
 	processes, setProcesses := app.UseState(c, []table.Row{})
 
 	app.UseEffectWithCleanup(c, func() func() {

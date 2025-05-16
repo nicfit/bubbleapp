@@ -10,7 +10,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func MainRouter(c *app.Ctx, _ app.Props) app.C {
+func MainRouter(c *app.Ctx) app.C {
 	return router.NewRouter(c, router.RouterProps{
 		Routes: []router.Route{
 			{Path: "/", Component: dashboard},

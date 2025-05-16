@@ -66,14 +66,14 @@ func UseSize(c *Ctx) (int, int) {
 	return c.UIState.GetWidth(id), c.UIState.GetHeight(id)
 }
 
-// UseChildren executes the children function to get pre-rendered Components
+// UseFCs executes the children function to get pre-rendered Components
 // and returns their string contents for layout component consumption
-func UseChildren(c *Ctx, childrenFn Children) []string {
-	if childrenFn == nil {
+func UseFCs(c *Ctx, fcs FCs) []string {
+	if fcs == nil {
 		return []string{}
 	}
 	// Execute the children function to get the components
-	components := childrenFn(c)
+	components := fcs(c)
 
 	// Allocate space for outputs
 	outputs := make([]string, 0, len(components))

@@ -28,13 +28,13 @@ func Create[T any](initialValue T) *Context[T] {
 type ProviderProps[T any] struct {
 	Context *Context[T]
 	Value   T // This is the specific value this provider instance will make available
-	Child   app.Child
+	Child   app.FC
 	app.Layout
 }
 
 // NewProvider creates a new ContextProvider component.
 // It takes the context object, the specific value to provide, and children.
-func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child app.Child) app.C {
+func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child app.FC) app.C {
 	if context == nil {
 		panic("NewProvider called with nil Context object")
 	}

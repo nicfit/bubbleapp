@@ -12,9 +12,8 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(c *app.Ctx, _ app.Props) app.C {
-
-	stack := stack.New(c, func(c *app.Ctx) []app.C {
+func NewRoot(c *app.Ctx) app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger)),
 			box.New(c, func(c *app.Ctx) app.C {
@@ -29,8 +28,6 @@ func NewRoot(c *app.Ctx, _ app.Props) app.C {
 			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning)),
 		}
 	})
-
-	return stack
 }
 
 func main() {

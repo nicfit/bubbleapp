@@ -12,16 +12,16 @@ import (
 
 // Route defines the structure for a single route.
 type Route struct {
-	Path      string    // Path segment (e.g., "users", ":id")
-	Component app.Child // Component to render for this route
-	Children  []Route   // Nested routes
+	Path      string  // Path segment (e.g., "users", ":id")
+	Component app.FC  // Component to render for this route
+	Children  []Route // Nested routes
 }
 
 // RouterProps defines the properties for the NewRouter component.
 type RouterProps struct {
 	Routes      []Route
 	InitialPath string
-	NotFound    app.Child // Component to render if no route matches
+	NotFound    app.FC // Component to render if no route matches
 }
 
 // --- RouterController ---
@@ -31,11 +31,11 @@ type RouterController struct {
 	History     []string
 	Routes      []Route
 	currentPath string
-	notFound    app.Child
+	notFound    app.FC
 }
 
 // NewRouterController creates and initializes a new RouterController.
-func NewRouterController(initialPath string, routes []Route, notFound app.Child) *RouterController {
+func NewRouterController(initialPath string, routes []Route, notFound app.FC) *RouterController {
 	rc := &RouterController{
 		History:     make([]string, 0),
 		Routes:      routes,
@@ -260,7 +260,7 @@ func matchAndRender(
 	fullUrl string,
 	pathSegmentToMatch string,
 	accumulatedParentPrefix string,
-	notFound app.Child,
+	notFound app.FC,
 ) app.C {
 	normalizedPathSegmentToMatch := path.Clean(pathSegmentToMatch)
 	if normalizedPathSegmentToMatch == "." { // path.Clean can return "." for empty or "/"

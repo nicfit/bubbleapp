@@ -13,7 +13,7 @@ type BoxProps struct {
 	Key           string
 	Bg            color.Color
 	DisableFollow bool
-	Child         app.Child
+	FC            app.FC
 	app.Layout
 }
 
@@ -40,9 +40,9 @@ func Box(c *app.Ctx, props app.Props) string {
 	vp.SetWidth(width)
 	vp.SetHeight(height)
 
-	if boxProps.Child != nil {
-		renderedChildren := boxProps.Child(c).String()
-		vp.SetContent(renderedChildren)
+	if boxProps.FC != nil {
+		fc := boxProps.FC(c).String()
+		vp.SetContent(fc)
 		if !boxProps.DisableFollow {
 			vp.GotoBottom()
 		}
@@ -59,9 +59,9 @@ func Box(c *app.Ctx, props app.Props) string {
 }
 
 // New creates a new Box component.
-func New(c *app.Ctx, child app.Child, opts ...BoxProp) app.C {
+func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
 	appliedProps := BoxProps{
-		Child:         child,
+		FC:            child,
 		DisableFollow: false,
 		Layout: app.Layout{
 			GrowX: true,

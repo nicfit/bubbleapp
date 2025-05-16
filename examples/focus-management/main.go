@@ -15,7 +15,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx, _ app.Props) app.C {
+func NewRoot(c *app.Ctx) app.C {
 	presses, setPresses := app.UseState(c, 0)
 	log, setLog := app.UseState(c, []string{})
 

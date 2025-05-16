@@ -24,7 +24,7 @@ type MainApp struct {
 
 var AppDataContext = context.Create(MainApp{})
 
-func NewLoginRoot(c *app.Ctx, _ app.Props) app.C {
+func NewLoginRoot(c *app.Ctx) app.C {
 	data, setData := app.UseState(c, authData{})
 
 	mainApp := MainApp{
@@ -54,7 +54,7 @@ func mainRoute(c *app.Ctx) app.C {
 		return text.New(c, "No user logged in")
 	}
 
-	return NewAuthModel(c, nil)
+	return NewAuthModel(c)
 }
 
 func loginRoute(c *app.Ctx) app.C {

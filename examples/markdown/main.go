@@ -13,8 +13,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx, _ app.Props) app.C {
-
+func NewRoot(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			text.New(c, "Markdown example!"),

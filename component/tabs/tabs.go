@@ -11,7 +11,7 @@ import (
 
 type Tab struct {
 	Title   string
-	Content app.Child
+	Content app.FC
 }
 
 type Props struct {

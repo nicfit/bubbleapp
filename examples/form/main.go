@@ -30,7 +30,7 @@ var loginForm = huh.NewForm(
 	),
 ).WithTheme(huh.ThemeFunc(huh.ThemeDracula)).WithShowHelp(false)
 
-func NewRoot(c *app.Ctx, _ app.Props) app.C {
+func NewRoot(c *app.Ctx) app.C {
 	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
 	return stack.New(c, func(c *app.Ctx) []app.C {
@@ -55,13 +55,11 @@ func NewRoot(c *app.Ctx, _ app.Props) app.C {
 			)
 		}
 
-		cs = append(cs,
+		return append(cs,
 			box.NewEmpty(c),
 			divider.New(c),
 			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
 		)
-
-		return cs
 	})
 }
 

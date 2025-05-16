@@ -47,7 +47,7 @@ import (
   tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx, _ app.Props) string {
+func NewRoot(c *app.Ctx) app.C {
   return text.New(c, "Hello World!")
 }
 
@@ -88,19 +88,19 @@ There is not a lot of code here for the UI. Take a look.
 Set up a router:
 
 ```go
-func MainRouter(c *app.Ctx, _ app.Props) string {
-  return router.NewRouter(c, router.RouterProps{
-    Routes: []router.Route{
-      {Path: "/", Component: dashboard},
-      {Path: "/shop", Component: shop},
+func MainRouter(c *app.Ctx) app.C {
+	return router.NewRouter(c, router.RouterProps{
+		Routes: []router.Route{
+			{Path: "/", Component: dashboard},
+			{Path: "/shop", Component: shop},
 
-      {Path: "/account", Component: account, Children: []router.Route{
-        {Path: "/overview", Component: accountOverview},
-        {Path: "/settings", Component: accountSettings},
-        {Path: "/orders", Component: accountOrders},
-      }},
-    },
-  })
+			{Path: "/account", Component: account, Children: []router.Route{
+				{Path: "/overview", Component: accountOverview},
+				{Path: "/settings", Component: accountSettings},
+				{Path: "/orders", Component: accountOrders},
+			}},
+		},
+	})
 }
 ```
 
@@ -133,8 +133,8 @@ var tabsData = []tabs.Tab{
   {Title: "Boxes 🟨", Content: boxes},
 }
 
-func NewRoot(c *app.Ctx, _ app.Props) string {
-  return tabs.New(c, tabsData)
+func NewRoot(c *app.Ctx) app.C {
+	return tabs.New(c, tabsData)
 }
 ```
 
@@ -145,7 +145,7 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 ### [Loader](./examples/loader/main.go)
 
 ```go
-loader.New(c, loader.Dots, "Loading...", nil),
+loader.New(c, loader.Dots, "Loading..."),
 ```
 
 ![Loaders](./examples/loader/demo.gif)
@@ -157,14 +157,18 @@ loader.New(c, loader.Dots, "Loading...", nil),
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
 ```go
-stack := stack.New(c, func(c *app.Ctx) {
-  table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
-    return clms, rows
-  }))
-  table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
-    return clms, rows
-  }))
-}, stack.WithDirection(app.Horizontal))
+func NewRoot(c *app.Ctx) app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+				return clms, rows
+			})),
+			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+				return clms, rows
+			})),
+		}
+	}, stack.WithDirection(app.Horizontal))
+}
 ```
 
 ![Table](./examples/table/demo.gif)
@@ -186,32 +190,37 @@ var loginForm = huh.NewForm(
 ```
 
 ```go
-func NewRoot(c *app.Ctx, _ app.Props) string {
-  formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
+func NewRoot(c *app.Ctx) app.C {
+	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-  return stack.New(c, func(c *app.Ctx) {
-    c.Render(loginLogo, nil)
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		cs := []app.C{}
+		cs = append(cs, c.Render(loginLogo, nil))
 
-    if formSubmit == nil {
-      form.New(c, loginForm, func() {
-        setFormSubmit(&FormData{
-          email:    loginForm.GetString("email"),
-          password: loginForm.GetString("password"),
-          remember: loginForm.GetString("rememberme"),
-        })
-      })
-    }
+		if formSubmit == nil {
+			cs = append(cs, form.New(c, loginForm, func() {
+				setFormSubmit(&FormData{
+					email:    loginForm.GetString("email"),
+					password: loginForm.GetString("password"),
+					remember: loginForm.GetString("rememberme"),
+				})
+			}))
+		}
 
-    if formSubmit != nil {
-      text.New(c, "Email: "+formSubmit.email, nil)
-      text.New(c, "Password 🙈: "+formSubmit.password, nil)
-      text.New(c, "Remember me: "+formSubmit.remember, nil)
-    }
+		if formSubmit != nil {
+			cs = append(cs,
+				text.New(c, "Email: "+formSubmit.email, nil),
+				text.New(c, "Password 🙈: "+formSubmit.password, nil),
+				text.New(c, "Remember me: "+formSubmit.remember, nil),
+			)
+		}
 
-    box.NewEmpty(c)
-    divider.New(c)
-    button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger))
-  })
+		return append(cs,
+			box.NewEmpty(c),
+			divider.New(c),
+			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+		)
+	})
 }
 ```
 
@@ -222,17 +231,21 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering.
 
 ```go
-return stack.New(c, func(c *app.Ctx) {
-  text.New(c, "Markdown example!")
-  divider.New(c)
+func NewRoot(c *app.Ctx) app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			text.New(c, "Markdown example!"),
+			divider.New(c),
 
-  box.New(c, func(c *app.Ctx) {
-    markdown.New(c, mdContent)
-  }, box.WithDisableFollow(true))
+			box.New(c, func(c *app.Ctx) app.C {
+				return markdown.New(c, mdContent)
+			}, box.WithDisableFollow(true)),
 
-  divider.New(c)
-  text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger))
-})
+			divider.New(c),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+		}
+	})
+}
 ```
 
 ![Markdown](./examples/markdown/demo.gif)
@@ -246,18 +259,23 @@ return stack.New(c, func(c *app.Ctx) {
 Stack layouts vertically or horizontally.
 
 ```go
-stack := stack.New(c, func(c *app.Ctx) {
-  box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger))
-  box.New(c, func(c *app.Ctx) {
-    stack.New(c, func(c *app.Ctx) {
-      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary))
-      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary))
-      box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary))
-
-    }, stack.WithDirection(app.Horizontal))
-  })
-  box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning))
-})
+func NewRoot(c *app.Ctx) app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger)),
+			box.New(c, func(c *app.Ctx) app.C {
+				return stack.New(c, func(c *app.Ctx) []app.C {
+					return []app.C{
+						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary)),
+						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary)),
+						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary)),
+					}
+				}, stack.WithDirection(app.Horizontal))
+			}),
+			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning)),
+		}
+	})
+}
 ```
 
 ![Stack](./examples/stack/demo.gif)
@@ -271,31 +289,31 @@ stack := stack.New(c, func(c *app.Ctx) {
 Functional components and hooks as you might be familiar with
 
 ```go
-func NewRoot(c *app.Ctx, _ app.Props) string {
-  clicks, setClicks := app.UseState(c, 0)
-  greeting, setGreeting := app.UseState(c, "Knock knock!")
+func NewRoot(c *app.Ctx) app.C {
+	clicks, setClicks := app.UseState(c, 0)
+	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
-  app.UseEffect(c, func() {
-    go func() {
-      time.Sleep(2 * time.Second)
-      setGreeting("Who's there?")
-    }()
-  }, []any{})
+	app.UseEffect(c, func() {
+		go func() {
+			time.Sleep(2 * time.Second)
+			setGreeting("Who's there?")
+		}()
+	}, []any{})
 
-  return stack.New(c, func(c *app.Ctx) {
-    button.NewButton(c, "Count clicks here!", func() {
-      setClicks(clicks + 1)
-    }, button.WithType(button.Compact))
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			button.New(c, "Count clicks here!", func() {
+				setClicks(clicks + 1)
+			}),
 
-    text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning))
-    text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning))
+			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning)),
+			text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning)),
 
-    box.NewEmpty(c)
+			box.NewEmpty(c),
 
-    button.NewButton(c, "Quit", func() {
-      c.Quit()
-    }, button.WithVariant(button.Danger), button.WithType(button.Compact))
-  }, stack.WithGap(1), stack.WithGrow(true))
+			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+		}
+	}, stack.WithGap(1), stack.WithGrow(true))
 }
 ```
 
@@ -306,34 +324,36 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 Global tab management without any extra code. All focusable components are automatically in a tab order (their order in the UI tree).
 
 ```go
-func NewRoot(c *app.Ctx, _ app.Props) string {
-  presses, setPresses := app.UseState(c, 0)
-  log, setLog := app.UseState(c, []string{})
+func NewRoot(c *app.Ctx) app.C {
+	presses, setPresses := app.UseState(c, 0)
+	log, setLog := app.UseState(c, []string{})
 
-  return stack.New(c, func(c *app.Ctx) {
-    text.New(c, "Tab through the buttons to see focus state!")
+	return stack.New(c, func(c *app.Ctx) []app.C {
+		return []app.C{
+			text.New(c, "Tab through the buttons to see focus state!"),
 
-    button.NewButton(c, "Button 1", func() {
-      currentLog := log
-      currentPresses := presses
-      newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
-      setLog(newLog)
-      setPresses(currentPresses + 1)
-    }, button.WithVariant(button.Primary), button.WithType(button.Compact))
+			button.New(c, "Button 1", func() {
+				currentLog := log
+				currentPresses := presses
+				newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
+				setLog(newLog)
+				setPresses(currentPresses + 1)
+			}, button.WithVariant(button.Primary)),
 
-    divider.New(c)
+			divider.New(c),
 
-    box.New(c, func(c *app.Ctx) {
-      text.New(c, strings.Join(log, "\n"))
-    })
+			box.New(c, func(c *app.Ctx) app.C {
+				return text.New(c, strings.Join(log, "\n"))
+			}),
 
-    divider.New(c)
+			divider.New(c),
 
-    button.NewButton(c, "Quit App", func() {
-      c.Quit()
-    }, button.WithVariant(button.Danger), button.WithType(button.Compact))
+			button.New(c, "Quit App", func() {
+				c.Quit()
+			}, button.WithVariant(button.Danger)),
+		}
 
-  }, stack.WithGrow(true))
+	}, stack.WithGrow(true))
 }
 ```
 
@@ -355,20 +375,21 @@ go run .
 
 Here are some planned features in no particular order. Feel free to suggest something.
 
-- **Alignments** - Add justify and align options on relevant components
-- **Border and title on Box** - Add borders and titles to Box component
-- **Router** - Add a router component that can handle screens, navigation, back history, etc.
-- **Speed up Viewport** - Move away from ViewPort to custom stateful variant of a scrolling box
-- **Proper theming** - Default themes (or BYOT, bring your own theme)
-- **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
-- **Modal Component** - Using canvas/layers approach
-- **Confirm Component** - Using modal but is an ok, cancel modal with text
-- **Help Text Component**
-- **Shortcut support** - global and locally within components in focus perhaps
-- **Context Menu Component**
-- **Table DataSource** - attach a datasource to a table that can handle fetching, sorting, filtering, etc.
-- **Animation Component** - give it a list of frames and an FPS and it handles the rest
-- **More shaders** - Color fade-in/out, Typewriter effect, more...
+- [x] **Component Structure/API** - Finalize the API for rendering components
+- [x] **Router** - Add a router component that can handle screens, navigation, back history, etc.
+- [ ] **Alignments** - Add justify and align options on relevant components
+- [ ] **Border and title on Box** - Add borders and titles to Box component
+- [ ] **Speed up Viewport** - Move away from ViewPort to custom stateful variant of a scrolling box
+- [ ] **Performance** - Figure out where CPU is spent and optimize (perhaps prevent rerenders if no props or state changes)
+- [ ] **Proper theming** - Default themes (or BYOT, bring your own theme)
+- [ ] **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
+- [ ] **Modal Component** - Using canvas/layers approach
+- [ ] **Confirm Component** - Using modal but is an ok, cancel modal with text
+- [ ] **Help Text Component**
+- [ ] **Shortcut support** - global and locally within components in focus perhaps
+- [ ] **Context Menu Component**
+- [ ] **Table DataSource** - attach a datasource to a table that can handle fetching, sorting, filtering, etc.
+- [ ] **Animation Component** - give it a list of frames and an FPS and it handles the rest
 
 ### Shout outs
 
