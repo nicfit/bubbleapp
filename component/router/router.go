@@ -12,16 +12,16 @@ import (
 
 // Route defines the structure for a single route.
 type Route struct {
-	Path      string  // Path segment (e.g., "users", ":id")
-	Component app.FC  // Component to render for this route
-	Children  []Route // Nested routes
+	Path      string    // Path segment (e.g., "users", ":id")
+	Component app.Child // Component to render for this route
+	Children  []Route   // Nested routes
 }
 
 // RouterProps defines the properties for the NewRouter component.
 type RouterProps struct {
 	Routes      []Route
 	InitialPath string
-	NotFound    app.FC // Component to render if no route matches
+	NotFound    app.Child // Component to render if no route matches
 }
 
 // --- RouterController ---
@@ -31,16 +31,16 @@ type RouterController struct {
 	History     []string
 	Routes      []Route
 	currentPath string
-	notFoundFC  app.FC
+	notFound    app.Child
 }
 
 // NewRouterController creates and initializes a new RouterController.
-func NewRouterController(initialPath string, routes []Route, notFoundFC app.FC) *RouterController {
+func NewRouterController(initialPath string, routes []Route, notFound app.Child) *RouterController {
 	rc := &RouterController{
 		History:     make([]string, 0),
 		Routes:      routes,
 		currentPath: "/",
-		notFoundFC:  notFoundFC,
+		notFound:    notFound,
 	}
 	if initialPath != "" {
 		rc.currentPath = initialPath
@@ -155,7 +155,7 @@ func routerView(c *app.Ctx, rawProps app.Props) string {
 	routerCtrl, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
 
 	return context.NewProvider(c, RouterContext, routerCtrl, func(c *app.Ctx) app.C {
-		return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFoundFC)
+		return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFound)
 	}).String()
 }
 
@@ -260,7 +260,7 @@ func matchAndRender(
 	fullUrl string,
 	pathSegmentToMatch string,
 	accumulatedParentPrefix string,
-	notFoundFC app.FC,
+	notFound app.Child,
 ) app.C {
 	normalizedPathSegmentToMatch := path.Clean(pathSegmentToMatch)
 	if normalizedPathSegmentToMatch == "." { // path.Clean can return "." for empty or "/"
@@ -285,7 +285,7 @@ func matchAndRender(
 			// via CurrentMatchContext.
 			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) app.C {
 				if routeCopy.Component != nil {
-					return routeCopy.Component(c, nil)
+					return routeCopy.Component(c)
 				} else {
 					// If no component, but has children, it's a layout/group route.
 					// An Outlet component should be used explicitly within the parent's render flow
@@ -297,8 +297,8 @@ func matchAndRender(
 		}
 	}
 
-	if notFoundFC != nil {
-		return notFoundFC(c, nil)
+	if notFound != nil {
+		return notFound(c)
 	}
 	return text.New(c, "404 Not Found", text.WithFg(c.Styles.Colors.White), text.WithBg(c.Styles.Colors.Danger))
 }
@@ -331,7 +331,7 @@ func outlet(c *app.Ctx, _ app.Props) string {
 		routerCtrl.Current(),
 		currentMatch.RemainingPath,
 		currentMatch.MatchedPathPrefix,
-		routerCtrl.notFoundFC,
+		routerCtrl.notFound,
 	).String()
 }
 

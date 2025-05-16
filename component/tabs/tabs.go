@@ -11,7 +11,7 @@ import (
 
 type Tab struct {
 	Title   string
-	Content app.FC
+	Content app.Child
 }
 
 type Props struct {
@@ -56,7 +56,7 @@ func Tabs(c *app.Ctx, props app.Props) string {
 				setActiveTab(activeTab)
 			}),
 			box.New(c, func(c *app.Ctx) app.C {
-				return p.Tabs[activeTab].Content(c, nil)
+				return p.Tabs[activeTab].Content(c)
 			}, box.WithKey(strconv.Itoa(activeTab)), box.WithDisableFollow(true)),
 		}
 	}).String()

@@ -25,7 +25,7 @@ func MainRouter(c *app.Ctx, _ app.Props) app.C {
 	})
 }
 
-func dashboard(c *app.Ctx, _ app.Props) app.C {
+func dashboard(c *app.Ctx) app.C {
 	router := router.UseRouterController(c)
 
 	return stack.New(c, func(c *app.Ctx) []app.C {
@@ -46,7 +46,7 @@ func dashboard(c *app.Ctx, _ app.Props) app.C {
 	})
 }
 
-func account(c *app.Ctx, _ app.Props) app.C {
+func account(c *app.Ctx) app.C {
 	r := router.UseRouterController(c)
 
 	return stack.New(c, func(c *app.Ctx) []app.C {
@@ -80,18 +80,18 @@ func account(c *app.Ctx, _ app.Props) app.C {
 	})
 }
 
-func accountOverview(c *app.Ctx, _ app.Props) app.C {
+func accountOverview(c *app.Ctx) app.C {
 	return text.New(c, "Account Overview")
 }
 
-func accountSettings(c *app.Ctx, _ app.Props) app.C {
+func accountSettings(c *app.Ctx) app.C {
 	return text.New(c, "Account Settings")
 }
-func accountOrders(c *app.Ctx, _ app.Props) app.C {
+func accountOrders(c *app.Ctx) app.C {
 	return text.New(c, "Account Orders")
 }
 
-func shop(c *app.Ctx, _ app.Props) app.C {
+func shop(c *app.Ctx) app.C {
 	router := router.UseRouterController(c)
 
 	return stack.New(c, func(c *app.Ctx) []app.C {
