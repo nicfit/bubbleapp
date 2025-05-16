@@ -14,7 +14,7 @@ type Props struct {
 	app.Layout
 }
 
-func New(ctx *app.Ctx, text string) app.C {
+func New(c *app.Ctx, text string) app.C {
 	props := Props{
 		Text: text,
 		Layout: app.Layout{
@@ -22,18 +22,18 @@ func New(ctx *app.Ctx, text string) app.C {
 			GrowY: true,
 		},
 	}
-	return ctx.Render(Markdown, props)
+	return c.Render(Markdown, props)
 }
 
-func Markdown(ctx *app.Ctx, props app.Props) string {
+func Markdown(c *app.Ctx, props app.Props) string {
 	markdownProps, ok := props.(Props)
 	if !ok {
 		panic("Markdown: props must be of type Props")
 	}
 
-	glamourRenderer, setGlamourRenderer := app.UseState[*glamour.TermRenderer](ctx, nil)
+	glamourRenderer, setGlamourRenderer := app.UseState[*glamour.TermRenderer](c, nil)
 
-	app.UseEffect(ctx, func() {
+	app.UseEffect(c, func() {
 		var r, _ = glamour.NewTermRenderer(
 			glamour.WithAutoStyle(),
 		)

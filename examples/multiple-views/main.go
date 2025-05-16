@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewLoginRoot)
+	bubbleApp := app.New(c, NewLoginRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

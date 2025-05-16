@@ -34,9 +34,9 @@ func NewRoot(c *app.Ctx, _ app.Props) app.C {
 }
 
 func main() {
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
+	bubbleApp := app.New(c, NewRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen())
 	bubbleApp.SetTeaProgram(p)
 

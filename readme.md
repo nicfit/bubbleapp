@@ -52,9 +52,9 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 }
 
 func main() {
-  ctx := app.NewCtx()
+  c := app.NewCtx()
 
-  bubbleApp := app.New(ctx, NewRoot)
+  bubbleApp := app.New(c, NewRoot)
   p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
   bubbleApp.SetTeaProgram(p)
   if _, err := p.Run(); err != nil {
@@ -88,8 +88,8 @@ There is not a lot of code here for the UI. Take a look.
 Set up a router:
 
 ```go
-func MainRouter(ctx *app.Ctx, _ app.Props) string {
-  return router.NewRouter(ctx, router.RouterProps{
+func MainRouter(c *app.Ctx, _ app.Props) string {
+  return router.NewRouter(c, router.RouterProps{
     Routes: []router.Route{
       {Path: "/", Component: dashboard},
       {Path: "/shop", Component: shop},
@@ -107,7 +107,7 @@ func MainRouter(ctx *app.Ctx, _ app.Props) string {
 How to navigate to a different route:
 
 ```go
-button.New(ctx, "My Account", func() {
+button.New(c, "My Account", func() {
   router.Push("/account/overview")
 })
 ```
@@ -115,7 +115,7 @@ button.New(ctx, "My Account", func() {
 Nested routes are rendered in an Outlet:
 
 ```go
-router.NewOutlet(ctx)
+router.NewOutlet(c)
 ```
 
 ![Router](./examples/router/demo.gif)
@@ -133,8 +133,8 @@ var tabsData = []tabs.Tab{
   {Title: "Boxes 🟨", Content: boxes},
 }
 
-func NewRoot(ctx *app.Ctx, _ app.Props) string {
-  return tabs.New(ctx, tabsData)
+func NewRoot(c *app.Ctx, _ app.Props) string {
+  return tabs.New(c, tabsData)
 }
 ```
 
@@ -145,7 +145,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) string {
 ### [Loader](./examples/loader/main.go)
 
 ```go
-loader.New(ctx, loader.Dots, "Loading...", nil),
+loader.New(c, loader.Dots, "Loading...", nil),
 ```
 
 ![Loaders](./examples/loader/demo.gif)
@@ -157,11 +157,11 @@ loader.New(ctx, loader.Dots, "Loading...", nil),
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
 ```go
-stack := stack.New(ctx, func(ctx *app.Ctx) {
-  table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+stack := stack.New(c, func(c *app.Ctx) {
+  table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
     return clms, rows
   }))
-  table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+  table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
     return clms, rows
   }))
 }, stack.WithDirection(app.Horizontal))
@@ -222,16 +222,16 @@ func NewRoot(c *app.Ctx, _ app.Props) string {
 Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering.
 
 ```go
-return stack.New(ctx, func(ctx *app.Ctx) {
-  text.New(ctx, "Markdown example!")
-  divider.New(ctx)
+return stack.New(c, func(c *app.Ctx) {
+  text.New(c, "Markdown example!")
+  divider.New(c)
 
-  box.New(ctx, func(ctx *app.Ctx) {
-    markdown.New(ctx, mdContent)
+  box.New(c, func(c *app.Ctx) {
+    markdown.New(c, mdContent)
   }, box.WithDisableFollow(true))
 
-  divider.New(ctx)
-  text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger))
+  divider.New(c)
+  text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger))
 })
 ```
 

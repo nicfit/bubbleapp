@@ -8,9 +8,9 @@ import (
 )
 
 func overview(c *app.Ctx, _ app.Props) app.C {
-	return stack.New(c, func(ctx *app.Ctx) []app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			text.New(ctx, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n"),
+			text.New(c, "\nFor now you navigate tabs with arrow keys.\nThey should have shortcuts probably. And perhaps navigate with tab? Or vim keys?\n\n"),
 			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
 		}
 	})

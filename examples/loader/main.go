@@ -17,134 +17,134 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
 
-	stack := stack.New(ctx, func(ctx *app.Ctx) []app.C {
+	stack := stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 
-			text.New(ctx, "Loaders:"),
-			divider.New(ctx),
-			loader.New(ctx, loader.Dots, "With text...", loader.WithColor(ctx.Styles.Colors.InfoLight), loader.WithTextColor(ctx.Styles.Colors.Primary)),
-			tickfps.NewAtInterval(ctx, 100*time.Microsecond), // Used for debugging tick events.
-			stack.New(ctx, func(ctx *app.Ctx) []app.C {
+			text.New(c, "Loaders:"),
+			divider.New(c),
+			loader.New(c, loader.Dots, "With text...", loader.WithColor(c.Styles.Colors.InfoLight), loader.WithTextColor(c.Styles.Colors.Primary)),
+			tickfps.NewAtInterval(c, 100*time.Microsecond), // Used for debugging tick events.
+			stack.New(c, func(c *app.Ctx) []app.C {
 				return []app.C{
 
-					box.New(ctx, func(ctx *app.Ctx) app.C {
-						return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+					box.New(c, func(c *app.Ctx) app.C {
+						return stack.New(c, func(c *app.Ctx) []app.C {
 							return []app.C{
-								loader.NewWithoutText(ctx, loader.Dots),
-								loader.NewWithoutText(ctx, loader.Dots2),
-								loader.NewWithoutText(ctx, loader.Dots3),
-								loader.NewWithoutText(ctx, loader.Dots4),
-								loader.NewWithoutText(ctx, loader.Dots5),
-								loader.NewWithoutText(ctx, loader.Dots6),
-								loader.NewWithoutText(ctx, loader.Dots7),
-								loader.NewWithoutText(ctx, loader.Dots8),
-								loader.NewWithoutText(ctx, loader.Dots9),
-								loader.NewWithoutText(ctx, loader.Dots10),
-								loader.NewWithoutText(ctx, loader.Dots11),
-								loader.NewWithoutText(ctx, loader.Dots12),
-								loader.NewWithoutText(ctx, loader.Dots13),
-								loader.NewWithoutText(ctx, loader.Dots14),
-								loader.NewWithoutText(ctx, loader.Dots8Bit),
-								loader.NewWithoutText(ctx, loader.DotsCircle),
-								loader.NewWithoutText(ctx, loader.Sand),
-								loader.NewWithoutText(ctx, loader.Line),
+								loader.NewWithoutText(c, loader.Dots),
+								loader.NewWithoutText(c, loader.Dots2),
+								loader.NewWithoutText(c, loader.Dots3),
+								loader.NewWithoutText(c, loader.Dots4),
+								loader.NewWithoutText(c, loader.Dots5),
+								loader.NewWithoutText(c, loader.Dots6),
+								loader.NewWithoutText(c, loader.Dots7),
+								loader.NewWithoutText(c, loader.Dots8),
+								loader.NewWithoutText(c, loader.Dots9),
+								loader.NewWithoutText(c, loader.Dots10),
+								loader.NewWithoutText(c, loader.Dots11),
+								loader.NewWithoutText(c, loader.Dots12),
+								loader.NewWithoutText(c, loader.Dots13),
+								loader.NewWithoutText(c, loader.Dots14),
+								loader.NewWithoutText(c, loader.Dots8Bit),
+								loader.NewWithoutText(c, loader.DotsCircle),
+								loader.NewWithoutText(c, loader.Sand),
+								loader.NewWithoutText(c, loader.Line),
 							}
 						})
 					}),
 
-					box.New(ctx, func(ctx *app.Ctx) app.C {
-						return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+					box.New(c, func(c *app.Ctx) app.C {
+						return stack.New(c, func(c *app.Ctx) []app.C {
 							return []app.C{
-								loader.NewWithoutText(ctx, loader.Line2),
-								loader.NewWithoutText(ctx, loader.Pipe),
-								loader.NewWithoutText(ctx, loader.SimpleDots),
-								loader.NewWithoutText(ctx, loader.SimpleDotsScrolling),
-								loader.NewWithoutText(ctx, loader.Star),
-								loader.NewWithoutText(ctx, loader.Star2),
-								loader.NewWithoutText(ctx, loader.Flip),
-								loader.NewWithoutText(ctx, loader.Hamburger),
-								loader.NewWithoutText(ctx, loader.GrowVertical),
-								loader.NewWithoutText(ctx, loader.GrowHorizontal),
-								loader.NewWithoutText(ctx, loader.Balloon),
-								loader.NewWithoutText(ctx, loader.Balloon2),
-								loader.NewWithoutText(ctx, loader.Noise),
-								loader.NewWithoutText(ctx, loader.Dqpb),
-								loader.NewWithoutText(ctx, loader.Bounce),
-								loader.NewWithoutText(ctx, loader.BoxBounce),
-								loader.NewWithoutText(ctx, loader.BoxBounce2),
-								loader.NewWithoutText(ctx, loader.Triangle),
+								loader.NewWithoutText(c, loader.Line2),
+								loader.NewWithoutText(c, loader.Pipe),
+								loader.NewWithoutText(c, loader.SimpleDots),
+								loader.NewWithoutText(c, loader.SimpleDotsScrolling),
+								loader.NewWithoutText(c, loader.Star),
+								loader.NewWithoutText(c, loader.Star2),
+								loader.NewWithoutText(c, loader.Flip),
+								loader.NewWithoutText(c, loader.Hamburger),
+								loader.NewWithoutText(c, loader.GrowVertical),
+								loader.NewWithoutText(c, loader.GrowHorizontal),
+								loader.NewWithoutText(c, loader.Balloon),
+								loader.NewWithoutText(c, loader.Balloon2),
+								loader.NewWithoutText(c, loader.Noise),
+								loader.NewWithoutText(c, loader.Dqpb),
+								loader.NewWithoutText(c, loader.Bounce),
+								loader.NewWithoutText(c, loader.BoxBounce),
+								loader.NewWithoutText(c, loader.BoxBounce2),
+								loader.NewWithoutText(c, loader.Triangle),
 							}
 						})
 					}),
-					box.New(ctx, func(ctx *app.Ctx) app.C {
-						return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+					box.New(c, func(c *app.Ctx) app.C {
+						return stack.New(c, func(c *app.Ctx) []app.C {
 							return []app.C{
-								loader.NewWithoutText(ctx, loader.Binary),
-								loader.NewWithoutText(ctx, loader.Arc),
-								loader.NewWithoutText(ctx, loader.Circle),
-								loader.NewWithoutText(ctx, loader.SquareCorners),
-								loader.NewWithoutText(ctx, loader.CircleQuarters),
-								loader.NewWithoutText(ctx, loader.CircleHalves),
-								loader.NewWithoutText(ctx, loader.Squish),
-								loader.NewWithoutText(ctx, loader.Toggle),
-								loader.NewWithoutText(ctx, loader.Toggle2),
-								loader.NewWithoutText(ctx, loader.Toggle3),
-								loader.NewWithoutText(ctx, loader.Toggle4),
-								loader.NewWithoutText(ctx, loader.Toggle5),
-								loader.NewWithoutText(ctx, loader.Toggle6),
-								loader.NewWithoutText(ctx, loader.Toggle7),
-								loader.NewWithoutText(ctx, loader.Toggle8),
-								loader.NewWithoutText(ctx, loader.Toggle9),
-								loader.NewWithoutText(ctx, loader.Toggle10),
-								loader.NewWithoutText(ctx, loader.Toggle11),
+								loader.NewWithoutText(c, loader.Binary),
+								loader.NewWithoutText(c, loader.Arc),
+								loader.NewWithoutText(c, loader.Circle),
+								loader.NewWithoutText(c, loader.SquareCorners),
+								loader.NewWithoutText(c, loader.CircleQuarters),
+								loader.NewWithoutText(c, loader.CircleHalves),
+								loader.NewWithoutText(c, loader.Squish),
+								loader.NewWithoutText(c, loader.Toggle),
+								loader.NewWithoutText(c, loader.Toggle2),
+								loader.NewWithoutText(c, loader.Toggle3),
+								loader.NewWithoutText(c, loader.Toggle4),
+								loader.NewWithoutText(c, loader.Toggle5),
+								loader.NewWithoutText(c, loader.Toggle6),
+								loader.NewWithoutText(c, loader.Toggle7),
+								loader.NewWithoutText(c, loader.Toggle8),
+								loader.NewWithoutText(c, loader.Toggle9),
+								loader.NewWithoutText(c, loader.Toggle10),
+								loader.NewWithoutText(c, loader.Toggle11),
 							}
 						})
 					}),
-					box.New(ctx, func(ctx *app.Ctx) app.C {
-						return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+					box.New(c, func(c *app.Ctx) app.C {
+						return stack.New(c, func(c *app.Ctx) []app.C {
 							return []app.C{
-								loader.NewWithoutText(ctx, loader.Toggle12),
-								loader.NewWithoutText(ctx, loader.Toggle13),
-								loader.NewWithoutText(ctx, loader.Arrow),
-								loader.NewWithoutText(ctx, loader.Arrow3),
-								loader.NewWithoutText(ctx, loader.BouncingBar),
-								loader.NewWithoutText(ctx, loader.BouncingBall),
-								loader.NewWithoutText(ctx, loader.AestheticSmall),
-								loader.NewWithoutText(ctx, loader.Point),
-								loader.NewWithoutText(ctx, loader.Layer),
-								loader.NewWithoutText(ctx, loader.BetaWave),
-								loader.NewWithoutText(ctx, loader.Monkey),
-								loader.NewWithoutText(ctx, loader.Hearts),
-								loader.NewWithoutText(ctx, loader.Clock),
-								loader.NewWithoutText(ctx, loader.Earth),
-								loader.NewWithoutText(ctx, loader.Moon),
+								loader.NewWithoutText(c, loader.Toggle12),
+								loader.NewWithoutText(c, loader.Toggle13),
+								loader.NewWithoutText(c, loader.Arrow),
+								loader.NewWithoutText(c, loader.Arrow3),
+								loader.NewWithoutText(c, loader.BouncingBar),
+								loader.NewWithoutText(c, loader.BouncingBall),
+								loader.NewWithoutText(c, loader.AestheticSmall),
+								loader.NewWithoutText(c, loader.Point),
+								loader.NewWithoutText(c, loader.Layer),
+								loader.NewWithoutText(c, loader.BetaWave),
+								loader.NewWithoutText(c, loader.Monkey),
+								loader.NewWithoutText(c, loader.Hearts),
+								loader.NewWithoutText(c, loader.Clock),
+								loader.NewWithoutText(c, loader.Earth),
+								loader.NewWithoutText(c, loader.Moon),
 							}
 						})
 					}),
-					box.New(ctx, func(ctx *app.Ctx) app.C {
-						return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+					box.New(c, func(c *app.Ctx) app.C {
+						return stack.New(c, func(c *app.Ctx) []app.C {
 							return []app.C{
-								loader.NewWithoutText(ctx, loader.Runner),
-								loader.NewWithoutText(ctx, loader.Pong),
-								loader.NewWithoutText(ctx, loader.Shark),
-								loader.NewWithoutText(ctx, loader.Weather),
-								loader.NewWithoutText(ctx, loader.Christmas),
-								loader.NewWithoutText(ctx, loader.Arrow2),
-								loader.NewWithoutText(ctx, loader.Smiley),
-								loader.NewWithoutText(ctx, loader.FingerDance),
-								loader.NewWithoutText(ctx, loader.FistBump),
-								loader.NewWithoutText(ctx, loader.SoccerHeader),
-								loader.NewWithoutText(ctx, loader.Mindblown),
-								loader.NewWithoutText(ctx, loader.Speaker),
-								loader.NewWithoutText(ctx, loader.OrangePulse),
-								loader.NewWithoutText(ctx, loader.BluePulse),
-								loader.NewWithoutText(ctx, loader.OrangeBluePulse),
-								loader.NewWithoutText(ctx, loader.TimeTravel),
-								loader.NewWithoutText(ctx, loader.Aesthetic),
-								loader.NewWithoutText(ctx, loader.Grenade),
-								loader.NewWithoutText(ctx, loader.DwarfFortress),
+								loader.NewWithoutText(c, loader.Runner),
+								loader.NewWithoutText(c, loader.Pong),
+								loader.NewWithoutText(c, loader.Shark),
+								loader.NewWithoutText(c, loader.Weather),
+								loader.NewWithoutText(c, loader.Christmas),
+								loader.NewWithoutText(c, loader.Arrow2),
+								loader.NewWithoutText(c, loader.Smiley),
+								loader.NewWithoutText(c, loader.FingerDance),
+								loader.NewWithoutText(c, loader.FistBump),
+								loader.NewWithoutText(c, loader.SoccerHeader),
+								loader.NewWithoutText(c, loader.Mindblown),
+								loader.NewWithoutText(c, loader.Speaker),
+								loader.NewWithoutText(c, loader.OrangePulse),
+								loader.NewWithoutText(c, loader.BluePulse),
+								loader.NewWithoutText(c, loader.OrangeBluePulse),
+								loader.NewWithoutText(c, loader.TimeTravel),
+								loader.NewWithoutText(c, loader.Aesthetic),
+								loader.NewWithoutText(c, loader.Grenade),
+								loader.NewWithoutText(c, loader.DwarfFortress),
 							}
 						})
 					}),
@@ -152,7 +152,7 @@ func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
 
 			}, stack.WithDirection(app.Horizontal)),
 
-			text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
 		}
 	},
 	)
@@ -161,9 +161,9 @@ func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
 }
 
 func main() {
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
+	bubbleApp := app.New(c, NewRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

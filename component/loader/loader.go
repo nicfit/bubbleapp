@@ -78,22 +78,3 @@ func WithTextBackgroundColor(color color.Color) prop {
 		p.TextBackgroundColor = color
 	}
 }
-
-// func (m *loader[T]) Update(ctx *app.Ctx, msg tea.Msg) bool {
-// 	switch msg.(type) {
-// 	case app.TickMsg:
-// 		// Only update frame if enough time has passed according to spinner FPS
-// 		// Not sure if this logic is correct.
-// 		now := time.Now()
-// 		uiState := m.getState(ctx)
-// 		if now.Sub(uiState.lastTick) >= m.spinner.Interval {
-// 			uiState.frame++
-// 			if uiState.frame >= len(m.spinner.Frames) {
-// 				uiState.frame = 0
-// 			}
-// 			uiState.lastTick = now
-// 		}
-// 		return true
-// 	}
-// 	return false
-// }

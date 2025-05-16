@@ -18,23 +18,23 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
-	processes, setProcesses := app.UseState(ctx, []table.Row{})
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
+	processes, setProcesses := app.UseState(c, []table.Row{})
 
-	app.UseEffectWithCleanup(ctx, func() func() {
+	app.UseEffectWithCleanup(c, func() func() {
 		processCtx, cancel := context.WithCancel(context.Background())
 		go monitorProcesses(processCtx, func(r []table.Row) { setProcesses(r) })
 		return cancel
 	}, app.RunOnceDeps)
 
-	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			text.New(ctx, "# Processes: "+strconv.Itoa(len(processes))),
-			table.New(ctx, table.WithDataFunc(func(ctx *app.Ctx) ([]table.Column, []table.Row) {
+			text.New(c, "# Processes: "+strconv.Itoa(len(processes))),
+			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
 				return clms, processes
 			})),
-			tickfps.NewAtInterval(ctx, 1*time.Second),
-			button.New(ctx, "Quit", ctx.Quit, button.WithVariant(button.Danger)),
+			tickfps.NewAtInterval(c, 1*time.Second),
+			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
 		}
 	})
 }
@@ -45,9 +45,9 @@ func main() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
 
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
+	bubbleApp := app.New(c, NewRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

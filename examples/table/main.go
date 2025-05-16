@@ -14,13 +14,13 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
-	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
 				return clms, rows
 			})),
-			table.New(ctx, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
+			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
 				return clms, rows
 			})),
 		}
@@ -33,9 +33,9 @@ func main() {
 		http.ListenAndServe("localhost:6060", nil)
 	}()
 
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
+	bubbleApp := app.New(c, NewRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

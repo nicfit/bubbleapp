@@ -13,27 +13,27 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(ctx *app.Ctx, _ app.Props) app.C {
+func NewRoot(c *app.Ctx, _ app.Props) app.C {
 
-	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			text.New(ctx, "Markdown example!"),
-			divider.New(ctx),
+			text.New(c, "Markdown example!"),
+			divider.New(c),
 
-			box.New(ctx, func(ctx *app.Ctx) app.C {
-				return markdown.New(ctx, mdContent)
+			box.New(c, func(c *app.Ctx) app.C {
+				return markdown.New(c, mdContent)
 			}, box.WithDisableFollow(true)),
 
-			divider.New(ctx),
-			text.New(ctx, "Press [ctrl-c] to quit.", text.WithFg(ctx.Styles.Colors.Danger)),
+			divider.New(c),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
 		}
 	})
 }
 
 func main() {
-	ctx := app.NewCtx()
+	c := app.NewCtx()
 
-	bubbleApp := app.New(ctx, NewRoot)
+	bubbleApp := app.New(c, NewRoot)
 	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 	if _, err := p.Run(); err != nil {

@@ -60,22 +60,22 @@ func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID i
 }
 
 // TabTitles is a functional component that displays a set of interactive tabs.
-func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
+func TabTitles(c *app.Ctx, componentProps app.Props) string {
 	p, _ := componentProps.(Props)
 
 	// TODO: UseMemo for this
-	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(ctx.Styles.Colors.Secondary).Padding(0, 1)
+	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(c.Styles.Colors.Secondary).Padding(0, 1)
 	inactiveStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")).Padding(0, 1)
 	inactiveStyleFocused := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")).Padding(0, 1)
-	hoveredStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(ctx.Styles.Colors.Primary).Foreground(ctx.Styles.Colors.Primary).Padding(0, 1)
+	hoveredStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(c.Styles.Colors.Primary).Foreground(c.Styles.Colors.Primary).Padding(0, 1)
 	unusedStyle := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC"))
 	unusedStyleFocused := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF"))
 
 	titles := p.Titles
-	focused := app.UseIsFocused(ctx)
-	_, hoveredChildID := app.UseIsHovered(ctx)
+	focused := app.UseIsFocused(c)
+	_, hoveredChildID := app.UseIsHovered(c)
 
-	app.UseKeyHandler(ctx, func(msg tea.KeyMsg) bool {
+	app.UseKeyHandler(c, func(msg tea.KeyMsg) bool {
 		numTitles := len(titles)
 		if numTitles == 0 {
 			return false
@@ -112,7 +112,7 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 		return false
 	})
 
-	app.UseMouseHandler(ctx, func(msg tea.MouseMsg, childID string) bool {
+	app.UseMouseHandler(c, func(msg tea.MouseMsg, childID string) bool {
 		if p.OnTabChange == nil {
 			return false
 		}
@@ -129,7 +129,7 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 	rowsBuilder := strings.Builder{}
 	var currentLineTabs []string
 	currentLineWidth := 0
-	availableWidth, _ := app.UseSize(ctx)
+	availableWidth, _ := app.UseSize(c)
 
 	for i, titleInfo := range titles {
 		tabChildGid := "tab:" + strconv.Itoa(i)
@@ -160,7 +160,7 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 			currentLineWidth = 0
 		}
 
-		currentLineTabs = append(currentLineTabs, ctx.MouseZoneChild(tabChildGid, renderedTabString))
+		currentLineTabs = append(currentLineTabs, c.MouseZoneChild(tabChildGid, renderedTabString))
 
 		currentLineWidth += tabWidth
 	}
@@ -168,7 +168,7 @@ func TabTitles(ctx *app.Ctx, componentProps app.Props) string {
 	if len(currentLineTabs) > 0 {
 		lastLineString := lipgloss.JoinHorizontal(lipgloss.Top, currentLineTabs...)
 		// Fill remaining width on the last line
-		if ctx.LayoutPhase == app.LayoutPhaseFinalRender && currentLineWidth < availableWidth {
+		if c.LayoutPhase == app.LayoutPhaseFinalRender && currentLineWidth < availableWidth {
 			fillWidth := availableWidth - currentLineWidth
 			if fillWidth > 0 {
 				var fillStyle lipgloss.Style

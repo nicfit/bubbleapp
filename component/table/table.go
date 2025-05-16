@@ -19,7 +19,7 @@ import (
 
 // Props holds the configuration for the Table component.
 type Props struct {
-	DataFunc func(ctx *app.Ctx) (clms []Column, rows []Row)
+	DataFunc func(c *app.Ctx) (clms []Column, rows []Row)
 	KeyMap   KeyMap
 	Styles   Styles
 	Help     help.Model
@@ -129,23 +129,23 @@ type Styles struct {
 	Hovered   lipgloss.Style // Currently unused
 }
 
-func defaultStyles(ctx *app.Ctx) Styles {
-	base := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, true, true, true).BorderForeground(ctx.Styles.Colors.Ghost)
+func defaultStyles(c *app.Ctx) Styles {
+	base := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, true, true, true).BorderForeground(c.Styles.Colors.Ghost)
 	return Styles{
 		Base:      base,
-		BaseFocus: base.BorderForeground(ctx.Styles.Colors.White),
-		Selected:  lipgloss.NewStyle().Bold(true).Foreground(ctx.Styles.Colors.PrimaryLight).Background(ctx.Styles.Colors.UIPanelBackground),
-		Hovered:   lipgloss.NewStyle().Bold(true).Foreground(ctx.Styles.Colors.PrimaryLight).Background(ctx.Styles.Colors.HighlightBackground),
-		Header:    lipgloss.NewStyle().Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(ctx.Styles.Colors.GhostLight).BorderBottom(true),
+		BaseFocus: base.BorderForeground(c.Styles.Colors.White),
+		Selected:  lipgloss.NewStyle().Bold(true).Foreground(c.Styles.Colors.PrimaryLight).Background(c.Styles.Colors.UIPanelBackground),
+		Hovered:   lipgloss.NewStyle().Bold(true).Foreground(c.Styles.Colors.PrimaryLight).Background(c.Styles.Colors.HighlightBackground),
+		Header:    lipgloss.NewStyle().Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(c.Styles.Colors.GhostLight).BorderBottom(true),
 		Cell:      lipgloss.NewStyle(),
 	}
 }
 
 // NewTable creates a new table component instance.
-func New(ctx *app.Ctx, props ...tableProp) app.C {
+func New(c *app.Ctx, props ...tableProp) app.C {
 	p := Props{
 		KeyMap: defaultKeyMap(),
-		Styles: defaultStyles(ctx),
+		Styles: defaultStyles(c),
 		Help:   help.New(),
 		Layout: app.Layout{
 			GrowX: true,
@@ -160,36 +160,36 @@ func New(ctx *app.Ctx, props ...tableProp) app.C {
 	p.Styles.Base = style.ApplyMargin(p.Styles.Base, p.Margin)
 	p.Styles.BaseFocus = style.ApplyMargin(p.Styles.BaseFocus, p.Margin)
 
-	return ctx.Render(Table, p)
+	return c.Render(Table, p)
 }
 
-func WithDataFunc(f func(ctx *app.Ctx) (clms []Column, rows []Row)) tableProp {
+func WithDataFunc(f func(c *app.Ctx) (clms []Column, rows []Row)) tableProp {
 	return func(props *Props) {
 		props.DataFunc = f
 	}
 }
 
 // Table is the functional component for rendering a table.
-func Table(ctx *app.Ctx, props app.Props) string {
+func Table(c *app.Ctx, props app.Props) string {
 	p, _ := props.(Props)
-	id := app.UseID(ctx)
-	isFocused := app.UseIsFocused(ctx)
-	_, childHoverID := app.UseIsHovered(ctx)
+	id := app.UseID(c)
+	isFocused := app.UseIsFocused(c)
+	_, childHoverID := app.UseIsHovered(c)
 
-	state, setState := app.UseState(ctx, tableState{
+	state, setState := app.UseState(c, tableState{
 		cursor:   -1,
 		viewport: viewport.New(),
 	})
 
-	rawCols, rows := p.DataFunc(ctx)
+	rawCols, rows := p.DataFunc(c)
 
-	app.UseKeyHandler(ctx, func(keyMsg tea.KeyMsg) bool {
+	app.UseKeyHandler(c, func(keyMsg tea.KeyMsg) bool {
 		return processInternalKeys(keyMsg, p.KeyMap, rows, state, func(t tableState) {
 			setState(t)
 		})
 	})
 
-	app.UseMouseHandler(ctx, func(msg tea.MouseMsg, childID string) bool {
+	app.UseMouseHandler(c, func(msg tea.MouseMsg, childID string) bool {
 		// TODO: Add click for headers to sort
 		if childID == "" || msg.Mouse().Button != tea.MouseLeft {
 			return false
@@ -212,9 +212,9 @@ func Table(ctx *app.Ctx, props app.Props) string {
 		return false
 	})
 
-	width, height := app.UseSize(ctx)
+	width, height := app.UseSize(c)
 
-	app.UseEffect(ctx, func() {
+	app.UseEffect(c, func() {
 		baseStyleToUse := p.Styles.Base
 		if isFocused {
 			baseStyleToUse = p.Styles.BaseFocus
@@ -262,7 +262,7 @@ func Table(ctx *app.Ctx, props app.Props) string {
 	state.viewport.SetHeight(height - lipgloss.Height(headersViewStr) - currentBaseStyle.GetVerticalFrameSize())
 	state.viewport.SetWidth(width - currentBaseStyle.GetHorizontalFrameSize())
 
-	updateViewportContent(&state.viewport, rows, state, childHoverID, p.Styles, ctx, id)
+	updateViewportContent(&state.viewport, rows, state, childHoverID, p.Styles, c, id)
 
 	return currentBaseStyle.Render(headersViewStr + "\n" + state.viewport.View())
 }
@@ -395,7 +395,7 @@ func generateHeadersView(cols []column, styles Styles) string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, s...)
 }
 
-func generateRenderedRow(rowIndex int, rowData Row, state tableState, childHoverID string, styles Styles, ctx *app.Ctx, tableID string) string {
+func generateRenderedRow(rowIndex int, rowData Row, state tableState, childHoverID string, styles Styles, c *app.Ctx, tableID string) string {
 	s := make([]string, 0, len(state.cols))
 	for i, value := range rowData {
 		if i >= len(state.cols) || state.cols[i].Width <= 0 { // Boundary check for cols
@@ -416,10 +416,10 @@ func generateRenderedRow(rowIndex int, rowData Row, state tableState, childHover
 	} else {
 		rowStr = lipgloss.JoinHorizontal(lipgloss.Top, s...)
 	}
-	return ctx.MouseZoneChild(rowElementID, rowStr)
+	return c.MouseZoneChild(rowElementID, rowStr)
 }
 
-func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, childHoverID string, styles Styles, ctx *app.Ctx, tableID string) {
+func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, childHoverID string, styles Styles, c *app.Ctx, tableID string) {
 	if len(rows) == 0 {
 		vp.SetContent("")
 		return
@@ -427,7 +427,7 @@ func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, chi
 
 	renderedRows := make([]string, len(rows))
 	for i, rowData := range rows {
-		renderedRows[i] = generateRenderedRow(i, rowData, state, childHoverID, styles, ctx, tableID)
+		renderedRows[i] = generateRenderedRow(i, rowData, state, childHoverID, styles, c, tableID)
 	}
 
 	vp.SetContent(

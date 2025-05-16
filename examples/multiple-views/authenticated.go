@@ -7,13 +7,13 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func NewAuthModel(ctx *app.Ctx, _ app.Props) app.C {
-	appData := context.UseContext(ctx, AppDataContext)
+func NewAuthModel(c *app.Ctx, _ app.Props) app.C {
+	appData := context.UseContext(c, AppDataContext)
 
-	return stack.New(ctx, func(ctx *app.Ctx) []app.C {
+	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			text.New(ctx, "You are logged in as: "+appData.data.userID),
-			text.New(ctx, "Press [ctrl-c] to quit.\n", text.WithFg(ctx.Styles.Colors.Danger)),
+			text.New(c, "You are logged in as: "+appData.data.userID),
+			text.New(c, "Press [ctrl-c] to quit.\n", text.WithFg(c.Styles.Colors.Danger)),
 		}
 	})
 }

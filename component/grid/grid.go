@@ -34,14 +34,14 @@ package grid
 // 	itemConfigs map[string]Item[T]
 // }
 
-// func New[T any](ctx *app.Context[T], options *Options[T], baseOptions ...app.BaseOption) *app.Base {
+// func New[T any](c *app.Context[T], options *Options[T], baseOptions ...app.BaseOption) *app.Base {
 // 	if options == nil {
 // 		options = &Options[T]{}
 // 	}
 // 	if baseOptions == nil {
 // 		baseOptions = []app.BaseOption{}
 // 	}
-// 	base, cleanup := app.NewBase(ctx, "grid", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
+// 	base, cleanup := app.NewBase(c, "grid", append([]app.BaseOption{app.WithGrow(true)}, baseOptions...)...)
 // 	defer cleanup()
 
 // 	m := model[T]{
