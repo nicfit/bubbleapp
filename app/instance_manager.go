@@ -18,14 +18,15 @@ type MsgHandler func(msg tea.Msg) tea.Cmd
 // It holds the component's ID, focusable state, function reference, props,
 // event handlers, and state management for both state and effects.
 type instanceContext struct {
-	id              string
-	focusable       bool
-	states          []any
-	effects         []effectRecord
-	keyHandlers     []KeyHandler
-	mouseHandlers   []MouseHandler
-	messageHandlers []MsgHandler
-	onFocused       func(isReverse bool)
+	id                string
+	focusable         bool
+	states            []any
+	effects           []effectRecord
+	keyHandlers       []KeyHandler
+	globalKeyHandlers []KeyHandler
+	mouseHandlers     []MouseHandler
+	messageHandlers   []MsgHandler
+	onFocused         func(isReverse bool)
 }
 
 type fcInstanceContext struct {
@@ -80,4 +81,18 @@ func (c *fcInstanceContext) getAllIDs() []string {
 		ids = append(ids, id)
 	}
 	return ids
+}
+
+func (c *fcInstanceContext) getAllGlobalKeyHandlers() []KeyHandler {
+	var handlers []KeyHandler
+	ids := make([]string, 0, len(c.ctxs))
+	for id := range c.ctxs {
+		ids = append(ids, id)
+	}
+
+	for i := len(ids) - 1; i >= 0; i-- {
+		instance := c.ctxs[ids[i]]
+		handlers = append(handlers, instance.globalKeyHandlers...)
+	}
+	return handlers
 }

@@ -81,6 +81,13 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
+		// If the key was not handled by the focused component, check global key handlers.
+		for _, handler := range a.ctx.componentContext.getAllGlobalKeyHandlers() {
+			if handler(msg) {
+				return a, nil // Key was handled by a global key handler
+			}
+		}
+
 		// If no focused component handled the key, or there's no focused component,
 		// handle global key bindings.
 		switch msg.String() {

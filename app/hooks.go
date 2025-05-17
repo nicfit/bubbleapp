@@ -273,6 +273,20 @@ func UseKeyHandler(c *Ctx, handler KeyHandler) {
 	instance.keyHandlers = append(instance.keyHandlers, handler)
 }
 
+// UseGlobalKeyHandler registers a function to handle key presses globally.
+// They are called in reverse order of registration.
+func UseGlobalKeyHandler(c *Ctx, handler KeyHandler) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+	instanceID := c.id.getID()
+	instance, exists := c.componentContext.get(instanceID)
+	if !exists {
+		panic("UseGlobalKeyHandler: component instance not found")
+	}
+	instance.globalKeyHandlers = append(instance.globalKeyHandlers, handler)
+}
+
 // UseMouseHandler registers a function to handle mouse events within a component.
 func UseMouseHandler(c *Ctx, handler MouseHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
