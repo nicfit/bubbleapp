@@ -10,6 +10,8 @@ type Layout struct {
 	GrowY     bool
 	GapX      int
 	GapY      int
+	Width     int
+	Height    int
 }
 
 type LayoutDirection int

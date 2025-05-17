@@ -35,7 +35,7 @@ func Divider(c *app.Ctx, props app.Props) string {
 	var length int
 	width, _ := app.UseSize(c)
 	if width > 0 {
-		length = width - 1
+		length = width
 	} else {
 		length = 0
 	}

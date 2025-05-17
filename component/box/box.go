@@ -15,6 +15,7 @@ type BoxProps struct {
 	DisableFollow bool
 	FC            app.FC
 	app.Layout
+	app.Border
 }
 
 // BoxProp is a function type for setting BoxProps.
@@ -31,7 +32,12 @@ func Box(c *app.Ctx, props app.Props) string {
 	vp, _ := app.UseState(c, &initialViewport)
 
 	width, height := app.UseSize(c)
-
+	if boxProps.Layout.Width > 0 {
+		width = boxProps.Layout.Width
+	}
+	if boxProps.Layout.Height > 0 {
+		height = boxProps.Layout.Height
+	}
 	if width <= 0 || height <= 0 {
 		return ""
 	}
@@ -48,7 +54,7 @@ func Box(c *app.Ctx, props app.Props) string {
 		}
 	}
 
-	style := lipgloss.NewStyle()
+	style := app.ApplyBorder(lipgloss.NewStyle(), boxProps.Border)
 	if boxProps.Bg != nil {
 		style = style.Background(boxProps.Bg)
 	}
@@ -79,44 +85,4 @@ func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
 // NewEmpty creates a new Box component with no children.
 func NewEmpty(c *app.Ctx, opts ...BoxProp) app.C {
 	return New(c, nil, opts...)
-}
-
-// --- Prop Option Functions ---
-
-func WithKey(key string) BoxProp {
-	return func(props *BoxProps) {
-		props.Key = key
-	}
-}
-
-// WithBg sets the background color for the box.
-func WithBg(bg color.Color) BoxProp {
-	return func(props *BoxProps) {
-		props.Bg = bg
-	}
-}
-
-// WithDisableFollow disables the viewport's auto-scrolling to the bottom on content change.
-func WithDisableFollow(disable bool) BoxProp {
-	return func(props *BoxProps) {
-		props.DisableFollow = disable
-	}
-}
-
-func WithGrow(grow bool) BoxProp {
-	return func(props *BoxProps) {
-		props.Layout.GrowX = grow
-		props.Layout.GrowY = grow
-	}
-}
-
-func WithGrowX(grow bool) BoxProp {
-	return func(props *BoxProps) {
-		props.Layout.GrowX = grow
-	}
-}
-func WithGrowY(grow bool) BoxProp {
-	return func(props *BoxProps) {
-		props.Layout.GrowY = grow
-	}
 }

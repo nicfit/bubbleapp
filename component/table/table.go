@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/style"
 
 	"github.com/charmbracelet/bubbles/v2/help"
 	"github.com/charmbracelet/bubbles/v2/key"
@@ -23,7 +22,7 @@ type Props struct {
 	KeyMap   KeyMap
 	Styles   Styles
 	Help     help.Model
-	style.Margin
+	app.Margin
 	app.Layout
 }
 
@@ -157,8 +156,8 @@ func New(c *app.Ctx, props ...tableProp) app.C {
 			prop(&p)
 		}
 	}
-	p.Styles.Base = style.ApplyMargin(p.Styles.Base, p.Margin)
-	p.Styles.BaseFocus = style.ApplyMargin(p.Styles.BaseFocus, p.Margin)
+	p.Styles.Base = app.ApplyMargin(p.Styles.Base, p.Margin)
+	p.Styles.BaseFocus = app.ApplyMargin(p.Styles.BaseFocus, p.Margin)
 
 	return c.Render(Table, p)
 }

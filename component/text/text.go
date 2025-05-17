@@ -4,7 +4,6 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/alexanderbh/bubbleapp/style"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -13,7 +12,8 @@ type Props struct {
 	Foreground color.Color
 	Background color.Color
 	Bold       bool
-	style.Margin
+	app.Margin
+	app.Padding
 }
 
 type prop func(*Props)
@@ -43,7 +43,7 @@ func Text(c *app.Ctx, props app.Props) string {
 		s = s.Bold(true)
 	}
 
-	s = style.ApplyMargin(s, textProps.Margin)
+	s = app.ApplyMargin(app.ApplyPadding(s, textProps.Padding), textProps.Margin)
 
 	return s.Render(textProps.Text)
 }
@@ -62,86 +62,4 @@ func New(c *app.Ctx, text string, opts ...prop) app.C {
 		}
 	}
 	return c.Render(Text, p)
-}
-
-// --- Prop Option Functions ---
-
-// WithFg sets the foreground color.
-func WithFg(fg color.Color) prop {
-	return func(props *Props) {
-		props.Foreground = fg
-	}
-}
-
-// WithBg sets the background color.
-func WithBg(bg color.Color) prop {
-	return func(props *Props) {
-		props.Background = bg
-	}
-}
-
-// WithBold enables or disables bold text.
-func WithBold(bold bool) prop {
-	return func(props *Props) {
-		props.Bold = bold
-	}
-}
-
-// WithMarginAll sets uniform margin for all sides.
-func WithMarginAll(m int) prop {
-	return func(props *Props) {
-		props.Margin.M = m
-	}
-}
-
-// WithMargin sets individual margins.
-func WithMargin(top, right, bottom, left int) prop {
-	return func(props *Props) {
-		props.Margin.MT = top
-		props.Margin.MR = right
-		props.Margin.MB = bottom
-		props.Margin.ML = left
-	}
-}
-
-// WithMarginTop sets the top margin.
-func WithMarginTop(m int) prop {
-	return func(props *Props) {
-		props.Margin.MT = m
-	}
-}
-
-// WithMarginRight sets the right margin.
-func WithMarginRight(m int) prop {
-	return func(props *Props) {
-		props.Margin.MR = m
-	}
-}
-
-// WithMarginBottom sets the bottom margin.
-func WithMarginBottom(m int) prop {
-	return func(props *Props) {
-		props.Margin.MB = m
-	}
-}
-
-// WithMarginLeft sets the left margin.
-func WithMarginLeft(m int) prop {
-	return func(props *Props) {
-		props.Margin.ML = m
-	}
-}
-
-// WithMarginX sets horizontal (left and right) margins.
-func WithMarginX(m int) prop {
-	return func(props *Props) {
-		props.Margin.MX = m
-	}
-}
-
-// WithMarginY sets vertical (top and bottom) margins.
-func WithMarginY(m int) prop {
-	return func(props *Props) {
-		props.Margin.MY = m
-	}
 }

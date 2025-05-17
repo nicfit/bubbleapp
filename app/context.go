@@ -95,7 +95,8 @@ func (c *Ctx) RenderWithName(fc func(c *Ctx, props Props) string, props Props, n
 			if node.Parent == nil {
 				c.UIState.setWidth(id, c.layoutManager.width)
 			} else if !node.Layout.GrowX {
-				c.UIState.setWidth(id, lipgloss.Width(output.String()))
+				width := lipgloss.Width(output.String())
+				c.UIState.setWidth(id, width)
 			}
 		}
 		if c.LayoutPhase == LayoutPhaseIntrincintHeight {
