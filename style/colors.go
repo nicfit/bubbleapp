@@ -80,9 +80,9 @@ func defaultColors() Colors {
 		WarningLight: lipgloss.Color("#FFF65D"),
 		WarningDark:  lipgloss.Color("#E5C229"),
 
-		Ghost:      lipgloss.Color("#A4A7BD"),
-		GhostLight: lipgloss.Color("#BEC1D7"),
-		GhostDark:  lipgloss.Color("#8A8DA3"),
+		Ghost:      lipgloss.Color("#6A6D83"),
+		GhostLight: lipgloss.Color("#84879D"),
+		GhostDark:  lipgloss.Color("#50526A"),
 
 		Background:          lipgloss.Color("#24242F"),
 		SecondaryBackground: lipgloss.Color("#2C2C3D"),

@@ -1,6 +1,8 @@
 package button
 
 import (
+	"strings"
+
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/charmbracelet/lipgloss/v2"
 )
@@ -11,6 +13,7 @@ type Props struct {
 	Text     string
 	Disabled bool
 	OnAction func()
+	app.Layout
 }
 
 type Prop func(*Props)
@@ -20,6 +23,7 @@ type Type int
 const (
 	Normal Type = iota
 	Bordered
+	Flat
 )
 
 type Variant int
@@ -48,9 +52,21 @@ func Button(c *app.Ctx, props app.Props) string {
 
 	style := styleResolver(c, buttonProps.Variant, buttonProps.Type, focused, hovered, buttonProps.Disabled)
 
-	if buttonProps.Type == Normal {
+	if buttonProps.Layout.Height > 0 {
+		style = style.Height(buttonProps.Layout.Height)
+	}
+	if buttonProps.Layout.Width > 0 {
+		style = style.Width(buttonProps.Layout.Width)
+		if buttonProps.Type == Normal {
+			repeasts := buttonProps.Layout.Width - lipgloss.Width(buttonProps.Text) - 4
+			if repeasts > 0 {
+				rs := strings.Repeat(" ", repeasts)
+				buttonProps.Text = "⟦ " + buttonProps.Text + rs + " ⟧"
+			}
+		}
+	} else if buttonProps.Type == Normal {
 		// Can this be part of theming somehow?
-		buttonProps.Text = "⟦" + buttonProps.Text + "⟧"
+		buttonProps.Text = "⟦ " + buttonProps.Text + " ⟧"
 	}
 
 	return c.MouseZone(style.Render(buttonProps.Text))
@@ -75,6 +91,16 @@ func WithVariant(variant Variant) Prop {
 func WithType(btnType Type) Prop {
 	return func(props *Props) {
 		props.Type = btnType
+	}
+}
+func WithWidth(width int) Prop {
+	return func(props *Props) {
+		props.Width = width
+	}
+}
+func WithHeight(height int) Prop {
+	return func(props *Props) {
+		props.Height = height
 	}
 }
 
@@ -132,6 +158,59 @@ func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hove
 				return c.Styles.ButtonCompact.Info
 			case Warning:
 				return c.Styles.ButtonCompact.Warning
+			}
+		}
+	} else if btnType == Flat {
+		if hovered {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonFlat.PrimaryHovered
+			case Secondary:
+				return c.Styles.ButtonFlat.SecondaryHovered
+			case Tertiary:
+				return c.Styles.ButtonFlat.TertiaryHovered
+			case Success:
+				return c.Styles.ButtonFlat.SuccessHovered
+			case Danger:
+				return c.Styles.ButtonFlat.DangerHovered
+			case Info:
+				return c.Styles.ButtonFlat.InfoHovered
+			case Warning:
+				return c.Styles.ButtonFlat.WarningHovered
+			}
+		} else if focused {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonFlat.PrimaryFocused
+			case Secondary:
+				return c.Styles.ButtonFlat.SecondaryFocused
+			case Tertiary:
+				return c.Styles.ButtonFlat.TertiaryFocused
+			case Success:
+				return c.Styles.ButtonFlat.SuccessFocused
+			case Danger:
+				return c.Styles.ButtonFlat.DangerFocused
+			case Info:
+				return c.Styles.ButtonFlat.InfoFocused
+			case Warning:
+				return c.Styles.ButtonFlat.WarningFocused
+			}
+		} else {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonFlat.Primary
+			case Secondary:
+				return c.Styles.ButtonFlat.Secondary
+			case Tertiary:
+				return c.Styles.ButtonFlat.Tertiary
+			case Success:
+				return c.Styles.ButtonFlat.Success
+			case Danger:
+				return c.Styles.ButtonFlat.Danger
+			case Info:
+				return c.Styles.ButtonFlat.Info
+			case Warning:
+				return c.Styles.ButtonFlat.Warning
 			}
 		}
 	} else if btnType == Bordered {

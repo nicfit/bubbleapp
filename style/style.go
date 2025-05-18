@@ -18,6 +18,7 @@ type Styles struct {
 
 	Button        ButtonStyles
 	ButtonCompact ButtonStyles
+	ButtonFlat    ButtonStyles
 }
 
 type ButtonStyles struct {
@@ -98,6 +99,32 @@ func DefaultStyles() *Styles {
 		Danger:    lipgloss.NewStyle().Foreground(s.Colors.Danger),
 		Warning:   lipgloss.NewStyle().Foreground(s.Colors.Warning),
 		Info:      lipgloss.NewStyle().Foreground(s.Colors.Info),
+
+		PrimaryFocused:   lipgloss.NewStyle().Background(s.Colors.Primary).Foreground(s.Colors.Black),
+		SecondaryFocused: lipgloss.NewStyle().Background(s.Colors.Secondary).Foreground(s.Colors.Black),
+		TertiaryFocused:  lipgloss.NewStyle().Background(s.Colors.Tertiary).Foreground(s.Colors.Black),
+		SuccessFocused:   lipgloss.NewStyle().Background(s.Colors.Success).Foreground(s.Colors.Black),
+		DangerFocused:    lipgloss.NewStyle().Background(s.Colors.Danger).Foreground(s.Colors.Black),
+		WarningFocused:   lipgloss.NewStyle().Background(s.Colors.Warning).Foreground(s.Colors.Black),
+		InfoFocused:      lipgloss.NewStyle().Background(s.Colors.Info).Foreground(s.Colors.Black),
+
+		PrimaryHovered:   lipgloss.NewStyle().Background(s.Colors.PrimaryLight).Foreground(s.Colors.Black),
+		SecondaryHovered: lipgloss.NewStyle().Background(s.Colors.SecondaryLight).Foreground(s.Colors.Black),
+		TertiaryHovered:  lipgloss.NewStyle().Background(s.Colors.TertiaryLight).Foreground(s.Colors.Black),
+		SuccessHovered:   lipgloss.NewStyle().Background(s.Colors.SuccessLight).Foreground(s.Colors.Black),
+		DangerHovered:    lipgloss.NewStyle().Background(s.Colors.DangerLight).Foreground(s.Colors.Black),
+		WarningHovered:   lipgloss.NewStyle().Background(s.Colors.WarningLight).Foreground(s.Colors.Black),
+		InfoHovered:      lipgloss.NewStyle().Background(s.Colors.InfoLight).Foreground(s.Colors.Black),
+	}
+
+	s.ButtonFlat = ButtonStyles{
+		Primary:   lipgloss.NewStyle().Foreground(s.Colors.Primary).Background(s.Colors.Ghost),
+		Secondary: lipgloss.NewStyle().Foreground(s.Colors.Secondary).Background(s.Colors.Ghost),
+		Tertiary:  lipgloss.NewStyle().Foreground(s.Colors.Tertiary).Background(s.Colors.Ghost),
+		Success:   lipgloss.NewStyle().Foreground(s.Colors.Success).Background(s.Colors.Ghost),
+		Danger:    lipgloss.NewStyle().Foreground(s.Colors.Danger).Background(s.Colors.Ghost),
+		Warning:   lipgloss.NewStyle().Foreground(s.Colors.Warning).Background(s.Colors.Ghost),
+		Info:      lipgloss.NewStyle().Foreground(s.Colors.Info).Background(s.Colors.Ghost),
 
 		PrimaryFocused:   lipgloss.NewStyle().Background(s.Colors.Primary).Foreground(s.Colors.Black),
 		SecondaryFocused: lipgloss.NewStyle().Background(s.Colors.Secondary).Foreground(s.Colors.Black),
