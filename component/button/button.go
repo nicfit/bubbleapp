@@ -13,17 +13,19 @@ type Props struct {
 	Text     string
 	Disabled bool
 	OnAction func()
+	Bold     bool
 	app.Layout
+	app.Margin
+	app.Padding
 }
 
-type Prop func(*Props)
+type prop func(*Props)
 
 type Type int
 
 const (
 	Normal Type = iota
 	Bordered
-	Flat
 )
 
 type Variant int
@@ -65,14 +67,22 @@ func Button(c *app.Ctx, props app.Props) string {
 			}
 		}
 	} else if buttonProps.Type == Normal {
-		// Can this be part of theming somehow?
-		buttonProps.Text = "⟦ " + buttonProps.Text + " ⟧"
+		if focused {
+			buttonProps.Text = "[>" + buttonProps.Text + "<]"
+		} else {
+			buttonProps.Text = "[ " + buttonProps.Text + " ]"
+		}
 	}
+
+	if buttonProps.Bold {
+		style = style.Bold(true)
+	}
+	style = app.ApplyMargin(app.ApplyPadding(style, buttonProps.Padding), buttonProps.Margin)
 
 	return c.MouseZone(style.Render(buttonProps.Text))
 }
 
-func New(c *app.Ctx, text string, onAction func(), props ...Prop) app.C {
+func New(c *app.Ctx, text string, onAction func(), props ...prop) app.C {
 	p := Props{
 		Text:     text,
 		OnAction: onAction,
@@ -83,22 +93,22 @@ func New(c *app.Ctx, text string, onAction func(), props ...Prop) app.C {
 	return c.Render(Button, p)
 }
 
-func WithVariant(variant Variant) Prop {
+func WithVariant(variant Variant) prop {
 	return func(props *Props) {
 		props.Variant = variant
 	}
 }
-func WithType(btnType Type) Prop {
+func WithType(btnType Type) prop {
 	return func(props *Props) {
 		props.Type = btnType
 	}
 }
-func WithWidth(width int) Prop {
+func WithWidth(width int) prop {
 	return func(props *Props) {
 		props.Width = width
 	}
 }
-func WithHeight(height int) Prop {
+func WithHeight(height int) prop {
 	return func(props *Props) {
 		props.Height = height
 	}
@@ -108,112 +118,6 @@ func WithHeight(height int) Prop {
 // This is a mess. I need to think about this more.
 func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hovered bool, disabled bool) lipgloss.Style {
 	if btnType == Normal {
-		if hovered {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonCompact.PrimaryHovered
-			case Secondary:
-				return c.Styles.ButtonCompact.SecondaryHovered
-			case Tertiary:
-				return c.Styles.ButtonCompact.TertiaryHovered
-			case Success:
-				return c.Styles.ButtonCompact.SuccessHovered
-			case Danger:
-				return c.Styles.ButtonCompact.DangerHovered
-			case Info:
-				return c.Styles.ButtonCompact.InfoHovered
-			case Warning:
-				return c.Styles.ButtonCompact.WarningHovered
-			}
-		} else if focused {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonCompact.PrimaryFocused
-			case Secondary:
-				return c.Styles.ButtonCompact.SecondaryFocused
-			case Tertiary:
-				return c.Styles.ButtonCompact.TertiaryFocused
-			case Success:
-				return c.Styles.ButtonCompact.SuccessFocused
-			case Danger:
-				return c.Styles.ButtonCompact.DangerFocused
-			case Info:
-				return c.Styles.ButtonCompact.InfoFocused
-			case Warning:
-				return c.Styles.ButtonCompact.WarningFocused
-			}
-		} else {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonCompact.Primary
-			case Secondary:
-				return c.Styles.ButtonCompact.Secondary
-			case Tertiary:
-				return c.Styles.ButtonCompact.Tertiary
-			case Success:
-				return c.Styles.ButtonCompact.Success
-			case Danger:
-				return c.Styles.ButtonCompact.Danger
-			case Info:
-				return c.Styles.ButtonCompact.Info
-			case Warning:
-				return c.Styles.ButtonCompact.Warning
-			}
-		}
-	} else if btnType == Flat {
-		if hovered {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonFlat.PrimaryHovered
-			case Secondary:
-				return c.Styles.ButtonFlat.SecondaryHovered
-			case Tertiary:
-				return c.Styles.ButtonFlat.TertiaryHovered
-			case Success:
-				return c.Styles.ButtonFlat.SuccessHovered
-			case Danger:
-				return c.Styles.ButtonFlat.DangerHovered
-			case Info:
-				return c.Styles.ButtonFlat.InfoHovered
-			case Warning:
-				return c.Styles.ButtonFlat.WarningHovered
-			}
-		} else if focused {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonFlat.PrimaryFocused
-			case Secondary:
-				return c.Styles.ButtonFlat.SecondaryFocused
-			case Tertiary:
-				return c.Styles.ButtonFlat.TertiaryFocused
-			case Success:
-				return c.Styles.ButtonFlat.SuccessFocused
-			case Danger:
-				return c.Styles.ButtonFlat.DangerFocused
-			case Info:
-				return c.Styles.ButtonFlat.InfoFocused
-			case Warning:
-				return c.Styles.ButtonFlat.WarningFocused
-			}
-		} else {
-			switch variant {
-			case Primary:
-				return c.Styles.ButtonFlat.Primary
-			case Secondary:
-				return c.Styles.ButtonFlat.Secondary
-			case Tertiary:
-				return c.Styles.ButtonFlat.Tertiary
-			case Success:
-				return c.Styles.ButtonFlat.Success
-			case Danger:
-				return c.Styles.ButtonFlat.Danger
-			case Info:
-				return c.Styles.ButtonFlat.Info
-			case Warning:
-				return c.Styles.ButtonFlat.Warning
-			}
-		}
-	} else if btnType == Bordered {
 		if hovered {
 			switch variant {
 			case Primary:
@@ -266,6 +170,59 @@ func styleResolver(c *app.Ctx, variant Variant, btnType Type, focused bool, hove
 				return c.Styles.Button.Warning
 			}
 		}
+	} else if btnType == Bordered {
+		if hovered {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonBordered.PrimaryHovered
+			case Secondary:
+				return c.Styles.ButtonBordered.SecondaryHovered
+			case Tertiary:
+				return c.Styles.ButtonBordered.TertiaryHovered
+			case Success:
+				return c.Styles.ButtonBordered.SuccessHovered
+			case Danger:
+				return c.Styles.ButtonBordered.DangerHovered
+			case Info:
+				return c.Styles.ButtonBordered.InfoHovered
+			case Warning:
+				return c.Styles.ButtonBordered.WarningHovered
+			}
+		} else if focused {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonBordered.PrimaryFocused
+			case Secondary:
+				return c.Styles.ButtonBordered.SecondaryFocused
+			case Tertiary:
+				return c.Styles.ButtonBordered.TertiaryFocused
+			case Success:
+				return c.Styles.ButtonBordered.SuccessFocused
+			case Danger:
+				return c.Styles.ButtonBordered.DangerFocused
+			case Info:
+				return c.Styles.ButtonBordered.InfoFocused
+			case Warning:
+				return c.Styles.ButtonBordered.WarningFocused
+			}
+		} else {
+			switch variant {
+			case Primary:
+				return c.Styles.ButtonBordered.Primary
+			case Secondary:
+				return c.Styles.ButtonBordered.Secondary
+			case Tertiary:
+				return c.Styles.ButtonBordered.Tertiary
+			case Success:
+				return c.Styles.ButtonBordered.Success
+			case Danger:
+				return c.Styles.ButtonBordered.Danger
+			case Info:
+				return c.Styles.ButtonBordered.Info
+			case Warning:
+				return c.Styles.ButtonBordered.Warning
+			}
+		}
 	}
-	return c.Styles.Button.Primary
+	return c.Styles.ButtonBordered.Primary
 }

@@ -16,9 +16,8 @@ type Styles struct {
 	TextInfo      lipgloss.Style
 	TextGhost     lipgloss.Style
 
-	Button        ButtonStyles
-	ButtonCompact ButtonStyles
-	ButtonFlat    ButtonStyles
+	ButtonBordered ButtonStyles
+	Button         ButtonStyles
 }
 
 type ButtonStyles struct {
@@ -65,7 +64,7 @@ func DefaultStyles() *Styles {
 	s.TextGhost = lipgloss.NewStyle().Foreground(s.Colors.Ghost)
 
 	buttonBaseNormal := lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder())
-	s.Button = ButtonStyles{
+	s.ButtonBordered = ButtonStyles{
 		Primary:   buttonBaseNormal.BorderForeground(s.Colors.Primary).Foreground(s.Colors.Primary),
 		Secondary: buttonBaseNormal.BorderForeground(s.Colors.Secondary).Foreground(s.Colors.Secondary),
 		Tertiary:  buttonBaseNormal.BorderForeground(s.Colors.Tertiary).Foreground(s.Colors.Tertiary),
@@ -91,56 +90,30 @@ func DefaultStyles() *Styles {
 		InfoHovered:      buttonBaseNormal.BorderForeground(s.Colors.InfoDark).Foreground(s.Colors.Black).Background(s.Colors.InfoLight),
 	}
 
-	s.ButtonCompact = ButtonStyles{
-		Primary:   lipgloss.NewStyle().Foreground(s.Colors.Primary),
-		Secondary: lipgloss.NewStyle().Foreground(s.Colors.Secondary),
-		Tertiary:  lipgloss.NewStyle().Foreground(s.Colors.Tertiary),
-		Success:   lipgloss.NewStyle().Foreground(s.Colors.Success),
-		Danger:    lipgloss.NewStyle().Foreground(s.Colors.Danger),
-		Warning:   lipgloss.NewStyle().Foreground(s.Colors.Warning),
-		Info:      lipgloss.NewStyle().Foreground(s.Colors.Info),
+	s.Button = ButtonStyles{
+		Primary:   lipgloss.NewStyle().Background(s.Colors.Primary).Foreground(s.Colors.Black),
+		Secondary: lipgloss.NewStyle().Background(s.Colors.Secondary).Foreground(s.Colors.Black),
+		Tertiary:  lipgloss.NewStyle().Background(s.Colors.Tertiary).Foreground(s.Colors.Black),
+		Success:   lipgloss.NewStyle().Background(s.Colors.Success).Foreground(s.Colors.Black),
+		Danger:    lipgloss.NewStyle().Background(s.Colors.Danger).Foreground(s.Colors.Black),
+		Warning:   lipgloss.NewStyle().Background(s.Colors.Warning).Foreground(s.Colors.Black),
+		Info:      lipgloss.NewStyle().Background(s.Colors.Info).Foreground(s.Colors.Black),
 
-		PrimaryFocused:   lipgloss.NewStyle().Background(s.Colors.Primary).Foreground(s.Colors.Black),
-		SecondaryFocused: lipgloss.NewStyle().Background(s.Colors.Secondary).Foreground(s.Colors.Black),
-		TertiaryFocused:  lipgloss.NewStyle().Background(s.Colors.Tertiary).Foreground(s.Colors.Black),
-		SuccessFocused:   lipgloss.NewStyle().Background(s.Colors.Success).Foreground(s.Colors.Black),
-		DangerFocused:    lipgloss.NewStyle().Background(s.Colors.Danger).Foreground(s.Colors.Black),
-		WarningFocused:   lipgloss.NewStyle().Background(s.Colors.Warning).Foreground(s.Colors.Black),
-		InfoFocused:      lipgloss.NewStyle().Background(s.Colors.Info).Foreground(s.Colors.Black),
+		PrimaryFocused:   lipgloss.NewStyle().Background(s.Colors.PrimaryLight).Foreground(s.Colors.Black),
+		SecondaryFocused: lipgloss.NewStyle().Background(s.Colors.SecondaryLight).Foreground(s.Colors.Black),
+		TertiaryFocused:  lipgloss.NewStyle().Background(s.Colors.TertiaryLight).Foreground(s.Colors.Black),
+		SuccessFocused:   lipgloss.NewStyle().Background(s.Colors.SuccessLight).Foreground(s.Colors.Black),
+		DangerFocused:    lipgloss.NewStyle().Background(s.Colors.DangerLight).Foreground(s.Colors.Black),
+		WarningFocused:   lipgloss.NewStyle().Background(s.Colors.WarningLight).Foreground(s.Colors.Black),
+		InfoFocused:      lipgloss.NewStyle().Background(s.Colors.InfoLight).Foreground(s.Colors.Black),
 
-		PrimaryHovered:   lipgloss.NewStyle().Background(s.Colors.PrimaryLight).Foreground(s.Colors.Black),
-		SecondaryHovered: lipgloss.NewStyle().Background(s.Colors.SecondaryLight).Foreground(s.Colors.Black),
-		TertiaryHovered:  lipgloss.NewStyle().Background(s.Colors.TertiaryLight).Foreground(s.Colors.Black),
-		SuccessHovered:   lipgloss.NewStyle().Background(s.Colors.SuccessLight).Foreground(s.Colors.Black),
-		DangerHovered:    lipgloss.NewStyle().Background(s.Colors.DangerLight).Foreground(s.Colors.Black),
-		WarningHovered:   lipgloss.NewStyle().Background(s.Colors.WarningLight).Foreground(s.Colors.Black),
-		InfoHovered:      lipgloss.NewStyle().Background(s.Colors.InfoLight).Foreground(s.Colors.Black),
-	}
-
-	s.ButtonFlat = ButtonStyles{
-		Primary:   lipgloss.NewStyle().Foreground(s.Colors.Primary).Background(s.Colors.Ghost),
-		Secondary: lipgloss.NewStyle().Foreground(s.Colors.Secondary).Background(s.Colors.Ghost),
-		Tertiary:  lipgloss.NewStyle().Foreground(s.Colors.Tertiary).Background(s.Colors.Ghost),
-		Success:   lipgloss.NewStyle().Foreground(s.Colors.Success).Background(s.Colors.Ghost),
-		Danger:    lipgloss.NewStyle().Foreground(s.Colors.Danger).Background(s.Colors.Ghost),
-		Warning:   lipgloss.NewStyle().Foreground(s.Colors.Warning).Background(s.Colors.Ghost),
-		Info:      lipgloss.NewStyle().Foreground(s.Colors.Info).Background(s.Colors.Ghost),
-
-		PrimaryFocused:   lipgloss.NewStyle().Background(s.Colors.Primary).Foreground(s.Colors.Black),
-		SecondaryFocused: lipgloss.NewStyle().Background(s.Colors.Secondary).Foreground(s.Colors.Black),
-		TertiaryFocused:  lipgloss.NewStyle().Background(s.Colors.Tertiary).Foreground(s.Colors.Black),
-		SuccessFocused:   lipgloss.NewStyle().Background(s.Colors.Success).Foreground(s.Colors.Black),
-		DangerFocused:    lipgloss.NewStyle().Background(s.Colors.Danger).Foreground(s.Colors.Black),
-		WarningFocused:   lipgloss.NewStyle().Background(s.Colors.Warning).Foreground(s.Colors.Black),
-		InfoFocused:      lipgloss.NewStyle().Background(s.Colors.Info).Foreground(s.Colors.Black),
-
-		PrimaryHovered:   lipgloss.NewStyle().Background(s.Colors.PrimaryLight).Foreground(s.Colors.Black),
-		SecondaryHovered: lipgloss.NewStyle().Background(s.Colors.SecondaryLight).Foreground(s.Colors.Black),
-		TertiaryHovered:  lipgloss.NewStyle().Background(s.Colors.TertiaryLight).Foreground(s.Colors.Black),
-		SuccessHovered:   lipgloss.NewStyle().Background(s.Colors.SuccessLight).Foreground(s.Colors.Black),
-		DangerHovered:    lipgloss.NewStyle().Background(s.Colors.DangerLight).Foreground(s.Colors.Black),
-		WarningHovered:   lipgloss.NewStyle().Background(s.Colors.WarningLight).Foreground(s.Colors.Black),
-		InfoHovered:      lipgloss.NewStyle().Background(s.Colors.InfoLight).Foreground(s.Colors.Black),
+		PrimaryHovered:   lipgloss.NewStyle().Background(s.Colors.PrimaryDark).Foreground(s.Colors.Black),
+		SecondaryHovered: lipgloss.NewStyle().Background(s.Colors.SecondaryDark).Foreground(s.Colors.Black),
+		TertiaryHovered:  lipgloss.NewStyle().Background(s.Colors.TertiaryDark).Foreground(s.Colors.Black),
+		SuccessHovered:   lipgloss.NewStyle().Background(s.Colors.SuccessDark).Foreground(s.Colors.Black),
+		DangerHovered:    lipgloss.NewStyle().Background(s.Colors.DangerDark).Foreground(s.Colors.Black),
+		WarningHovered:   lipgloss.NewStyle().Background(s.Colors.WarningDark).Foreground(s.Colors.Black),
+		InfoHovered:      lipgloss.NewStyle().Background(s.Colors.InfoDark).Foreground(s.Colors.Black),
 	}
 
 	return s
