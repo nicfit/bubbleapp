@@ -3,7 +3,7 @@ module github.com/alexanderbh/bubbleapp
 go 1.24.1
 
 require (
-	github.com/alexanderbh/bubblezone/v2 v2.0.0-20250504134016-61b96be737e7
+	github.com/alexanderbh/bubblezone/v2 v2.0.0-20250513070732-bb67fca0c6de
 	github.com/charmbracelet/bubbles/v2 v2.0.0-beta.1.0.20250414140720-bb6a2a461dd8
 	github.com/charmbracelet/bubbletea/v2 v2.0.0-beta.3.0.20250505151056-185e28113f13
 	github.com/charmbracelet/glamour v0.10.0
