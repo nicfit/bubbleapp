@@ -297,7 +297,6 @@ func UseMouseHandler(c *Ctx, handler MouseHandler) {
 	if !exists {
 		panic("UseMouseHandler: component instance not found")
 	}
-	instance.focusable = true
 	instance.mouseHandlers = append(instance.mouseHandlers, handler)
 }
 
@@ -312,7 +311,6 @@ func UseAction(c *Ctx, handler func(childID string)) {
 	if !exists {
 		panic("UseAction: component instance not found")
 	}
-	instance.focusable = true
 	instance.mouseHandlers = append(instance.mouseHandlers, func(msg tea.MouseMsg, childID string) bool {
 		if releaseMsg, ok := msg.(tea.MouseReleaseMsg); ok && releaseMsg.Mouse().Button == tea.MouseLeft {
 			handler(childID)

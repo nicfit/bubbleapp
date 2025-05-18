@@ -28,6 +28,46 @@ func _findCurrentFocusIndex(focusableIDs []string, currentFocusID string) int {
 	return -1
 }
 
+// FocusThis sets the focus to the component with the given ID.
+// If the component is not focusable, it will try to find a parent that is focusable.
+// If no focusable parent is found, it sets the focused ID to empty.
+func (c *Ctx) FocusThis(id string) {
+	if c.id == nil || c.componentContext == nil {
+		panic("FocusThis: invalid context")
+	}
+	if instance, ok := c.componentContext.get(id); ok && instance != nil {
+		if instance.focusable {
+			c.UIState.Focused = id
+			// If the component has an onFocused function, call it
+			if instance.onFocused != nil {
+				instance.onFocused(false)
+			}
+		} else {
+			// If the component is not focusable, try to find a parent that is
+			var parent = c.layoutManager.componentTree.nodes[instance.id].Parent
+			for parent != nil {
+				pInstance, ok := c.componentContext.get(id)
+				if !ok {
+					break
+				}
+				if pInstance.focusable {
+					c.UIState.Focused = pInstance.id
+					// If the component has an onFocused function, call it
+					if pInstance.onFocused != nil {
+						pInstance.onFocused(false)
+					}
+					break
+				}
+				parent = c.layoutManager.componentTree.nodes[pInstance.id].Parent
+			}
+			// If no parent is focusable, set the focused ID to empty
+			if parent == nil {
+				c.UIState.Focused = ""
+			}
+		}
+	}
+}
+
 func (c *Ctx) FocusNext() string {
 	focusableIDs := _getFocusableComponentIDs(c)
 	if len(focusableIDs) == 0 {
