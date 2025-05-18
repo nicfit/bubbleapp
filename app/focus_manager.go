@@ -32,9 +32,6 @@ func _findCurrentFocusIndex(focusableIDs []string, currentFocusID string) int {
 // If the component is not focusable, it will try to find a parent that is focusable.
 // If no focusable parent is found, it sets the focused ID to empty.
 func (c *Ctx) FocusThis(id string) {
-	if c.id == nil || c.componentContext == nil {
-		panic("FocusThis: invalid context")
-	}
 	if instance, ok := c.componentContext.get(id); ok && instance != nil {
 		if instance.focusable {
 			c.UIState.Focused = id
@@ -46,7 +43,7 @@ func (c *Ctx) FocusThis(id string) {
 			// If the component is not focusable, try to find a parent that is
 			var parent = c.layoutManager.componentTree.nodes[instance.id].Parent
 			for parent != nil {
-				pInstance, ok := c.componentContext.get(id)
+				pInstance, ok := c.componentContext.get(parent.ID)
 				if !ok {
 					break
 				}
