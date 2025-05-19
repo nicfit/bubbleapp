@@ -3,16 +3,7 @@
 > [!WARNING]
 > This is work in progress. Help is welcome.
 
-An opinionated App Framework for BubbleTea. Using composable functional components and hooks it becomes easy to make large BubbleTea apps without too much code. See the examples for how it works.
-
-## Components
-
-- **[Router](#router)**
-  - Easy navigation with nested routes and outlets
-- **[Layout Components](#layout-components)**
-  - [Stack](#stack) and (Flex) Box makes it easy to create flexible layouts
-- **[Widget Components](#widget-components)**
-  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), [Forms (huh?)](#form) and more to come...
+BubbleApp is an opinionated app framework for BubbleTea. Using composable functional components and hooks it becomes easy to make large BubbleTea apps without too much code. See the examples for how it works.
 
 ## Features
 
@@ -24,18 +15,41 @@ An opinionated App Framework for BubbleTea. Using composable functional componen
   - Automatic mouse handling and propagation for all components.
 - **[Focus Management](#focus)**
   - Tab through your entire UI tree without any extra code. Tab order is the order in the UI tree.
-- **Global Ticks** IN PROGRESS
-  - Adding several Spinners from Bubbles is really slow over SSH since they each start a Tick message. In BubbleTea all components use the same global tick for real time updates.
+- **[Theming](./style/style.go)**
+  - Use the default provided theme or provide your own. A `style.Theme` uses named colors in a `style.Color` which are in turn defined by a provided `style.Palette`.
 
-# Examples
+## Components
+
+- **[Router](#router)**
+  - Easy navigation with nested routes and outlets
+- **Context Provider**
+  - Share state and behavior with Contexts that can be consumed from any component below the Provider. This is how the Router works for example.
+- **[Layout Components](#layout-components)**
+  - [Stack](#stack) and Box makes it easy to create flexible layouts. (Responsive Grid Layout Component planned)
+- **[Widget Components](#widget-components)**
+  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), [Forms](#form) and more to come...
+- **Custom Components**
+  - Make your own components. All the provided components are built with the same hooks you have access to
+
+## How it works
+
+BubbleApp works as an adaptor on top of BubbleTea. As a user of BubbleApp you will not have to interact with BubbleTea at all. That is abtracted away.
+
+You provide a single function `app.FC` that takes in a Context `app.Ctx` and returns a "rendered" Component `app.C`. That is your App!
+
+A rendered component is in the end just a string but in the form of a Component (`app.C`) that is registered with BubbleApp.
+
+BubbleApp provides the means to Render a string with the render method:
+
+`func (c *Ctx) Render(fn func(c *Ctx, props Props) string, props Props) C`
+
+It might look complicated but it is esentially just wrapping a function call. It takes a function (`fn`) and some props. It then generates a unique ID for the component and prepares state for Hooks, Layout calculations and more.
+
+In the end it then calls `fn` with the provided props which returns a string. This string is what is returned to BubbleTea and rendered on the screen.
 
 ### Minimal example
 
-This is the smallest example of a BubbleApp program. A BubbleApp program is a function that takes a 'context' and some props and returns a string.
-
-It can then in turn use other components (read: functions) to build an app. `text.New` is just a helper that is the same as calling the `func Text(c *app.Ctx, props app.Props) string` function.
-
-Everything is just functions that return strings. It is similar to a certain web framework with functional components and hooks.
+This is the smallest example of a BubbleApp program.
 
 ```go
 package main
@@ -47,6 +61,7 @@ import (
   tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+// This is your root function that returns an app.C (which is a rendered string)
 func NewRoot(c *app.Ctx) app.C {
   return text.New(c, "Hello World!")
 }
@@ -54,9 +69,9 @@ func NewRoot(c *app.Ctx) app.C {
 func main() {
   c := app.NewCtx()
 
-  bubbleApp := app.New(c, NewRoot)
+  bubbleApp := app.New(c, NewRoot) // Create a BubbleApp
   p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
-  bubbleApp.SetTeaProgram(p)
+  bubbleApp.SetTeaProgram(p) // Required: give BubbleApp a reference to your BubbleTea program
   if _, err := p.Run(); err != nil {
     os.Exit(1)
   }
@@ -64,6 +79,8 @@ func main() {
 ```
 
 ---
+
+## Examples
 
 ### [Multiple Views](./examples/multiple-views/login.go)
 

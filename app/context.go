@@ -61,7 +61,7 @@ func (c *Ctx) initView() {
 	}
 }
 
-func (c *Ctx) RenderWithName(fc func(c *Ctx, props Props) string, props Props, name string) C {
+func (c *Ctx) RenderWithName(fn func(c *Ctx, props Props) string, props Props, name string) C {
 	id := c.id.push(name)
 	defer c.id.pop()
 
@@ -81,7 +81,7 @@ func (c *Ctx) RenderWithName(fc func(c *Ctx, props Props) string, props Props, n
 	c.useEffectCounter[id] = 0
 
 	// FC now returns a string, not Component
-	outputStr := fc(c, props)
+	outputStr := fn(c, props)
 
 	// Create the Component here
 	output := C{
@@ -118,8 +118,8 @@ func (c *Ctx) RenderWithName(fc func(c *Ctx, props Props) string, props Props, n
 // Render a functional component with the given props.
 // This function is responsible for managing the lifecycle of the component,
 // including state management, effect handling, and ID management.
-func (c *Ctx) Render(fc func(c *Ctx, props Props) string, props Props) C {
-	return c.RenderWithName(fc, props, getKeyName(fc, props))
+func (c *Ctx) Render(fn func(c *Ctx, props Props) string, props Props) C {
+	return c.RenderWithName(fn, props, getKeyName(fn, props))
 }
 
 // MouseZone creates a mouse zone for the given content.

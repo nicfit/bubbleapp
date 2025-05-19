@@ -28,7 +28,7 @@ Enter
 
 Sleep 1s
 
-Tab@200ms 2
+Tab@200ms 1
 
 Sleep 1s
 
