@@ -16,6 +16,7 @@ type Props struct {
 	Bold       bool
 	app.Margin
 	app.Padding
+	app.Layout
 }
 
 type prop func(*Props)
@@ -31,14 +32,23 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 
 	if props.Foreground != nil {
 		s = s.Foreground(props.Foreground)
+	} else if s.GetForeground() == nil {
+		s = s.Foreground(lipgloss.NoColor{})
 	}
 	if props.Background != nil {
 		s = s.Background(props.Background)
-	} else {
-		s = s.Background(lipgloss.NoColor{})
+	} else if c.CurrentBg != nil {
+		s = s.Background(c.CurrentBg)
 	}
 	if props.Bold {
 		s = s.Bold(true)
+	}
+
+	if props.Layout.Height > 0 {
+		s = s.Height(props.Layout.Height)
+	}
+	if props.Layout.Width > 0 {
+		s = s.Width(props.Layout.Width)
 	}
 
 	s = app.ApplyMargin(app.ApplyPadding(s, props.Padding), props.Margin)

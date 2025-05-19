@@ -34,6 +34,18 @@ func WithBold(bold bool) prop {
 	}
 }
 
+func WithHeight(height int) prop {
+	return func(props *Props) {
+		props.Layout.Height = height
+	}
+}
+
+func WithWidth(width int) prop {
+	return func(props *Props) {
+		props.Layout.Width = width
+	}
+}
+
 // WithM sets uniform margin for all sides.
 func WithM(m int) prop {
 	return func(props *Props) {

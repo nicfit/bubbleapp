@@ -4,7 +4,7 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/charmbracelet/bubbles/v2/viewport"
+	"github.com/alexanderbh/bubbleapp/component/box/viewport"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -13,7 +13,7 @@ type BoxProps struct {
 	Key           string
 	Bg            color.Color
 	DisableFollow bool
-	FC            app.FC
+	Child         app.FC
 	app.Layout
 	app.Border
 }
@@ -46,17 +46,26 @@ func Box(c *app.Ctx, props app.Props) string {
 	vp.SetWidth(width)
 	vp.SetHeight(height)
 
-	if boxProps.FC != nil {
-		fc := boxProps.FC(c).String()
+	style := app.ApplyBorder(lipgloss.NewStyle(), boxProps.Border)
+	if boxProps.Bg != nil {
+		style = style.Background(boxProps.Bg)
+		beforeCurrentBg := c.CurrentBg
+		c.CurrentBg = boxProps.Bg
+		vp.Style = vp.Style.Background(c.CurrentBg)
+		defer func() {
+			c.CurrentBg = beforeCurrentBg
+		}()
+	} else if c.CurrentBg != nil {
+		style = style.Background(c.CurrentBg)
+		vp.Style = vp.Style.Background(c.CurrentBg)
+	}
+
+	if boxProps.Child != nil {
+		fc := boxProps.Child(c).String()
 		vp.SetContent(fc)
 		if !boxProps.DisableFollow {
 			vp.GotoBottom()
 		}
-	}
-
-	style := app.ApplyBorder(lipgloss.NewStyle(), boxProps.Border)
-	if boxProps.Bg != nil {
-		style = style.Background(boxProps.Bg)
 	}
 
 	finalRender := style.Width(width).Height(height).Render(vp.View())
@@ -67,7 +76,7 @@ func Box(c *app.Ctx, props app.Props) string {
 // New creates a new Box component.
 func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
 	appliedProps := BoxProps{
-		FC:            child,
+		Child:         child,
 		DisableFollow: false,
 		Layout: app.Layout{
 			GrowX: true,

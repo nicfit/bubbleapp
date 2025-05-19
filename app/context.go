@@ -1,6 +1,7 @@
 package app
 
 import (
+	"image/color"
 	"reflect"
 	"runtime"
 	"strings"
@@ -25,6 +26,7 @@ type Ctx struct {
 	useStateCounter  map[string]int
 	contextValues    map[uint64][]any // Added for Context API
 
+	CurrentBg color.Color
 	// Layout
 	LayoutPhase   layoutPhase
 	layoutManager *layoutManager
