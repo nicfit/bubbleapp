@@ -1,6 +1,7 @@
 package app
 
 import (
+	"image/color"
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/style"
@@ -28,12 +29,21 @@ type Props any
 type FCs = func(c *Ctx) []C
 type FC = func(c *Ctx) C
 
-type AppOptions struct{}
+type AppOptions struct {
+	BackgroundColor color.Color
+}
 type AppOption func(*AppOptions)
+
+func WithBackgroundColor(color color.Color) AppOption {
+	return func(opts *AppOptions) {
+		opts.BackgroundColor = color
+	}
+}
 
 type app struct {
 	root FC
 	ctx  *Ctx
+	opts *AppOptions
 }
 
 func New(ctx *Ctx, root FC, options ...AppOption) *app {
@@ -52,6 +62,7 @@ func New(ctx *Ctx, root FC, options ...AppOption) *app {
 	return &app{
 		root: root,
 		ctx:  ctx,
+		opts: opts,
 	}
 }
 
@@ -63,7 +74,11 @@ func (a *app) Init() tea.Cmd {
 	if a.ctx.teaProgram == nil {
 		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
 	}
-	return nil
+	var cmds []tea.Cmd
+	if a.opts.BackgroundColor != nil {
+		cmds = append(cmds, tea.SetBackgroundColor(a.opts.BackgroundColor))
+	}
+	return tea.Batch(cmds...)
 }
 
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
