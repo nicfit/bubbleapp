@@ -31,12 +31,19 @@ type FC = func(c *Ctx) C
 
 type AppOptions struct {
 	BackgroundColor color.Color
+	ForegroundColor color.Color
 }
 type AppOption func(*AppOptions)
 
 func WithBackgroundColor(color color.Color) AppOption {
 	return func(opts *AppOptions) {
 		opts.BackgroundColor = color
+	}
+}
+
+func WithForegroundColor(color color.Color) AppOption {
+	return func(opts *AppOptions) {
+		opts.ForegroundColor = color
 	}
 }
 
@@ -77,6 +84,9 @@ func (a *app) Init() tea.Cmd {
 	var cmds []tea.Cmd
 	if a.opts.BackgroundColor != nil {
 		cmds = append(cmds, tea.SetBackgroundColor(a.opts.BackgroundColor))
+	}
+	if a.opts.ForegroundColor != nil {
+		cmds = append(cmds, tea.SetForegroundColor(a.opts.ForegroundColor))
 	}
 	return tea.Batch(cmds...)
 }
