@@ -51,7 +51,7 @@ func NewWithoutText(c *app.Ctx, variant Spinner, prop ...prop) app.C {
 
 func New(c *app.Ctx, variant Spinner, text string, prop ...prop) app.C {
 	p := Props{
-		Color:   c.Styles.Colors.Primary,
+		Color:   c.Theme.Colors.PrimaryFg,
 		Spinner: variant,
 		Text:    text,
 	}

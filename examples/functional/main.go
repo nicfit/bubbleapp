@@ -10,6 +10,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/button"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/style"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
@@ -31,12 +32,12 @@ func NewRoot(c *app.Ctx) app.C {
 				setClicks(clicks + 1)
 			}),
 
-			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning)),
-			text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning)),
+			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Theme.Colors.Warning)),
+			text.New(c, "Greeting: "+greeting, text.WithFg(c.Theme.Colors.Warning)),
 
 			box.NewEmpty(c),
 
-			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+			button.New(c, "Quit", c.Quit, button.WithVariant(style.Danger)),
 		}
 	}, stack.WithGap(1), stack.WithGrow(true))
 }

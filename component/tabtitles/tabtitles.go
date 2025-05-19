@@ -63,13 +63,13 @@ func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID i
 func TabTitles(c *app.Ctx, componentProps app.Props) string {
 	p, _ := componentProps.(Props)
 
-	// TODO: UseMemo for this
-	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(c.Styles.Colors.Secondary).Padding(0, 1)
-	inactiveStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC")).Padding(0, 1)
-	inactiveStyleFocused := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF")).Padding(0, 1)
-	hoveredStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(c.Styles.Colors.Primary).Foreground(c.Styles.Colors.Primary).Padding(0, 1)
-	unusedStyle := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#ACACAC")).Foreground(lipgloss.Color("#ACACAC"))
-	unusedStyleFocused := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(lipgloss.Color("#FFFFFF")).Foreground(lipgloss.Color("#FFFFFF"))
+	// TODO: Add this to Theme
+	activeStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(c.Theme.Colors.PrimaryFg).Foreground(c.Theme.Colors.PrimaryFg).Padding(0, 1)
+	inactiveStyle := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(c.Theme.Colors.Base200).Foreground(c.Theme.Colors.Base200).Padding(0, 1)
+	inactiveStyleFocused := lipgloss.NewStyle().Border(defaultInactiveTabBorder, true).BorderForeground(c.Theme.Colors.PrimaryLight).Foreground(c.Theme.Colors.PrimaryLighter).Padding(0, 1)
+	hoveredStyle := lipgloss.NewStyle().Border(defaultActiveTabBorder, true).BorderForeground(c.Theme.Colors.PrimaryLighter).Foreground(c.Theme.Colors.PrimaryLighter).Padding(0, 1).Underline(true)
+	unusedStyle := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(c.Theme.Colors.Base300).Foreground(c.Theme.Colors.Base300)
+	unusedStyleFocused := lipgloss.NewStyle().Border(defaultUnusedTabBorder, false, false, true, false).BorderForeground(c.Theme.Colors.PrimaryLighter).Foreground(c.Theme.Colors.PrimaryLighter)
 
 	titles := p.Titles
 	focused := app.UseIsFocused(c)

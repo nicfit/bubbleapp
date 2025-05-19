@@ -242,7 +242,7 @@ func NewRoot(c *app.Ctx) app.C {
 			}, box.WithDisableFollow(true)),
 
 			divider.New(c),
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.Danger)),
 		}
 	})
 }
@@ -262,17 +262,17 @@ Stack layouts vertically or horizontally.
 func NewRoot(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger)),
+			box.NewEmpty(c, box.WithBg(c.Theme.Colors.Danger)),
 			box.New(c, func(c *app.Ctx) app.C {
 				return stack.New(c, func(c *app.Ctx) []app.C {
 					return []app.C{
-						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary)),
-						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary)),
-						box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary)),
+						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Primary)),
+						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Secondary)),
+						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Tertiary)),
 					}
 				}, stack.WithDirection(app.Horizontal))
 			}),
-			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning)),
+			box.NewEmpty(c, box.WithBg(c.Theme.Colors.Warning)),
 		}
 	})
 }
@@ -306,8 +306,8 @@ func NewRoot(c *app.Ctx) app.C {
 				setClicks(clicks + 1)
 			}),
 
-			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Styles.Colors.Warning)),
-			text.New(c, "Greeting: "+greeting, text.WithFg(c.Styles.Colors.Warning)),
+			text.New(c, "Clicks: "+strconv.Itoa(clicks), text.WithFg(c.Theme.Colors.Warning)),
+			text.New(c, "Greeting: "+greeting, text.WithFg(c.Theme.Colors.Warning)),
 
 			box.NewEmpty(c),
 
@@ -377,16 +377,16 @@ Here are some planned features in no particular order. Feel free to suggest some
 
 - [x] **Component Structure/API** - Finalize the API for rendering components
 - [x] **Router** - Add a router component that can handle screens, navigation, back history, etc.
+- [x] **Theme** - Support for theme/palette
+- [x] **Shortcut support** - global and locally within components in focus perhaps
+- [ ] **Scroll overflow** - Support scrolling (mouse and keyboard) for Boxes with vertical overflowing content
+- [ ] **Form and input fields** - Move away from huh for forms as it is not flexible enough
 - [ ] **Alignments** - Add justify and align options on relevant components
 - [ ] **Border and title on Box** - Add borders and titles to Box component
-- [ ] **Speed up Viewport** - Move away from ViewPort to custom stateful variant of a scrolling box
 - [ ] **Performance** - Figure out where CPU is spent and optimize (perhaps prevent rerenders if no props or state changes)
-- [ ] **Proper theming** - Default themes (or BYOT, bring your own theme)
-- [ ] **Scroll content** - Scroll with mouse and keyboard on Box (which is an overflow container)
 - [ ] **Modal Component** - Using canvas/layers approach
 - [ ] **Confirm Component** - Using modal but is an ok, cancel modal with text
 - [ ] **Help Text Component**
-- [ ] **Shortcut support** - global and locally within components in focus perhaps
 - [ ] **Context Menu Component**
 - [ ] **Table DataSource** - attach a datasource to a table that can handle fetching, sorting, filtering, etc.
 - [ ] **Animation Component** - give it a list of frames and an FPS and it handles the rest

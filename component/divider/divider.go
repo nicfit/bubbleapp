@@ -11,26 +11,22 @@ import (
 // TODO: Support GrowY/Vertical divider
 
 type Props struct {
-	Char    string      // If not set defaults to "─"
-	FGColor color.Color // If nil, defaults to app.Ctx.Styles.Colors.Ghost.
+	Char    string
+	FGColor color.Color
 	app.Layout
 }
 
 type prop func(*Props)
 
-func Divider(c *app.Ctx, props app.Props) string {
-	divProps, ok := props.(Props)
+func Divider(c *app.Ctx, rawProps app.Props) string {
+	props, ok := rawProps.(Props)
 	if !ok {
 		return ""
 	}
 
-	finalFGColor := divProps.FGColor
-	if finalFGColor == nil {
-		finalFGColor = c.Styles.Colors.Ghost
-	}
-	style := lipgloss.NewStyle().Foreground(finalFGColor)
+	style := lipgloss.NewStyle().Foreground(props.FGColor)
 
-	char := divProps.Char
+	char := props.Char
 
 	var length int
 	width, _ := app.UseSize(c)
@@ -51,7 +47,7 @@ func Divider(c *app.Ctx, props app.Props) string {
 func New(c *app.Ctx, opts ...prop) app.C {
 	p := Props{
 		Char:    "─",
-		FGColor: c.Styles.Colors.Ghost,
+		FGColor: c.Theme.Colors.Base600,
 		Layout: app.Layout{
 			GrowX: true,
 			GrowY: false,
@@ -88,11 +84,3 @@ func WithGrowX(grow bool) prop {
 		props.Layout.GrowX = grow
 	}
 }
-
-// Note: WithGrowY might not be typical for a horizontal divider,
-// but could be added if vertical dividers or other use cases emerge.
-// func WithGrowY(grow bool) prop {
-// 	return func(props *Props) {
-// 		props.Layout.GrowY = grow
-// 	}
-// }

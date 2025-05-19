@@ -24,7 +24,7 @@ func NewRoot(c *app.Ctx) app.C {
 
 			text.New(c, "Loaders:"),
 			divider.New(c),
-			loader.New(c, loader.Dots, "With text...", loader.WithColor(c.Styles.Colors.InfoLight), loader.WithTextColor(c.Styles.Colors.Primary)),
+			loader.New(c, loader.Dots, "With text...", loader.WithColor(c.Theme.Colors.InfoLight), loader.WithTextColor(c.Theme.Colors.PrimaryFg)),
 			tickfps.NewAtInterval(c, 100*time.Microsecond), // Used for debugging tick events.
 			stack.New(c, func(c *app.Ctx) []app.C {
 				return []app.C{
@@ -152,7 +152,7 @@ func NewRoot(c *app.Ctx) app.C {
 
 			}, stack.WithDirection(app.Horizontal)),
 
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
 		}
 	},
 	)

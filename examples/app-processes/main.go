@@ -14,6 +14,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/table"
 	"github.com/alexanderbh/bubbleapp/component/text"
 	"github.com/alexanderbh/bubbleapp/component/tickfps"
+	"github.com/alexanderbh/bubbleapp/style"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
@@ -34,7 +35,7 @@ func NewRoot(c *app.Ctx) app.C {
 				return clms, processes
 			})),
 			tickfps.NewAtInterval(c, 1*time.Second),
-			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+			button.New(c, "Quit", c.Quit, button.WithVariant(style.Danger)),
 		}
 	})
 }

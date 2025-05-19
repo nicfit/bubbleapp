@@ -4,10 +4,11 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/alexanderbh/bubbleapp/style"
 )
 
 type Props struct {
+	Variant    style.Variant
 	Text       string
 	Foreground color.Color
 	Background color.Color
@@ -19,41 +20,34 @@ type Props struct {
 type prop func(*Props)
 
 // Text is the core functional component for rendering text.
-func Text(c *app.Ctx, props app.Props) string {
-	textProps, ok := props.(Props)
+func Text(c *app.Ctx, rawProps app.Props) string {
+	props, ok := rawProps.(Props)
 	if !ok {
 		return ""
 	}
 
-	s := lipgloss.NewStyle()
+	s := c.Theme.Text[props.Variant][style.Normal]
 
-	if textProps.Foreground != nil {
-		s = s.Foreground(textProps.Foreground)
-	} else {
-		s = s.Foreground(lipgloss.NoColor{}) // Default as in original
+	if props.Foreground != nil {
+		s = s.Foreground(props.Foreground)
 	}
-
-	if textProps.Background != nil {
-		s = s.Background(textProps.Background)
-	} else {
-		s = s.Background(lipgloss.NoColor{}) // Default as in original
+	if props.Background != nil {
+		s = s.Background(props.Background)
 	}
-
-	if textProps.Bold {
+	if props.Bold {
 		s = s.Bold(true)
 	}
 
-	s = app.ApplyMargin(app.ApplyPadding(s, textProps.Padding), textProps.Margin)
+	s = app.ApplyMargin(app.ApplyPadding(s, props.Padding), props.Margin)
 
-	return s.Render(textProps.Text)
+	return s.Render(props.Text)
 }
 
 // New creates a new text element.
 func New(c *app.Ctx, text string, opts ...prop) app.C {
 	p := Props{
-		Text:       text,
-		Foreground: lipgloss.NoColor{},
-		Background: lipgloss.NoColor{},
+		Text:    text,
+		Variant: style.Base,
 	}
 
 	for _, opt := range opts {

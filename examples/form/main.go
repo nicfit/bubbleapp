@@ -10,6 +10,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/form"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/style"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/huh/v2"
@@ -58,7 +59,7 @@ func NewRoot(c *app.Ctx) app.C {
 		return append(cs,
 			box.NewEmpty(c),
 			divider.New(c),
-			button.New(c, "Quit", c.Quit, button.WithVariant(button.Danger)),
+			button.New(c, "Quit", c.Quit, button.WithVariant(style.Danger)),
 		)
 	})
 }
@@ -75,8 +76,8 @@ func main() {
 }
 
 func loginLogo(c *app.Ctx, _ app.Props) string {
-	f := lipgloss.NewStyle().Foreground(c.Styles.Colors.Secondary)
-	b := lipgloss.NewStyle().Foreground(c.Styles.Colors.GhostDark)
+	f := lipgloss.NewStyle().Foreground(c.Theme.Colors.Secondary)
+	b := lipgloss.NewStyle().Foreground(c.Theme.Colors.Base700)
 	return f.Render("██") + b.Render("╗      ") + f.Render("██████") + b.Render("╗  ") + f.Render("██████") + b.Render("╗ ") + f.Render("██") + b.Render("╗") + f.Render("███") + b.Render("╗   ") + f.Render("██") + b.Render("╗") + "\n" +
 		f.Render("██") + b.Render("║     ") + f.Render("██") + b.Render("╔═══") + f.Render("██") + b.Render("╗") + f.Render("██") + b.Render("╔════╝ ") + f.Render("██") + b.Render("║") + f.Render("████") + b.Render("╗  ") + f.Render("██") + b.Render("║") + "\n" +
 		f.Render("██") + b.Render("║     ") + f.Render("██") + b.Render("║   ") + f.Render("██") + b.Render("║") + f.Render("██") + b.Render("║  ") + f.Render("███") + b.Render("╗") + f.Render("██") + b.Render("║") + f.Render("██") + b.Render("╔") + f.Render("██") + b.Render("╗ ") + f.Render("██") + b.Render("║") + "\n" +

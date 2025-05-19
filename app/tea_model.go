@@ -1,7 +1,6 @@
 package app
 
 import (
-	"image/color"
 	"strings"
 
 	"github.com/alexanderbh/bubbleapp/style"
@@ -30,46 +29,34 @@ type FCs = func(c *Ctx) []C
 type FC = func(c *Ctx) C
 
 type AppOptions struct {
-	BackgroundColor color.Color
-	ForegroundColor color.Color
+	Theme *style.AppTheme
 }
 type AppOption func(*AppOptions)
 
-func WithBackgroundColor(color color.Color) AppOption {
+func WithTheme(theme *style.AppTheme) AppOption {
 	return func(opts *AppOptions) {
-		opts.BackgroundColor = color
-	}
-}
-
-func WithForegroundColor(color color.Color) AppOption {
-	return func(opts *AppOptions) {
-		opts.ForegroundColor = color
+		opts.Theme = theme
 	}
 }
 
 type app struct {
 	root FC
 	ctx  *Ctx
-	opts *AppOptions
 }
 
 func New(ctx *Ctx, root FC, options ...AppOption) *app {
-	if ctx.zoneMap == nil {
-		ctx.zoneMap = make(map[string]*instanceContext)
-	}
-	if ctx.Styles == nil {
-		ctx.Styles = style.DefaultStyles()
-	}
-
 	opts := &AppOptions{}
 	for _, opt := range options {
 		opt(opts)
 	}
 
+	if opts.Theme != nil {
+		ctx.Theme = opts.Theme
+	}
+
 	return &app{
 		root: root,
 		ctx:  ctx,
-		opts: opts,
 	}
 }
 
@@ -82,11 +69,11 @@ func (a *app) Init() tea.Cmd {
 		panic("teaProgram is nil. Set the tea.Program with app.SetTeaProgram(p).")
 	}
 	var cmds []tea.Cmd
-	if a.opts.BackgroundColor != nil {
-		cmds = append(cmds, tea.SetBackgroundColor(a.opts.BackgroundColor))
+	if a.ctx.Theme.BackgroundColor != nil {
+		cmds = append(cmds, tea.SetBackgroundColor(a.ctx.Theme.BackgroundColor))
 	}
-	if a.opts.ForegroundColor != nil {
-		cmds = append(cmds, tea.SetForegroundColor(a.opts.ForegroundColor))
+	if a.ctx.Theme.ForegroundColor != nil {
+		cmds = append(cmds, tea.SetForegroundColor(a.ctx.Theme.ForegroundColor))
 	}
 	return tea.Batch(cmds...)
 }

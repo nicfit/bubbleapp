@@ -7,7 +7,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/stack"
 )
 
-func boxes(c *app.Ctx) app.C {
+func tabtab(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			box.New(c, func(c *app.Ctx) app.C {

@@ -13,7 +13,7 @@ func NewAuthModel(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			text.New(c, "You are logged in as: "+appData.data.userID),
-			text.New(c, "Press [ctrl-c] to quit.\n", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.\n", text.WithFg(c.Theme.Colors.DangerFg)),
 		}
 	})
 }

@@ -31,7 +31,7 @@ func dashboard(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			text.New(c, "Welcome to the dashboard! "),
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
 
 			divider.New(c),
 
@@ -52,7 +52,7 @@ func account(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			text.New(c, "My Account"),
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
 			stack.New(c, func(c *app.Ctx) []app.C {
 				return []app.C{
 					button.New(c, "Overview", func() {
@@ -97,7 +97,7 @@ func shop(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
 			text.New(c, "Welcome to the shop!"),
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.Danger)),
 
 			divider.New(c),
 
@@ -107,9 +107,9 @@ func shop(c *app.Ctx) app.C {
 
 			stack.New(c, func(c *app.Ctx) []app.C {
 				return []app.C{
-					text.New(c, "Shop Item 1 - $10", text.WithFg(c.Styles.Colors.Tertiary)),
-					text.New(c, "Shop Item 2 - $12", text.WithFg(c.Styles.Colors.Tertiary)),
-					text.New(c, "This is just for show", text.WithFg(c.Styles.Colors.Warning)),
+					text.New(c, "Shop Item 1 - $10", text.WithFg(c.Theme.Colors.Tertiary)),
+					text.New(c, "Shop Item 2 - $12", text.WithFg(c.Theme.Colors.Tertiary)),
+					text.New(c, "This is just for show", text.WithFg(c.Theme.Colors.Warning)),
 				}
 			}),
 		}

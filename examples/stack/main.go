@@ -15,16 +15,16 @@ type CustomData struct{}
 func NewRoot(c *app.Ctx) app.C {
 	return stack.New(c, func(c *app.Ctx) []app.C {
 		return []app.C{
-			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Danger)),
+			box.NewEmpty(c, box.WithBg(c.Theme.Colors.DangerLight)),
 			stack.New(c, func(c *app.Ctx) []app.C {
 				return []app.C{
-					box.NewEmpty(c, box.WithBg(c.Styles.Colors.Primary)),
-					box.NewEmpty(c, box.WithBg(c.Styles.Colors.Secondary)),
-					box.NewEmpty(c, box.WithBg(c.Styles.Colors.Tertiary)),
+					box.NewEmpty(c, box.WithBg(c.Theme.Colors.PrimaryLight)),
+					box.NewEmpty(c, box.WithBg(c.Theme.Colors.SecondaryLight)),
+					box.NewEmpty(c, box.WithBg(c.Theme.Colors.TertiaryLight)),
 				}
 			}, stack.WithDirection(app.Horizontal), stack.WithGrow(true)),
 
-			box.NewEmpty(c, box.WithBg(c.Styles.Colors.Warning)),
+			box.NewEmpty(c, box.WithBg(c.Theme.Colors.WarningLight)),
 		}
 	})
 }

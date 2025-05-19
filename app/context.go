@@ -16,7 +16,7 @@ type Ctx struct {
 	zone             *zone.Manager
 	zoneMap          map[string]*instanceContext
 	teaProgram       *tea.Program
-	Styles           *style.Styles
+	Theme            *style.AppTheme
 	id               *idContext
 	tick             *tickState[any]
 	invalidate       bool
@@ -35,7 +35,7 @@ func NewCtx() *Ctx {
 		UIState:          NewUIStateContext(),
 		zone:             zone.New(),
 		zoneMap:          make(map[string]*instanceContext),
-		Styles:           style.DefaultStyles(),
+		Theme:            style.NewDefaultAppTheme(),
 		id:               newIdContext(),
 		tick:             &tickState[any]{},
 		componentContext: newInstanceContext(),

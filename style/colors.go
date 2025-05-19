@@ -2,96 +2,178 @@ package style
 
 import (
 	"image/color"
-
-	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type Colors struct {
-	Primary      color.Color
-	PrimaryLight color.Color
-	PrimaryDark  color.Color
+	Palette Palette
 
-	Secondary      color.Color
-	SecondaryLight color.Color
-	SecondaryDark  color.Color
+	Base50  color.Color
+	Base100 color.Color
+	Base200 color.Color
+	Base300 color.Color
+	Base400 color.Color
+	Base500 color.Color
+	Base600 color.Color
+	Base700 color.Color
+	Base800 color.Color
+	Base900 color.Color
+	Base950 color.Color
 
-	Tertiary      color.Color
-	TertiaryLight color.Color
-	TertiaryDark  color.Color
+	BaseAlt50  color.Color
+	BaseAlt100 color.Color
+	BaseAlt200 color.Color
+	BaseAlt300 color.Color
+	BaseAlt400 color.Color
+	BaseAlt500 color.Color
+	BaseAlt600 color.Color
+	BaseAlt700 color.Color
+	BaseAlt800 color.Color
+	BaseAlt900 color.Color
+	BaseAlt950 color.Color
 
-	Info      color.Color
-	InfoLight color.Color
-	InfoDark  color.Color
+	Primary        color.Color
+	PrimaryLight   color.Color
+	PrimaryLighter color.Color
+	PrimaryDark    color.Color
+	PrimaryDarker  color.Color
+	PrimaryBg      color.Color
+	PrimaryFg      color.Color
 
-	Danger      color.Color
-	DangerLight color.Color
-	DangerDark  color.Color
+	Secondary        color.Color
+	SecondaryLight   color.Color
+	SecondaryLighter color.Color
+	SecondaryDark    color.Color
+	SecondaryDarker  color.Color
+	SecondaryBg      color.Color
+	SecondaryFg      color.Color
 
-	Success      color.Color
-	SuccessLight color.Color
-	SuccessDark  color.Color
+	Tertiary        color.Color
+	TertiaryLight   color.Color
+	TertiaryLighter color.Color
+	TertiaryDark    color.Color
+	TertiaryDarker  color.Color
+	TertiaryBg      color.Color
+	TertiaryFg      color.Color
 
-	Warning      color.Color
-	WarningLight color.Color
-	WarningDark  color.Color
+	Info        color.Color
+	InfoLight   color.Color
+	InfoLighter color.Color
+	InfoDark    color.Color
+	InfoDarker  color.Color
+	InfoBg      color.Color
+	InfoFg      color.Color
 
-	Ghost      color.Color
-	GhostLight color.Color
-	GhostDark  color.Color
+	Danger        color.Color
+	DangerLight   color.Color
+	DangerLighter color.Color
+	DangerDark    color.Color
+	DangerDarker  color.Color
+	DangerBg      color.Color
+	DangerFg      color.Color
 
-	Background          color.Color
-	SecondaryBackground color.Color
-	TertiaryBackground  color.Color
-	UIPanelBackground   color.Color
-	HighlightBackground color.Color
-	CodeBackground      color.Color
+	Success        color.Color
+	SuccessLight   color.Color
+	SuccessLighter color.Color
+	SuccessDark    color.Color
+	SuccessDarker  color.Color
+	SuccessBg      color.Color
+	SuccessFg      color.Color
 
-	White color.Color
-	Black color.Color
+	Warning        color.Color
+	WarningLight   color.Color
+	WarningLighter color.Color
+	WarningDark    color.Color
+	WarningDarker  color.Color
+	WarningBg      color.Color
+	WarningFg      color.Color
 }
 
-func defaultColors() Colors {
+func NewDefaultColors() Colors {
+	return NewColors(NewDefaultPalette())
+}
+
+func NewColors(palette Palette) Colors {
 	return Colors{
-		Primary:      lipgloss.Color("#BA99FF"),
-		PrimaryLight: lipgloss.Color("#D4B3FF"),
-		PrimaryDark:  lipgloss.Color("#A07FE5"),
+		Palette: palette,
 
-		Secondary:      lipgloss.Color("#539FFF"),
-		SecondaryLight: lipgloss.Color("#6DB9FF"),
-		SecondaryDark:  lipgloss.Color("#3985E5"),
+		Base50:  palette.Neutral50,
+		Base100: palette.Neutral100,
+		Base200: palette.Neutral200,
+		Base300: palette.Neutral300,
+		Base400: palette.Neutral400,
+		Base500: palette.Neutral500,
+		Base600: palette.Neutral600,
+		Base700: palette.Neutral700,
+		Base800: palette.Neutral800,
+		Base900: palette.Neutral900,
+		Base950: palette.Neutral950,
 
-		Tertiary:      lipgloss.Color("#1AE9D7"),
-		TertiaryLight: lipgloss.Color("#34FFF1"),
-		TertiaryDark:  lipgloss.Color("#00CFBD"),
+		BaseAlt50:  palette.Slate50,
+		BaseAlt100: palette.Slate100,
+		BaseAlt200: palette.Slate200,
+		BaseAlt300: palette.Slate300,
+		BaseAlt400: palette.Slate400,
+		BaseAlt500: palette.Slate500,
+		BaseAlt600: palette.Slate600,
+		BaseAlt700: palette.Slate700,
+		BaseAlt800: palette.Slate800,
+		BaseAlt900: palette.Slate900,
+		BaseAlt950: palette.Slate950,
 
-		Info:      lipgloss.Color("#8AC3F5"),
-		InfoLight: lipgloss.Color("#A4DDFF"),
-		InfoDark:  lipgloss.Color("#70A9DB"),
+		Primary:        palette.Indigo500,
+		PrimaryLight:   palette.Indigo400,
+		PrimaryLighter: palette.Indigo300,
+		PrimaryDark:    palette.Indigo600,
+		PrimaryDarker:  palette.Indigo700,
+		PrimaryBg:      palette.Indigo800,
+		PrimaryFg:      palette.Indigo300,
 
-		Danger:      lipgloss.Color("#F56E7B"),
-		DangerLight: lipgloss.Color("#FF8895"),
-		DangerDark:  lipgloss.Color("#DB5461"),
+		Secondary:        palette.Emerald500,
+		SecondaryLight:   palette.Emerald400,
+		SecondaryLighter: palette.Emerald300,
+		SecondaryDark:    palette.Emerald600,
+		SecondaryDarker:  palette.Emerald700,
+		SecondaryBg:      palette.Emerald800,
+		SecondaryFg:      palette.Emerald300,
 
-		Success:      lipgloss.Color("#7BEAAF"),
-		SuccessLight: lipgloss.Color("#95FFC9"),
-		SuccessDark:  lipgloss.Color("#61D095"),
+		Tertiary:        palette.Orange500,
+		TertiaryLight:   palette.Orange400,
+		TertiaryLighter: palette.Orange300,
+		TertiaryDark:    palette.Orange600,
+		TertiaryDarker:  palette.Orange700,
+		TertiaryBg:      palette.Orange800,
+		TertiaryFg:      palette.Orange300,
 
-		Warning:      lipgloss.Color("#FFDC43"),
-		WarningLight: lipgloss.Color("#FFF65D"),
-		WarningDark:  lipgloss.Color("#E5C229"),
+		Info:        palette.Sky500,
+		InfoLight:   palette.Sky400,
+		InfoLighter: palette.Sky300,
+		InfoDark:    palette.Sky600,
+		InfoDarker:  palette.Sky700,
+		InfoBg:      palette.Sky800,
+		InfoFg:      palette.Sky300,
 
-		Ghost:      lipgloss.Color("#6A6D83"),
-		GhostLight: lipgloss.Color("#84879D"),
-		GhostDark:  lipgloss.Color("#50526A"),
+		Danger:        palette.Red500,
+		DangerLight:   palette.Red400,
+		DangerLighter: palette.Red300,
+		DangerDark:    palette.Red600,
+		DangerDarker:  palette.Red700,
+		DangerBg:      palette.Red800,
+		DangerFg:      palette.Red300,
 
-		Background:          lipgloss.Color("#24242F"),
-		SecondaryBackground: lipgloss.Color("#2C2C3D"),
-		TertiaryBackground:  lipgloss.Color("#34344A"),
-		UIPanelBackground:   lipgloss.Color("#2E2E42"),
-		HighlightBackground: lipgloss.Color("#3F3F5C"),
-		CodeBackground:      lipgloss.Color("#272734"),
+		Success:        palette.Green500,
+		SuccessLight:   palette.Green500,
+		SuccessLighter: palette.Green300,
+		SuccessDark:    palette.Green600,
+		SuccessDarker:  palette.Green700,
+		SuccessBg:      palette.Green800,
+		SuccessFg:      palette.Green300,
 
-		White: lipgloss.Color("#FFFFFF"),
-		Black: lipgloss.Color("#000000"),
+		Warning:        palette.Amber500,
+		WarningLight:   palette.Amber400,
+		WarningLighter: palette.Amber300,
+		WarningDark:    palette.Amber600,
+		WarningDarker:  palette.Amber700,
+		WarningBg:      palette.Amber800,
+		WarningFg:      palette.Amber300,
 	}
 }

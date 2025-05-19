@@ -1,6 +1,10 @@
 package text
 
-import "image/color"
+import (
+	"image/color"
+
+	"github.com/alexanderbh/bubbleapp/style"
+)
 
 // WithFg sets the foreground color.
 func WithFg(fg color.Color) prop {
@@ -13,6 +17,13 @@ func WithFg(fg color.Color) prop {
 func WithBg(bg color.Color) prop {
 	return func(props *Props) {
 		props.Background = bg
+	}
+}
+
+// WithVariant sets the text variant.
+func WithVariant(variant style.Variant) prop {
+	return func(props *Props) {
+		props.Variant = variant
 	}
 }
 

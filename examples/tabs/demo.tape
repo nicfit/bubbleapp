@@ -10,6 +10,8 @@ Enter
 Sleep 3s
 Show
 
+Sleep 1s
+
 Tab
 
 Sleep 3s
@@ -18,7 +20,7 @@ Tab
 
 Sleep 500ms
 
-Tab
+Shift+Tab
 
 Sleep 500ms
 

@@ -8,6 +8,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/context"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/style"
 )
 
 // Route defines the structure for a single route.
@@ -300,7 +301,7 @@ func matchAndRender(
 	if notFound != nil {
 		return notFound(c)
 	}
-	return text.New(c, "404 Not Found", text.WithFg(c.Styles.Colors.White), text.WithBg(c.Styles.Colors.Danger))
+	return text.New(c, "404 Not Found", text.WithVariant(style.Danger))
 }
 
 // --- Outlet ---

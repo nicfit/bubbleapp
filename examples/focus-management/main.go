@@ -11,6 +11,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/divider"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/style"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
@@ -29,7 +30,7 @@ func NewRoot(c *app.Ctx) app.C {
 				newLog := append(currentLog, "["+strconv.Itoa(currentPresses)+"] "+"Button 1 pressed")
 				setLog(newLog)
 				setPresses(currentPresses + 1)
-			}, button.WithVariant(button.Primary)),
+			}, button.WithVariant(style.Primary)),
 
 			divider.New(c),
 
@@ -41,7 +42,7 @@ func NewRoot(c *app.Ctx) app.C {
 
 			button.New(c, "Quit App", func() {
 				c.Quit()
-			}, button.WithVariant(button.Danger)),
+			}, button.WithVariant(style.Danger)),
 		}
 
 	}, stack.WithGrow(true))

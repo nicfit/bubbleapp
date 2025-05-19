@@ -24,7 +24,7 @@ func NewRoot(c *app.Ctx) app.C {
 			}, box.WithDisableFollow(true)),
 
 			divider.New(c),
-			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Styles.Colors.Danger)),
+			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
 		}
 	})
 }

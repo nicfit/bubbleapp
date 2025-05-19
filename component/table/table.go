@@ -128,14 +128,15 @@ type Styles struct {
 	Hovered   lipgloss.Style // Currently unused
 }
 
+// TODO: Add this to the theme
 func defaultStyles(c *app.Ctx) Styles {
-	base := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, true, true, true).BorderForeground(c.Styles.Colors.Ghost)
+	base := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true, true, true, true).BorderForeground(c.Theme.Colors.Base600)
 	return Styles{
 		Base:      base,
-		BaseFocus: base.BorderForeground(c.Styles.Colors.White),
-		Selected:  lipgloss.NewStyle().Bold(true).Foreground(c.Styles.Colors.PrimaryLight).Background(c.Styles.Colors.UIPanelBackground),
-		Hovered:   lipgloss.NewStyle().Bold(true).Foreground(c.Styles.Colors.PrimaryLight).Background(c.Styles.Colors.HighlightBackground),
-		Header:    lipgloss.NewStyle().Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(c.Styles.Colors.GhostLight).BorderBottom(true),
+		BaseFocus: base.BorderForeground(c.Theme.Colors.Base50),
+		Selected:  lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Colors.PrimaryLight).Background(c.Theme.Colors.Base700),
+		Hovered:   lipgloss.NewStyle().Bold(true).Foreground(c.Theme.Colors.PrimaryLight).Background(c.Theme.Colors.Base600),
+		Header:    lipgloss.NewStyle().Bold(true).BorderStyle(lipgloss.NormalBorder()).BorderForeground(c.Theme.Colors.Base600).BorderBottom(true),
 		Cell:      lipgloss.NewStyle(),
 	}
 }
@@ -395,27 +396,25 @@ func generateHeadersView(cols []column, styles Styles) string {
 }
 
 func generateRenderedRow(rowIndex int, rowData Row, state tableState, childHoverID string, styles Styles, c *app.Ctx, tableID string) string {
+	rowStyle := styles.Cell
+
 	s := make([]string, 0, len(state.cols))
 	for i, value := range rowData {
-		if i >= len(state.cols) || state.cols[i].Width <= 0 { // Boundary check for cols
+		if i >= len(state.cols) || state.cols[i].Width <= 0 {
 			continue
 		}
-		renderedCellStyle := styles.Cell.Width(state.cols[i].Width).MaxWidth(state.cols[i].Width)
-		if rowIndex == state.cursor {
-			renderedCellStyle = renderedCellStyle.Inherit(styles.Selected)
-		}
-		s = append(s, renderedCellStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
+		rowClmStyle := styles.Cell.Width(state.cols[i].Width).MaxWidth(state.cols[i].Width)
+		s = append(s, rowClmStyle.Render(runewidth.Truncate(value, state.cols[i].Width, "…")))
 	}
-	rowElementID := "row:" + strconv.Itoa(rowIndex) // Unique ID for mouse events per row
-
-	var rowStr string
+	rowElementID := "row:" + strconv.Itoa(rowIndex)
 
 	if rowElementID == childHoverID {
-		rowStr = styles.Hovered.Render(lipgloss.JoinHorizontal(lipgloss.Top, s...))
-	} else {
-		rowStr = lipgloss.JoinHorizontal(lipgloss.Top, s...)
+		rowStyle = rowStyle.Inherit(styles.Hovered)
+	} else if rowIndex == state.cursor {
+		rowStyle = rowStyle.Inherit(styles.Selected)
 	}
-	return c.MouseZoneChild(rowElementID, rowStr)
+
+	return c.MouseZoneChild(rowElementID, rowStyle.Render(lipgloss.JoinHorizontal(lipgloss.Top, s...)))
 }
 
 func updateViewportContent(vp *viewport.Model, rows []Row, state tableState, childHoverID string, styles Styles, c *app.Ctx, tableID string) {

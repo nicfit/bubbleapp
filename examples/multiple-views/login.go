@@ -11,6 +11,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/router"
 	"github.com/alexanderbh/bubbleapp/component/stack"
 	"github.com/alexanderbh/bubbleapp/component/text"
+	"github.com/alexanderbh/bubbleapp/style"
 )
 
 type authData struct {
@@ -96,18 +97,18 @@ func loginRoute(c *app.Ctx) app.C {
 				setLoginError("")
 				setLogginIn(true)
 				go loginFunc(false)
-			}, button.WithVariant(button.Primary)),
+			}, button.WithVariant(style.Primary)),
 
 			button.New(c, "Fail log in", func() {
 				setLoginError("")
 				setLogginIn(true)
 				go loginFunc(true)
-			}, button.WithVariant(button.Warning)),
+			}, button.WithVariant(style.Warning)),
 
-			button.New(c, "Quit App", c.Quit, button.WithVariant(button.Danger)),
+			button.New(c, "Quit App", c.Quit, button.WithVariant(style.Danger)),
 		}
 		if loginError != "" {
-			views = append(views, text.New(c, "\n"+loginError, text.WithFg(c.Styles.Colors.Danger)))
+			views = append(views, text.New(c, "\n"+loginError, text.WithFg(c.Theme.Colors.DangerFg)))
 		}
 
 		return views
