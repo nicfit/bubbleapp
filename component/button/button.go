@@ -24,11 +24,13 @@ type prop func(*Props)
 func Button(c *app.Ctx, props app.Props) string {
 	buttonProps, _ := props.(Props)
 
+	id := app.UseID(c)
 	focused := app.UseIsFocused(c)
 	hovered, _ := app.UseIsHovered(c)
 
 	app.UseAction(c, func(_ string) {
 		if buttonProps.OnAction != nil && !buttonProps.Disabled {
+			c.FocusThis(id)
 			buttonProps.OnAction()
 		}
 	})

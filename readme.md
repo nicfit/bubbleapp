@@ -396,9 +396,11 @@ Here are some planned features in no particular order. Feel free to suggest some
 - [x] **Router** - Add a router component that can handle screens, navigation, back history, etc.
 - [x] **Theme** - Support for theme/palette
 - [x] **Shortcut support** - global and locally within components in focus perhaps
-- [ ] **Mouse wheel propagation** - propagate mouse wheel messages to hovered component tree
-- [ ] **Scroll overflow** - Support scrolling (mouse and keyboard) for Boxes with vertical overflowing content
-- [ ] **Form and input fields** - Move away from huh for forms as it is not flexible enough
+- [x] **Mouse wheel propagation** - propagate mouse wheel messages to hovered component tree
+- [ ] **Button loading state** - Add loading state to button
+- [x] **Scroll Box with mouse** - Scroll overflow Box with mouse wheel
+- [ ] **Scroll Box with keyboard** - Support scrolling (mouse and keyboard) for Boxes with vertical overflowing content
+- [ ] **Form and input fields** - Move away from huh for forms and use BubbleApp components for it
 - [ ] **Alignments** - Add justify and align options on relevant components
 - [ ] **Border and title on Box** - Add borders and titles to Box component
 - [ ] **Performance** - Figure out where CPU is spent and optimize (perhaps prevent rerenders if no props or state changes)

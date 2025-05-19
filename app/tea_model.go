@@ -125,6 +125,8 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.ctx.UIState.Hovered = ""
 			a.ctx.UIState.HoveredChild = ""
 		}
+		// TODO: Iterate these in bottom up order of the layout tree somehow.
+		//       so that the lowest component in the tree gets a change for handling first
 		for _, id := range idsInBounds {
 			splitID := strings.Split(id, "###")
 			id = splitID[0]

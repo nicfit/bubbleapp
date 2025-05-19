@@ -5,6 +5,8 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/component/box/viewport"
+	"github.com/alexanderbh/bubbleapp/component/router"
+	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
@@ -29,7 +31,17 @@ func Box(c *app.Ctx, props app.Props) string {
 	}
 
 	initialViewport := viewport.New()
+	initialViewport.MouseWheelDelta = 1
 	vp, _ := app.UseState(c, &initialViewport)
+
+	// Scroll to top on route change
+	// Not sure if this should be default behavior. It makes sense for now.
+	router := router.UseRouterController(c)
+	currentRoute := router.Current()
+	app.UseEffect(c, func() {
+		vp.GotoTop()
+	}, []any{currentRoute})
+	// End scroll to top on route change
 
 	width, height := app.UseSize(c)
 	if boxProps.Layout.Width > 0 {
@@ -41,6 +53,28 @@ func Box(c *app.Ctx, props app.Props) string {
 	if width <= 0 || height <= 0 {
 		return ""
 	}
+
+	app.UseMouseHandler(c, func(msg tea.MouseMsg, childID string) bool {
+		switch msg := msg.(type) {
+		case tea.MouseWheelMsg:
+			switch msg.Button {
+			case tea.MouseWheelDown:
+				if vp.AtBottom() {
+					return false
+				}
+			case tea.MouseWheelUp:
+				if vp.AtTop() {
+					return false
+				}
+			}
+			newVp, _ := vp.Update(msg)
+			vp.SetYOffset(newVp.YOffset())
+			vp.SetXOffset(newVp.XOffset())
+
+			return true
+		}
+		return false
+	})
 
 	// Is this right? When trying to get intrinsic size it feels like this should not be set
 	vp.SetWidth(width)
@@ -70,7 +104,7 @@ func Box(c *app.Ctx, props app.Props) string {
 
 	finalRender := style.Width(width).Height(height).Render(vp.View())
 
-	return finalRender
+	return c.MouseZone(finalRender)
 }
 
 // New creates a new Box component.
