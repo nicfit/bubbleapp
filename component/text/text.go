@@ -5,6 +5,7 @@ import (
 
 	"github.com/alexanderbh/bubbleapp/app"
 	"github.com/alexanderbh/bubbleapp/style"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type Props struct {
@@ -30,9 +31,13 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 
 	if props.Foreground != nil {
 		s = s.Foreground(props.Foreground)
+	} else {
+		s = s.Foreground(lipgloss.NoColor{})
 	}
 	if props.Background != nil {
 		s = s.Background(props.Background)
+	} else {
+		s = s.Background(lipgloss.NoColor{})
 	}
 	if props.Bold {
 		s = s.Bold(true)
