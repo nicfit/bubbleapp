@@ -396,6 +396,7 @@ Here are some planned features in no particular order. Feel free to suggest some
 - [x] **Router** - Add a router component that can handle screens, navigation, back history, etc.
 - [x] **Theme** - Support for theme/palette
 - [x] **Shortcut support** - global and locally within components in focus perhaps
+- [ ] **Mouse wheel propagation** - propagate mouse wheel messages to hovered component tree
 - [ ] **Scroll overflow** - Support scrolling (mouse and keyboard) for Boxes with vertical overflowing content
 - [ ] **Form and input fields** - Move away from huh for forms as it is not flexible enough
 - [ ] **Alignments** - Add justify and align options on relevant components
