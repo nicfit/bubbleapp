@@ -145,6 +145,12 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
+		// Nothing was clicked with the mouse so remove focus
+		if releaseMsg, ok := msg.(tea.MouseReleaseMsg); ok {
+			if releaseMsg.Button == tea.MouseLeft {
+				a.ctx.UIState.Focused = ""
+			}
+		}
 		return a, nil
 	default:
 		if a.ctx.UIState.Focused != "" {
