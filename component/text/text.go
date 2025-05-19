@@ -31,8 +31,6 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 
 	if props.Foreground != nil {
 		s = s.Foreground(props.Foreground)
-	} else {
-		s = s.Foreground(lipgloss.NoColor{})
 	}
 	if props.Background != nil {
 		s = s.Background(props.Background)
