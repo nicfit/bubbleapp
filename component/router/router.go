@@ -286,7 +286,12 @@ func matchAndRender(
 			// via CurrentMatchContext.
 			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) app.C {
 				if routeCopy.Component != nil {
-					return routeCopy.Component(c)
+					return c.RenderWithName(func(c *app.Ctx, props app.Props) string { return routeCopy.Component(c).String() }, keyProps{
+						Layout: app.Layout{
+							GrowX: true,
+							GrowY: true,
+						},
+					}, "route{"+path.Join(accumulatedParentPrefix, pathConsumed)+"}")
 				} else {
 					// If no component, but has children, it's a layout/group route.
 					// An Outlet component should be used explicitly within the parent's render flow
