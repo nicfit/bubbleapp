@@ -309,7 +309,10 @@ func matchAndRender(
 func NewOutlet(c *app.Ctx) app.C {
 	routerCtrl := UseCurrentMatch(c)
 
-	return c.Render(outlet, outletProps{Key: routerCtrl.RemainingPath})
+	return c.Render(outlet, outletProps{Key: routerCtrl.RemainingPath, Layout: app.Layout{
+		GrowX: true,
+		GrowY: true,
+	}})
 }
 
 type outletProps struct {

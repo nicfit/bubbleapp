@@ -127,5 +127,5 @@ func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
 
 // NewEmpty creates a new Box component with no children.
 func NewEmpty(c *app.Ctx, opts ...BoxProp) app.C {
-	return New(c, nil, opts...)
+	return New(c, nil, append([]BoxProp{WithDisableFollow(true)}, opts...)...)
 }
