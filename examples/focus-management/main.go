@@ -16,12 +16,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	presses, setPresses := app.UseState(c, 0)
 	log, setLog := app.UseState(c, []string{})
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Tab through the buttons to see focus state!"),
 
 			button.New(c, "Button 1", func() {
@@ -34,7 +34,7 @@ func NewRoot(c *app.Ctx) app.C {
 
 			divider.New(c),
 
-			box.New(c, func(c *app.Ctx) app.C {
+			box.New(c, func(c *app.Ctx) *app.C {
 				return text.New(c, strings.Join(log, "\n"))
 			}),
 

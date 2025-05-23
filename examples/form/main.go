@@ -31,11 +31,11 @@ var loginForm = huh.NewForm(
 	),
 ).WithTheme(huh.ThemeFunc(huh.ThemeDracula)).WithShowHelp(false)
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		cs := []app.C{}
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		cs := []*app.C{}
 		cs = append(cs, c.Render(loginLogo, nil))
 
 		if formSubmit == nil {

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/alexanderbh/bubbleapp/app" // Assuming app.Ctx, app.Fc, app.View (string), etc. are defined here
+	"github.com/alexanderbh/bubbleapp/app" // Assuming *app.Ctx, app.Fc, app.View (string), etc. are defined here
 	tea "github.com/charmbracelet/bubbletea/v2"
 	"github.com/charmbracelet/lipgloss/v2"
 )
@@ -37,7 +37,7 @@ type Props struct {
 type Prop func(*Props)
 
 // New creates a new TabTitles component.
-func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID int), opts ...Prop) app.C {
+func New(c *app.Ctx, titles []string, activeTab int, onTabChange func(activeID int), opts ...Prop) *app.C {
 	p := Props{
 		Titles:      titles,
 		ActiveTab:   activeTab,

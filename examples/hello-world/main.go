@@ -13,10 +13,10 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Hello World!", nil),
 			divider.New(c),
 			text.New(c, "Press [ctrl-c] to quit.", nil),

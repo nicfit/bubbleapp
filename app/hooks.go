@@ -8,16 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-// ChildMissingRenderError is the error thrown when a component
-// in a layout isn't properly registered with c.Render
-type ChildMissingRenderError struct {
-	ComponentPath string
-}
-
-func (e ChildMissingRenderError) Error() string {
-	return fmt.Sprintf("Component at path '%s' was not properly registered with c.Render - always use c.Render for components in layouts", e.ComponentPath)
-}
-
 // Returns the component ID
 func UseID(c *Ctx) string {
 	return c.id.getID()
@@ -25,10 +15,10 @@ func UseID(c *Ctx) string {
 
 // Registers component as focusable and returns the focus state
 func UseIsFocused(c *Ctx) bool {
-	instance, instanceExists := c.componentContext.get(c.id.getID())
-	if instanceExists {
-		instance.focusable = true
-	}
+	instance := c.getCurrentComponent()
+
+	instance.focusable = true
+
 	return c.UIState.Focused == c.id.getID()
 }
 
@@ -36,11 +26,7 @@ func UseOnFocused(c *Ctx, onFocused func(isReverse bool)) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseOnFocused: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.focusable = true
 	instance.onFocused = onFocused
 }
@@ -59,11 +45,11 @@ func UseSize(c *Ctx) (int, int) {
 	if c.LayoutPhase == LayoutPhaseIntrincintWidth {
 		return c.layoutManager.width, c.layoutManager.height
 	}
-	id := c.id.getID()
+	instance := c.getCurrentComponent()
 	if c.LayoutPhase == LayoutPhaseIntrincintHeight {
-		return c.UIState.GetWidth(id), c.layoutManager.height
+		return instance.width, c.layoutManager.height
 	}
-	return c.UIState.GetWidth(id), c.UIState.GetHeight(id)
+	return instance.width, instance.height
 }
 
 // UseFCs executes the children function to get pre-rendered Components
@@ -95,11 +81,10 @@ func UseFCs(c *Ctx, fcs FCs) []string {
 // IMPORTANT: Hooks must be called in the same order on every render,
 // and they must not be called conditionally.
 func UseState[T any](c *Ctx, initialValue T) (T, func(valueOrUpdater interface{})) {
-	instanceID := c.id.getID()
-	instance, _ := c.componentContext.get(instanceID)
+	instance := c.getCurrentComponent()
 
-	hookIndex := c.useStateCounter[instanceID]
-	c.useStateCounter[instanceID]++
+	hookIndex := instance.useStateCounter
+	instance.useStateCounter++
 
 	if hookIndex >= len(instance.states) {
 		instance.states = append(instance.states, initialValue)
@@ -170,11 +155,10 @@ func UseEffectWithCleanup(c *Ctx, effect func() func(), deps []any) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, _ := c.componentContext.get(instanceID)
+	instance := c.getCurrentComponent()
 
-	hookIndex := c.useEffectCounter[instanceID]
-	c.useEffectCounter[instanceID]++
+	hookIndex := instance.useEffectCounter
+	instance.useEffectCounter++
 
 	if hookIndex >= len(instance.effects) {
 		instance.effects = append(instance.effects, effectRecord{})
@@ -264,11 +248,7 @@ func UseKeyHandler(c *Ctx, handler KeyHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseKeyHandler: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.focusable = true
 	instance.keyHandlers = append(instance.keyHandlers, handler)
 }
@@ -279,11 +259,7 @@ func UseGlobalKeyHandler(c *Ctx, handler KeyHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseGlobalKeyHandler: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.globalKeyHandlers = append(instance.globalKeyHandlers, handler)
 }
 
@@ -292,11 +268,7 @@ func UseMouseHandler(c *Ctx, handler MouseHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseMouseHandler: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.mouseHandlers = append(instance.mouseHandlers, handler)
 }
 
@@ -306,11 +278,7 @@ func UseAction(c *Ctx, handler func(childID string)) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseAction: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.mouseHandlers = append(instance.mouseHandlers, func(msg tea.MouseMsg, childID string) bool {
 		if releaseMsg, ok := msg.(tea.MouseReleaseMsg); ok && releaseMsg.Mouse().Button == tea.MouseLeft {
 			handler(childID)
@@ -331,10 +299,6 @@ func UseMsgHandler(c *Ctx, handler MsgHandler) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
 	}
-	instanceID := c.id.getID()
-	instance, exists := c.componentContext.get(instanceID)
-	if !exists {
-		panic("UseMsgHandler: component instance not found")
-	}
+	instance := c.getCurrentComponent()
 	instance.messageHandlers = append(instance.messageHandlers, handler)
 }

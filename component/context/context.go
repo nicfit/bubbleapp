@@ -34,7 +34,7 @@ type ProviderProps[T any] struct {
 
 // NewProvider creates a new ContextProvider component.
 // It takes the context object, the specific value to provide, and children.
-func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child app.FC) app.C {
+func NewProvider[T any](c *app.Ctx, context *Context[T], valueToProvide T, child app.FC) *app.C {
 	if context == nil {
 		panic("NewProvider called with nil Context object")
 	}

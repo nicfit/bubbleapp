@@ -64,7 +64,7 @@ func TickFPS(c *app.Ctx, props app.Props) string {
 
 // New creates an instance of the TickFPS that registers its own tick listener
 // with the specified interval. This is useful for debugging tick events.
-func NewAtInterval(c *app.Ctx, registerTicks time.Duration) app.C {
+func NewAtInterval(c *app.Ctx, registerTicks time.Duration) *app.C {
 	componentProps := Props{
 		RegisterTicks: registerTicks,
 	}
@@ -72,6 +72,6 @@ func NewAtInterval(c *app.Ctx, registerTicks time.Duration) app.C {
 }
 
 // New creates an instance of the TickFPS component with a default interval of 1s.
-func New(c *app.Ctx) app.C {
+func New(c *app.Ctx) *app.C {
 	return NewAtInterval(c, 1000*time.Millisecond)
 }

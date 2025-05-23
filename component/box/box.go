@@ -108,7 +108,7 @@ func Box(c *app.Ctx, props app.Props) string {
 }
 
 // New creates a new Box component.
-func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
+func New(c *app.Ctx, child app.FC, opts ...BoxProp) *app.C {
 	appliedProps := BoxProps{
 		Child:         child,
 		DisableFollow: false,
@@ -126,6 +126,6 @@ func New(c *app.Ctx, child app.FC, opts ...BoxProp) app.C {
 }
 
 // NewEmpty creates a new Box component with no children.
-func NewEmpty(c *app.Ctx, opts ...BoxProp) app.C {
+func NewEmpty(c *app.Ctx, opts ...BoxProp) *app.C {
 	return New(c, nil, append([]BoxProp{WithDisableFollow(true)}, opts...)...)
 }

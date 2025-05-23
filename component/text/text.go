@@ -57,7 +57,7 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 }
 
 // New creates a new text element.
-func New(c *app.Ctx, text string, opts ...prop) app.C {
+func New(c *app.Ctx, text string, opts ...prop) *app.C {
 	p := Props{
 		Text:    text,
 		Variant: style.Base,

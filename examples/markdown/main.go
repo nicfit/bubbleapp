@@ -13,13 +13,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func NewRoot(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Markdown example!"),
 			divider.New(c),
 
-			box.New(c, func(c *app.Ctx) app.C {
+			box.New(c, func(c *app.Ctx) *app.C {
 				return markdown.New(c, mdContent)
 			}, box.WithDisableFollow(true)),
 

@@ -9,126 +9,113 @@ import (
 	"github.com/alexanderbh/bubbleapp/style"
 	zone "github.com/alexanderbh/bubblezone/v2"
 	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type Ctx struct {
-	UIState          *uiStateContext
-	zone             *zone.Manager
-	zoneMap          map[string]*instanceContext
-	teaProgram       *tea.Program
-	Theme            *style.AppTheme
-	id               *idContext
-	tick             *tickState[any]
-	invalidate       bool
-	componentContext *fcInstanceContext
-	useEffectCounter map[string]int
-	useStateCounter  map[string]int
-	contextValues    map[uint64][]any // Added for Context API
+	UIState       *uiStateContext
+	zone          *zone.Manager
+	zoneMap       map[string]*C
+	teaProgram    *tea.Program
+	Theme         *style.AppTheme
+	id            *idContext
+	tick          *tickState[any]
+	invalidate    bool
+	components    map[string]*C
+	ids           []string
+	contextValues map[uint64][]any // Added for Context API
 
 	CurrentBg color.Color
 	// Layout
 	LayoutPhase   layoutPhase
+	root          *C
 	layoutManager *layoutManager
 }
 
 func NewCtx() *Ctx {
 	return &Ctx{
-		UIState:          NewUIStateContext(),
-		zone:             zone.New(),
-		zoneMap:          make(map[string]*instanceContext),
-		Theme:            style.NewDefaultAppTheme(),
-		id:               newIdContext(),
-		tick:             &tickState[any]{},
-		componentContext: newInstanceContext(),
-		layoutManager:    newLayoutManager(),
-		useEffectCounter: make(map[string]int),
-		useStateCounter:  make(map[string]int),
-		contextValues:    make(map[uint64][]any), // Initialize contextValues
+		UIState:       NewUIStateContext(),
+		zone:          zone.New(),
+		zoneMap:       make(map[string]*C),
+		Theme:         style.NewDefaultAppTheme(),
+		id:            newIdContext(),
+		tick:          &tickState[any]{},
+		components:    make(map[string]*C),
+		ids:           make([]string, 0),
+		layoutManager: newLayoutManager(),
+		contextValues: make(map[uint64][]any),
 	}
 }
 
-func (c *Ctx) initView() {
-	c.id.initIDCollections()
-	c.id.initPath()
-	c.tick.init()
-	c.layoutManager.componentTree = newComponentTree()
-	c.zoneMap = make(map[string]*instanceContext)
-	// Is this the right way to clean up here?
-	for _, cs := range c.componentContext.ctxs {
-		cs.keyHandlers = make([]KeyHandler, 0)
-		cs.mouseHandlers = make([]MouseHandler, 0)
-		cs.messageHandlers = make([]MsgHandler, 0)
-		cs.onFocused = nil
-	}
-}
-
-func (c *Ctx) RenderWithName(fn func(c *Ctx, props Props) string, props Props, name string) C {
+func (c *Ctx) RenderWithName(fn func(c *Ctx, props Props) string, props Props, name string) *C {
 	id := c.id.push(name)
 	defer c.id.pop()
 
-	var node *ComponentNode
-	if c.LayoutPhase == LayoutPhaseIntrincintWidth {
-		node = c.layoutManager.addComponent(id, props)
-		defer c.layoutManager.pop()
-	} else {
-		node = c.layoutManager.getComponent(id)
+	var comp *C = c.components[id]
+	if comp == nil || c.LayoutPhase == LayoutPhaseIntrincintWidth {
+		comp = c.initComponent(id, props)
 	}
 
-	c.id.ids = append(c.id.ids, id)
+	c.ids = append(c.ids, id)
 
-	c.componentContext.set(id)
+	c.layoutManager.addComponent(comp)
+	defer c.layoutManager.pop(c, comp)
+	if c.root == nil {
+		c.root = comp
+	}
 
-	c.useStateCounter[id] = 0
-	c.useEffectCounter[id] = 0
+	comp.useStateCounter = 0
+	comp.useEffectCounter = 0
 
 	// FC now returns a string, not Component
 	outputStr := fn(c, props)
 
-	// Create the Component here
-	output := C{
-		content: outputStr,
-		id:      id,
-	}
+	comp.content = outputStr
 
-	if node != nil {
-		node.LastRender = output.String()
-		if c.LayoutPhase == LayoutPhaseIntrincintWidth {
-			if node.Parent == nil {
-				c.UIState.setWidth(id, c.layoutManager.width)
-			} else if !node.Layout.GrowX {
-				width := lipgloss.Width(output.String())
-				c.UIState.setWidth(id, width)
-			}
-		}
-		if c.LayoutPhase == LayoutPhaseIntrincintHeight {
-			if node.Parent == nil {
-				c.UIState.setHeight(id, c.layoutManager.height)
-			} else if !node.Layout.GrowY {
-				if output.String() == "" {
-					c.UIState.setHeight(id, 0)
-				} else {
-					c.UIState.setHeight(id, lipgloss.Height(output.String()))
-				}
-			}
-		}
-	}
-
-	return output
+	return comp
 }
 
 // Render a functional component with the given props.
 // This function is responsible for managing the lifecycle of the component,
 // including state management, effect handling, and ID management.
-func (c *Ctx) Render(fn func(c *Ctx, props Props) string, props Props) C {
+func (c *Ctx) Render(fn func(c *Ctx, props Props) string, props Props) *C {
 	return c.RenderWithName(fn, props, getKeyName(fn, props))
+}
+
+func (c *Ctx) initView() {
+	c.root = nil
+	c.id.initPath()
+	c.tick.init()
+	c.zoneMap = make(map[string]*C)
+
+	c.ids = []string{}
+	for _, cs := range c.components {
+		cs.keyHandlers = make([]KeyHandler, 0)
+		cs.mouseHandlers = make([]MouseHandler, 0)
+		cs.messageHandlers = make([]MsgHandler, 0)
+		cs.onFocused = nil
+		cs.height = 0
+		cs.width = 0
+
+		cs.children = make([]*C, 0)
+		cs.parent = nil
+		cs.layout = Layout{}
+	}
+}
+
+func (c *Ctx) initPhase() {
+	c.ids = []string{}
+	for _, cs := range c.components {
+
+		cs.children = make([]*C, 0)
+		cs.parent = nil
+	}
 }
 
 // MouseZone creates a mouse zone for the given content.
 // The ID of the zone is the components ID.
 func (c *Ctx) MouseZone(content string) string {
 	id := c.id.getID()
-	instance, _ := c.componentContext.get(id)
+	instance, _ := c.getComponent(id)
 	c.zoneMap[id] = instance
 	markedContent := c.zone.Mark(id, content)
 	return markedContent
@@ -143,9 +130,6 @@ func (c *Ctx) MouseZoneChild(childID string, content string) string {
 	return markedContent
 }
 
-type outputCollector struct {
-	outputs []string
-}
 type InvalidateMsg struct{}
 
 // Helper to get function name (can be fragile - consider other approach)

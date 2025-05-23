@@ -10,7 +10,7 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func MainRouter(c *app.Ctx) app.C {
+func MainRouter(c *app.Ctx) *app.C {
 	return router.NewRouter(c, router.RouterProps{
 		Routes: []router.Route{
 			{Path: "/", Component: dashboard},
@@ -25,11 +25,11 @@ func MainRouter(c *app.Ctx) app.C {
 	})
 }
 
-func dashboard(c *app.Ctx) app.C {
+func dashboard(c *app.Ctx) *app.C {
 	router := router.UseRouterController(c)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Welcome to the dashboard! "),
 			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
 
@@ -46,15 +46,15 @@ func dashboard(c *app.Ctx) app.C {
 	})
 }
 
-func account(c *app.Ctx) app.C {
+func account(c *app.Ctx) *app.C {
 	r := router.UseRouterController(c)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "My Account"),
 			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.DangerFg)),
-			stack.New(c, func(c *app.Ctx) []app.C {
-				return []app.C{
+			stack.New(c, func(c *app.Ctx) []*app.C {
+				return []*app.C{
 					button.New(c, "Overview", func() {
 						r.Push(c, "/account/overview")
 					}),
@@ -80,22 +80,22 @@ func account(c *app.Ctx) app.C {
 	})
 }
 
-func accountOverview(c *app.Ctx) app.C {
+func accountOverview(c *app.Ctx) *app.C {
 	return text.New(c, "Account Overview")
 }
 
-func accountSettings(c *app.Ctx) app.C {
+func accountSettings(c *app.Ctx) *app.C {
 	return text.New(c, "Account Settings")
 }
-func accountOrders(c *app.Ctx) app.C {
+func accountOrders(c *app.Ctx) *app.C {
 	return text.New(c, "Account Orders")
 }
 
-func shop(c *app.Ctx) app.C {
+func shop(c *app.Ctx) *app.C {
 	router := router.UseRouterController(c)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Welcome to the shop!"),
 			text.New(c, "Press [ctrl-c] to quit.", text.WithFg(c.Theme.Colors.Danger)),
 
@@ -105,8 +105,8 @@ func shop(c *app.Ctx) app.C {
 				router.Push(c, "/")
 			}),
 
-			stack.New(c, func(c *app.Ctx) []app.C {
-				return []app.C{
+			stack.New(c, func(c *app.Ctx) []*app.C {
+				return []*app.C{
 					text.New(c, "Shop Item 1 - $10", text.WithFg(c.Theme.Colors.Tertiary)),
 					text.New(c, "Shop Item 2 - $12", text.WithFg(c.Theme.Colors.Tertiary)),
 					text.New(c, "This is just for show", text.WithFg(c.Theme.Colors.Warning)),

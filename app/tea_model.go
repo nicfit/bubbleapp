@@ -7,26 +7,14 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-// C (Component) is a special type that can only be created via c.Render.
-// This ensures all components are properly registered with the rendering system.
-type C struct {
-	content string
-	id      string
-}
-
-// String allows the Component to be used in contexts where a string is expected
-func (c C) String() string {
-	return c.content
-}
-
 // Props is the generic type for component properties
 type Props any
 
 // FCs is a function that returns a slice of pre-rendered Components.
 // This ensures that all child elements must be created via c.Render while
 // allowing for conditional logic when rendering children.
-type FCs = func(c *Ctx) []C
-type FC = func(c *Ctx) C
+type FCs = func(c *Ctx) []*C
+type FC = func(c *Ctx) *C
 
 type AppOptions struct {
 	Theme *style.AppTheme
@@ -79,12 +67,13 @@ func (a *app) Init() tea.Cmd {
 }
 
 func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
+	// TODO: Add debug logging flag
+	//log.Println("UPDATE", msg)
 	switch msg := msg.(type) {
 	case InvalidateMsg:
 		return a, nil
 	case tea.KeyMsg:
-		focusedInstance, focusedInstanceExists := a.ctx.componentContext.get(a.ctx.UIState.Focused)
+		focusedInstance, focusedInstanceExists := a.ctx.getComponent(a.ctx.UIState.Focused)
 		if focusedInstanceExists {
 			for _, handler := range focusedInstance.keyHandlers {
 				if handler(msg) {
@@ -94,7 +83,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// If the key was not handled by the focused component, check global key handlers.
-		for _, handler := range a.ctx.componentContext.getAllGlobalKeyHandlers() {
+		for _, handler := range a.ctx.getAllGlobalKeyHandlers() {
 			if handler(msg) {
 				return a, nil // Key was handled by a global key handler
 			}
@@ -126,7 +115,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			a.ctx.UIState.HoveredChild = ""
 		}
 
-		for i := len(idsInBounds) - 1; i >= 0; i-- {
+		for i := range idsInBounds {
 			id := idsInBounds[i]
 			splitID := strings.Split(id, "###")
 			id = splitID[0]
@@ -135,10 +124,14 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				childID = splitID[1]
 			}
 			if isMotionMsg {
-				a.ctx.UIState.Hovered = id // This will run for each meaning the last one will be the hovered one
-				a.ctx.UIState.HoveredChild = childID
+				// Longer ID means it is more specific here and thus hovered.
+				// Not sure if that is valid always
+				if a.ctx.UIState.Hovered == "" || len(id) > len(a.ctx.UIState.Hovered) {
+					a.ctx.UIState.Hovered = id // This will run for each meaning the last one will be the hovered one
+					a.ctx.UIState.HoveredChild = childID
+				}
 			}
-			foundInstance, found := a.ctx.componentContext.get(id)
+			foundInstance, found := a.ctx.getComponent(id)
 			if found {
 				for _, handler := range foundInstance.mouseHandlers {
 					if handler(msg, childID) {
@@ -156,7 +149,7 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return a, nil
 	default:
 		if a.ctx.UIState.Focused != "" {
-			foundInstance, found := a.ctx.componentContext.get(a.ctx.UIState.Focused)
+			foundInstance, found := a.ctx.getComponent(a.ctx.UIState.Focused)
 			if found {
 				for _, handler := range foundInstance.messageHandlers {
 					cmd := handler(msg)
@@ -175,11 +168,10 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (a *app) View() string {
 	// Get all component IDs before rendering (current state)
-	prevIDs := a.ctx.componentContext.getAllIDs()
+	prevIDs := a.ctx.ids
 
 	a.ctx.initView()
 
-	a.ctx.UIState.resetSizes()
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
 	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
 		return a.root(c).String()
@@ -187,7 +179,7 @@ func (a *app) View() string {
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
-	a.ctx.id.initIDCollections()
+	a.ctx.initPhase()
 	a.ctx.id.initPath()
 	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
 		return a.root(c).String()
@@ -196,7 +188,7 @@ func (a *app) View() string {
 
 	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.invalidate = false
-	a.ctx.id.initIDCollections()
+	a.ctx.initPhase()
 	a.ctx.id.initPath()
 
 	rootComponent := a.ctx.RenderWithName(func(c *Ctx, props Props) string {
@@ -208,16 +200,17 @@ func (a *app) View() string {
 	a.ctx.tick.createTimer(a.ctx)
 
 	// Get all component IDs after rendering (new state)
-	currentIDs := a.ctx.id.ids // These are the IDs that were actually rendered
+	currentIDs := a.ctx.ids
 
 	// Determine removed IDs
 	removedIDs := findRemovedIDs(prevIDs, currentIDs)
 
 	// Cleanup effects for removed components
-	a.ctx.componentContext.cleanupEffects(removedIDs)
+	a.ctx.cleanupEffects(removedIDs)
 
-	// Cleanup general state for removed components (from app/state.go logic)
-	a.ctx.UIState.cleanup(currentIDs)
+	for _, removedID := range removedIDs {
+		delete(a.ctx.components, removedID)
+	}
 
 	return renderedView
 }

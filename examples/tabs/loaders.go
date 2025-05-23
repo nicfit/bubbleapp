@@ -8,9 +8,9 @@ import (
 	"github.com/alexanderbh/bubbleapp/component/text"
 )
 
-func loaders(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func loaders(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Loaders share the same tick for performance"),
 			divider.New(c),
 			loader.NewWithoutText(c, loader.Dots),

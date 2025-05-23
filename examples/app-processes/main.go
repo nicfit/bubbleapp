@@ -19,7 +19,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	processes, setProcesses := app.UseState(c, []table.Row{})
 
 	app.UseEffectWithCleanup(c, func() func() {
@@ -28,8 +28,8 @@ func NewRoot(c *app.Ctx) app.C {
 		return cancel
 	}, app.RunOnceDeps)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "# Processes: "+strconv.Itoa(len(processes))),
 			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
 				return clms, processes

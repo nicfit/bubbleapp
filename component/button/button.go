@@ -81,7 +81,7 @@ func Button(c *app.Ctx, props app.Props) string {
 	return c.MouseZone(style.Render(buttonProps.Text))
 }
 
-func New(c *app.Ctx, text string, onAction func(), props ...prop) app.C {
+func New(c *app.Ctx, text string, onAction func(), props ...prop) *app.C {
 	p := Props{
 		Text:     text,
 		OnAction: onAction,

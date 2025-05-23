@@ -2,6 +2,8 @@ package app
 
 import (
 	"reflect"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 type Layout struct {
@@ -29,88 +31,66 @@ const (
 	LayoutPhaseFinalRender
 )
 
-type componentTree struct {
-	nodes map[string]*ComponentNode
-	root  *ComponentNode
-}
-
-func newComponentTree() *componentTree {
-	return &componentTree{
-		nodes: make(map[string]*ComponentNode),
-		root:  nil,
-	}
-}
-
 type layoutManager struct {
-	componentTree *componentTree
-	currentParent []*ComponentNode
+	currentParent []*C
 	width         int
 	height        int
 }
 
 func newLayoutManager() *layoutManager {
 	return &layoutManager{
-		componentTree: newComponentTree(),
 		currentParent: nil,
 	}
 }
 
-type ComponentNode struct {
-	ID         string
-	Parent     *ComponentNode
-	LastRender string
-	Props      Props            // Props passed to this instance
-	Children   []*ComponentNode // Children in rendered order
-	Layout     Layout
-}
-
-func (lm *layoutManager) addComponent(id string, props Props) *ComponentNode {
-
-	node := &ComponentNode{
-		ID:     id,
-		Props:  props,
-		Layout: extractLayoutFromProps(props),
-	}
-
+func (lm *layoutManager) addComponent(comp *C) {
 	if len(lm.currentParent) > 0 {
 		parent := lm.currentParent[len(lm.currentParent)-1]
-		node.Parent = parent
+		comp.parent = parent
 
-		parent.Children = append(parent.Children, node)
+		parent.children = append(parent.children, comp)
 	}
-	lm.currentParent = append(lm.currentParent, node)
-
-	if lm.componentTree.root == nil {
-		lm.componentTree.root = node
-	}
-
-	lm.componentTree.nodes[id] = node
-
-	return node
+	lm.currentParent = append(lm.currentParent, comp)
 }
 
-func (lm *layoutManager) pop() {
+func (lm *layoutManager) pop(c *Ctx, comp *C) {
+
+	if comp != nil {
+
+		if c.LayoutPhase == LayoutPhaseIntrincintWidth {
+			if comp.parent == nil {
+				comp.width = lm.width
+			} else if !comp.layout.GrowX {
+				width := lipgloss.Width(comp.String())
+				comp.width = width
+			}
+		}
+		if c.LayoutPhase == LayoutPhaseIntrincintHeight {
+			if comp.parent == nil {
+				comp.height = lm.height
+			} else if !comp.layout.GrowY {
+				if comp.String() == "" {
+					comp.height = 0
+				} else {
+					comp.height = lipgloss.Height(comp.String())
+				}
+			}
+		}
+	}
+
 	if len(lm.currentParent) > 0 {
 		lm.currentParent = lm.currentParent[:len(lm.currentParent)-1]
 	}
 }
 
-func (lm *layoutManager) getComponent(id string) *ComponentNode {
-	node, ok := lm.componentTree.nodes[id]
-	if !ok {
-		return nil
-	}
-	return node
-}
-
 func (lm *layoutManager) distributeWidth(c *Ctx) {
-	Visit(lm.componentTree.root, 0, c, distributeAvailableWidthVisitor, PreOrder)
+	Visit(c.root, 0, c, distributeAvailableWidthVisitor, PreOrder)
 }
 func (lm *layoutManager) distributeHeight(c *Ctx) {
-	Visit(lm.componentTree.root, 0, c, distributeAvailableHeightVisitor, PreOrder)
+	Visit(c.root, 0, c, distributeAvailableHeightVisitor, PreOrder)
 }
 
-type VisitorFunc func(node *ComponentNode, index int, ctx *Ctx)
+type VisitorFunc func(node *C, index int, ctx *Ctx)
 
 type Order int
 
@@ -119,7 +99,7 @@ const (
 	PostOrder
 )
 
-func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order Order) {
+func Visit(node *C, index int, ctx *Ctx, visitor VisitorFunc, order Order) {
 	if node == nil {
 		return
 	}
@@ -128,7 +108,7 @@ func Visit(node *ComponentNode, index int, ctx *Ctx, visitor VisitorFunc, order 
 		visitor(node, index, ctx)
 	}
 
-	for i, child := range node.Children {
+	for i, child := range node.children {
 		Visit(child, i, ctx, visitor, order)
 	}
 
@@ -185,42 +165,42 @@ func extractLayoutFromProps(props interface{}) Layout {
 	return defaultLayout
 }
 
-func distributeAvailableWidthVisitor(node *ComponentNode, _ int, c *Ctx) {
+func distributeAvailableWidthVisitor(node *C, _ int, c *Ctx) {
 	if node == nil {
 		return
 	}
-	children := node.Children
+	children := node.children
 	if len(children) == 0 {
 		return
 	}
 
-	availableWidth := c.UIState.GetWidth(node.ID)
-	direction := node.Layout.Direction
+	availableWidth := node.width
+	direction := node.layout.Direction
 
 	if direction == Vertical {
 		for _, child := range children {
-			if child.Layout.GrowX {
-				c.UIState.setWidth(child.ID, availableWidth)
+			if child.layout.GrowX {
+				child.width = availableWidth
 			}
 		}
 	} else { // Horizontal
 		nonGrowingChildrenWidth := 0
 		growingChildrenCount := 0
-		var growingChildren []*ComponentNode
+		var growingChildren []*C
 
 		for _, child := range children {
-			if child.Layout.GrowX {
+			if child.layout.GrowX {
 				growingChildrenCount++
 				growingChildren = append(growingChildren, child)
 			} else {
-				nonGrowingChildrenWidth += c.UIState.GetWidth(child.ID)
+				nonGrowingChildrenWidth += child.width
 			}
 		}
 
 		totalGapWidth := 0
 		// Calculate total gap width if there's more than one child and a positive gap is specified by the parent
-		if len(children) > 1 && node.Layout.GapX > 0 {
-			totalGapWidth = (len(children) - 1) * node.Layout.GapX
+		if len(children) > 1 && node.layout.GapX > 0 {
+			totalGapWidth = (len(children) - 1) * node.layout.GapX
 		}
 
 		remainingWidth := availableWidth - nonGrowingChildrenWidth - totalGapWidth
@@ -237,47 +217,47 @@ func distributeAvailableWidthVisitor(node *ComponentNode, _ int, c *Ctx) {
 				if i < remainder {
 					childWidth++
 				}
-				c.UIState.setWidth(child.ID, childWidth)
+				child.width = childWidth
 			}
 		}
 	}
 }
 
-func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
+func distributeAvailableHeightVisitor(node *C, _ int, ctx *Ctx) {
 	if node == nil {
 		return
 	}
-	children := node.Children
+	children := node.children
 	if len(children) == 0 {
 		return
 	}
 
-	availableHeight := ctx.UIState.GetHeight(node.ID)
-	direction := node.Layout.Direction
+	availableHeight := node.height
+	direction := node.layout.Direction
 
 	if direction == Horizontal {
 		for _, child := range children {
-			if child.Layout.GrowY {
-				ctx.UIState.setHeight(child.ID, availableHeight)
+			if child.layout.GrowY {
+				child.height = availableHeight
 			}
 		}
 	} else { // Vertical
 		nonGrowingChildrenHeight := 0
 		growingChildrenCount := 0
-		var growingChildren []*ComponentNode
+		var growingChildren []*C
 
 		for _, child := range children {
-			if child.Layout.GrowY {
+			if child.layout.GrowY {
 				growingChildrenCount++
 				growingChildren = append(growingChildren, child)
 			} else {
-				nonGrowingChildrenHeight += ctx.UIState.GetHeight(child.ID)
+				nonGrowingChildrenHeight += child.height
 			}
 		}
 
 		totalGapHeight := 0
-		if len(children) > 1 && node.Layout.GapY > 0 {
-			totalGapHeight = (len(children) - 1) * node.Layout.GapY
+		if len(children) > 1 && node.layout.GapY > 0 {
+			totalGapHeight = (len(children) - 1) * node.layout.GapY
 		}
 
 		remainingHeight := availableHeight - nonGrowingChildrenHeight - totalGapHeight
@@ -294,7 +274,7 @@ func distributeAvailableHeightVisitor(node *ComponentNode, _ int, ctx *Ctx) {
 				if i < remainder {
 					childHeight++
 				}
-				ctx.UIState.setHeight(child.ID, childHeight)
+				child.height = childHeight
 			}
 		}
 	}

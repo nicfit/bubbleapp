@@ -51,7 +51,7 @@ func Stack(c *app.Ctx, props app.Props) string {
 	return result
 }
 
-func New(c *app.Ctx, fcs app.FCs, props ...StackProp) app.C {
+func New(c *app.Ctx, fcs app.FCs, props ...StackProp) *app.C {
 	appliedProps := StackProps{
 		FCs: fcs,
 		Layout: app.Layout{

@@ -17,21 +17,21 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 
-	stack := stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	stack := stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 
 			text.New(c, "Loaders:"),
 			divider.New(c),
 			loader.New(c, loader.Dots, "With text...", loader.WithColor(c.Theme.Colors.InfoLight), loader.WithTextColor(c.Theme.Colors.PrimaryFg)),
 			tickfps.NewAtInterval(c, 100*time.Microsecond), // Used for debugging tick events.
-			stack.New(c, func(c *app.Ctx) []app.C {
-				return []app.C{
+			stack.New(c, func(c *app.Ctx) []*app.C {
+				return []*app.C{
 
-					box.New(c, func(c *app.Ctx) app.C {
-						return stack.New(c, func(c *app.Ctx) []app.C {
-							return []app.C{
+					box.New(c, func(c *app.Ctx) *app.C {
+						return stack.New(c, func(c *app.Ctx) []*app.C {
+							return []*app.C{
 								loader.NewWithoutText(c, loader.Dots),
 								loader.NewWithoutText(c, loader.Dots2),
 								loader.NewWithoutText(c, loader.Dots3),
@@ -54,9 +54,9 @@ func NewRoot(c *app.Ctx) app.C {
 						})
 					}),
 
-					box.New(c, func(c *app.Ctx) app.C {
-						return stack.New(c, func(c *app.Ctx) []app.C {
-							return []app.C{
+					box.New(c, func(c *app.Ctx) *app.C {
+						return stack.New(c, func(c *app.Ctx) []*app.C {
+							return []*app.C{
 								loader.NewWithoutText(c, loader.Line2),
 								loader.NewWithoutText(c, loader.Pipe),
 								loader.NewWithoutText(c, loader.SimpleDots),
@@ -78,9 +78,9 @@ func NewRoot(c *app.Ctx) app.C {
 							}
 						})
 					}),
-					box.New(c, func(c *app.Ctx) app.C {
-						return stack.New(c, func(c *app.Ctx) []app.C {
-							return []app.C{
+					box.New(c, func(c *app.Ctx) *app.C {
+						return stack.New(c, func(c *app.Ctx) []*app.C {
+							return []*app.C{
 								loader.NewWithoutText(c, loader.Binary),
 								loader.NewWithoutText(c, loader.Arc),
 								loader.NewWithoutText(c, loader.Circle),
@@ -102,9 +102,9 @@ func NewRoot(c *app.Ctx) app.C {
 							}
 						})
 					}),
-					box.New(c, func(c *app.Ctx) app.C {
-						return stack.New(c, func(c *app.Ctx) []app.C {
-							return []app.C{
+					box.New(c, func(c *app.Ctx) *app.C {
+						return stack.New(c, func(c *app.Ctx) []*app.C {
+							return []*app.C{
 								loader.NewWithoutText(c, loader.Toggle12),
 								loader.NewWithoutText(c, loader.Toggle13),
 								loader.NewWithoutText(c, loader.Arrow),
@@ -123,9 +123,9 @@ func NewRoot(c *app.Ctx) app.C {
 							}
 						})
 					}),
-					box.New(c, func(c *app.Ctx) app.C {
-						return stack.New(c, func(c *app.Ctx) []app.C {
-							return []app.C{
+					box.New(c, func(c *app.Ctx) *app.C {
+						return stack.New(c, func(c *app.Ctx) []*app.C {
+							return []*app.C{
 								loader.NewWithoutText(c, loader.Runner),
 								loader.NewWithoutText(c, loader.Pong),
 								loader.NewWithoutText(c, loader.Shark),

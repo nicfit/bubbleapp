@@ -12,12 +12,12 @@ import (
 
 type CustomData struct{}
 
-func NewRoot(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func NewRoot(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			box.NewEmpty(c, box.WithBg(c.Theme.Colors.DangerLight)),
-			stack.New(c, func(c *app.Ctx) []app.C {
-				return []app.C{
+			stack.New(c, func(c *app.Ctx) []*app.C {
+				return []*app.C{
 					box.NewEmpty(c, box.WithBg(c.Theme.Colors.PrimaryLight)),
 					box.NewEmpty(c, box.WithBg(c.Theme.Colors.SecondaryLight)),
 					box.NewEmpty(c, box.WithBg(c.Theme.Colors.TertiaryLight)),
@@ -33,7 +33,7 @@ func main() {
 	c := app.NewCtx()
 
 	bubbleApp := app.New(c, NewRoot)
-	p := tea.NewProgram(bubbleApp, tea.WithAltScreen())
+	p := tea.NewProgram(bubbleApp, tea.WithAltScreen(), tea.WithMouseAllMotion())
 	bubbleApp.SetTeaProgram(p)
 
 	if _, err := p.Run(); err != nil {

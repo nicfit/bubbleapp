@@ -132,7 +132,7 @@ func UseCurrentMatch(c *app.Ctx) CurrentMatchContextData {
 
 // NewRouter is the entry point to set up the router.
 // It provides the RouterController to its children.
-func NewRouter(c *app.Ctx, props RouterProps) app.C {
+func NewRouter(c *app.Ctx, props RouterProps) *app.C {
 
 	ps := RouterViewProps{
 		Layout: app.Layout{
@@ -155,7 +155,7 @@ func routerView(c *app.Ctx, rawProps app.Props) string {
 
 	routerCtrl, _ := app.UseState(c, NewRouterController(props.InitialPath, props.Routes, props.NotFound))
 
-	return context.NewProvider(c, RouterContext, routerCtrl, func(c *app.Ctx) app.C {
+	return context.NewProvider(c, RouterContext, routerCtrl, func(c *app.Ctx) *app.C {
 		return matchAndRender(c, routerCtrl.Routes, routerCtrl.currentPath, routerCtrl.currentPath, "", routerCtrl.notFound)
 	}).String()
 }
@@ -262,7 +262,7 @@ func matchAndRender(
 	pathSegmentToMatch string,
 	accumulatedParentPrefix string,
 	notFound app.FC,
-) app.C {
+) *app.C {
 	normalizedPathSegmentToMatch := path.Clean(pathSegmentToMatch)
 	if normalizedPathSegmentToMatch == "." { // path.Clean can return "." for empty or "/"
 		normalizedPathSegmentToMatch = "/"
@@ -284,7 +284,7 @@ func matchAndRender(
 
 			// Provide this specific newMatchData to the matched component and its children (e.g., Outlet)
 			// via CurrentMatchContext.
-			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) app.C {
+			return context.NewProvider(c, CurrentMatchContext, newMatchData, func(c *app.Ctx) *app.C {
 				if routeCopy.Component != nil {
 					return c.RenderWithName(func(c *app.Ctx, props app.Props) string { return routeCopy.Component(c).String() }, keyProps{
 						Layout: app.Layout{
@@ -311,7 +311,7 @@ func matchAndRender(
 
 // --- Outlet ---
 
-func NewOutlet(c *app.Ctx) app.C {
+func NewOutlet(c *app.Ctx) *app.C {
 	routerCtrl := UseCurrentMatch(c)
 
 	return c.Render(outlet, outletProps{Key: routerCtrl.RemainingPath, Layout: app.Layout{

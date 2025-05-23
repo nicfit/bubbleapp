@@ -61,8 +61,8 @@ import (
   tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-// This is your root function that returns an app.C (which is a rendered string)
-func NewRoot(c *app.Ctx) app.C {
+// This is your root function that returns an *app.C (which is a rendered string)
+func NewRoot(c *app.Ctx) *app.C {
   return text.New(c, "Hello World!")
 }
 
@@ -105,7 +105,7 @@ There is not a lot of code here for the UI. Take a look.
 Set up a router:
 
 ```go
-func MainRouter(c *app.Ctx) app.C {
+func MainRouter(c *app.Ctx) *app.C {
 	return router.NewRouter(c, router.RouterProps{
 		Routes: []router.Route{
 			{Path: "/", Component: dashboard},
@@ -150,7 +150,7 @@ var tabsData = []tabs.Tab{
   {Title: "Boxes 🟨", Content: boxes},
 }
 
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	return tabs.New(c, tabsData)
 }
 ```
@@ -174,9 +174,9 @@ loader.New(c, loader.Dots, "Loading..."),
 Each table automatically handles mouse hovering rows. They send out messages on state change and focus and keys are handled automatically.
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func NewRoot(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			table.New(c, table.WithDataFunc(func(c *app.Ctx) ([]table.Column, []table.Row) {
 				return clms, rows
 			})),
@@ -207,11 +207,11 @@ var loginForm = huh.NewForm(
 ```
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		cs := []app.C{}
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		cs := []*app.C{}
 		cs = append(cs, c.Render(loginLogo, nil))
 
 		if formSubmit == nil {
@@ -248,13 +248,13 @@ func NewRoot(c *app.Ctx) app.C {
 Using [Glamour](https://github.com/charmbracelet/glamour) for markdown rendering.
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func NewRoot(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Markdown example!"),
 			divider.New(c),
 
-			box.New(c, func(c *app.Ctx) app.C {
+			box.New(c, func(c *app.Ctx) *app.C {
 				return markdown.New(c, mdContent)
 			}, box.WithDisableFollow(true)),
 
@@ -276,13 +276,13 @@ func NewRoot(c *app.Ctx) app.C {
 Stack layouts vertically or horizontally.
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+func NewRoot(c *app.Ctx) *app.C {
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			box.NewEmpty(c, box.WithBg(c.Theme.Colors.Danger)),
-			box.New(c, func(c *app.Ctx) app.C {
-				return stack.New(c, func(c *app.Ctx) []app.C {
-					return []app.C{
+			box.New(c, func(c *app.Ctx) *app.C {
+				return stack.New(c, func(c *app.Ctx) []*app.C {
+					return []*app.C{
 						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Primary)),
 						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Secondary)),
 						box.NewEmpty(c, box.WithBg(c.Theme.Colors.Tertiary)),
@@ -306,7 +306,7 @@ func NewRoot(c *app.Ctx) app.C {
 Functional components and hooks as you might be familiar with
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	clicks, setClicks := app.UseState(c, 0)
 	greeting, setGreeting := app.UseState(c, "Knock knock!")
 
@@ -317,8 +317,8 @@ func NewRoot(c *app.Ctx) app.C {
 		}()
 	}, []any{})
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			button.New(c, "Count clicks here!", func() {
 				setClicks(clicks + 1)
 			}),
@@ -341,12 +341,12 @@ func NewRoot(c *app.Ctx) app.C {
 Global tab management without any extra code. All focusable components are automatically in a tab order (their order in the UI tree).
 
 ```go
-func NewRoot(c *app.Ctx) app.C {
+func NewRoot(c *app.Ctx) *app.C {
 	presses, setPresses := app.UseState(c, 0)
 	log, setLog := app.UseState(c, []string{})
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		return []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		return []*app.C{
 			text.New(c, "Tab through the buttons to see focus state!"),
 
 			button.New(c, "Button 1", func() {
@@ -359,7 +359,7 @@ func NewRoot(c *app.Ctx) app.C {
 
 			divider.New(c),
 
-			box.New(c, func(c *app.Ctx) app.C {
+			box.New(c, func(c *app.Ctx) *app.C {
 				return text.New(c, strings.Join(log, "\n"))
 			}),
 

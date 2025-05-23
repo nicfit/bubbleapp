@@ -3,13 +3,13 @@ package app
 // _getFocusableComponentIDs retrieves all focusable component IDs.
 func _getFocusableComponentIDs(c *Ctx) []string {
 	var focusableIDs []string
-	if c.id == nil || c.componentContext == nil {
+	if c.id == nil || c.components == nil {
 		// Should not happen in a healthy context
 		return focusableIDs
 	}
 
-	for _, id := range c.id.ids {
-		componentInfo, ok := c.componentContext.get(id)
+	for _, id := range c.ids {
+		componentInfo, ok := c.getComponent(id)
 		if ok && componentInfo != nil && componentInfo.focusable {
 			focusableIDs = append(focusableIDs, id)
 		}
@@ -32,7 +32,7 @@ func _findCurrentFocusIndex(focusableIDs []string, currentFocusID string) int {
 // If the component is not focusable, it will try to find a parent that is focusable.
 // If no focusable parent is found, it sets the focused ID to empty.
 func (c *Ctx) FocusThis(id string) {
-	if instance, ok := c.componentContext.get(id); ok && instance != nil {
+	if instance, ok := c.getComponent(id); ok && instance != nil {
 		if instance.focusable {
 			c.UIState.Focused = id
 			// If the component has an onFocused function, call it
@@ -41,9 +41,9 @@ func (c *Ctx) FocusThis(id string) {
 			}
 		} else {
 			// If the component is not focusable, try to find a parent that is
-			var parent = c.layoutManager.componentTree.nodes[instance.id].Parent
+			var parent = instance.parent
 			for parent != nil {
-				pInstance, ok := c.componentContext.get(parent.ID)
+				pInstance, ok := c.getComponent(parent.id)
 				if !ok {
 					break
 				}
@@ -55,7 +55,7 @@ func (c *Ctx) FocusThis(id string) {
 					}
 					break
 				}
-				parent = c.layoutManager.componentTree.nodes[pInstance.id].Parent
+				parent = pInstance.parent
 			}
 			// If no parent is focusable, set the focused ID to empty
 			if parent == nil {
@@ -88,7 +88,7 @@ func (c *Ctx) FocusNext() string {
 	nextIDToFocus := focusableIDs[nextIndex]
 	c.UIState.Focused = nextIDToFocus
 	// If the component has an onFocused function, call it
-	if instance, ok := c.componentContext.get(nextIDToFocus); ok && instance.onFocused != nil {
+	if instance, ok := c.getComponent(nextIDToFocus); ok && instance.onFocused != nil {
 		instance.onFocused(false)
 	}
 	return nextIDToFocus
@@ -116,7 +116,7 @@ func (c *Ctx) FocusPrev() string {
 
 	prevIDToFocus := focusableIDs[prevIndex]
 	c.UIState.Focused = prevIDToFocus
-	if instance, ok := c.componentContext.get(prevIDToFocus); ok && instance.onFocused != nil {
+	if instance, ok := c.getComponent(prevIDToFocus); ok && instance.onFocused != nil {
 		instance.onFocused(true)
 	}
 	return prevIDToFocus

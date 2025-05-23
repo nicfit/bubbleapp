@@ -25,7 +25,7 @@ type MainApp struct {
 
 var AppDataContext = context.Create(MainApp{})
 
-func NewLoginRoot(c *app.Ctx) app.C {
+func NewLoginRoot(c *app.Ctx) *app.C {
 	data, setData := app.UseState(c, authData{})
 
 	mainApp := MainApp{
@@ -33,7 +33,7 @@ func NewLoginRoot(c *app.Ctx) app.C {
 		setData: func(ad authData) { setData(ad) },
 	}
 
-	return context.NewProvider(c, AppDataContext, mainApp, func(c *app.Ctx) app.C {
+	return context.NewProvider(c, AppDataContext, mainApp, func(c *app.Ctx) *app.C {
 		return router.NewRouter(c, router.RouterProps{
 			Routes: []router.Route{
 				{Path: "/", Component: mainRoute},
@@ -44,7 +44,7 @@ func NewLoginRoot(c *app.Ctx) app.C {
 
 }
 
-func mainRoute(c *app.Ctx) app.C {
+func mainRoute(c *app.Ctx) *app.C {
 	// UseContext returns AppContextValue.
 	contextValue := context.UseContext(c, AppDataContext)
 	appAuthData := contextValue.data // This is *authData
@@ -58,7 +58,7 @@ func mainRoute(c *app.Ctx) app.C {
 	return NewAuthModel(c)
 }
 
-func loginRoute(c *app.Ctx) app.C {
+func loginRoute(c *app.Ctx) *app.C {
 	appData := context.UseContext(c, AppDataContext)
 
 	loggingIn, setLogginIn := app.UseState(c, false)
@@ -66,8 +66,8 @@ func loginRoute(c *app.Ctx) app.C {
 	router := router.UseRouterController(c)
 
 	if loggingIn {
-		return stack.New(c, func(c *app.Ctx) []app.C {
-			return []app.C{
+		return stack.New(c, func(c *app.Ctx) []*app.C {
+			return []*app.C{
 				text.New(c, "Please wait..."),
 				loader.New(c, loader.Binary, "Logging in..."),
 			}
@@ -88,8 +88,8 @@ func loginRoute(c *app.Ctx) app.C {
 		router.ReplaceRoot(c, "/")
 	}
 
-	return stack.New(c, func(c *app.Ctx) []app.C {
-		views := []app.C{
+	return stack.New(c, func(c *app.Ctx) []*app.C {
+		views := []*app.C{
 			text.New(c, "██       ██████   ██████  ██ ███    ██\n██      ██    ██ ██       ██ ████   ██\n██      ██    ██ ██   ███ ██ ██ ██  ██\n██      ██    ██ ██    ██ ██ ██  ██ ██\n███████  ██████   ██████  ██ ██   ████\n\n"),
 			text.New(c, "Log in or fail! Up to you!"),
 
