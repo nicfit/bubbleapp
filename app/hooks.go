@@ -147,7 +147,7 @@ func UseEffect(c *Ctx, effect func(), deps []any) {
 	}, deps)
 }
 
-// UseEffect schedules a function to run after render, and optionally clean up.
+// UseEffectWithCleanup schedules a function to run after render, and optionally clean up.
 // Dependencies (deps) are checked to see if the effect should re-run.
 // If deps is nil, the effect runs after every render.
 // If deps is an empty slice, it runs only once after the initial render and on unmount.

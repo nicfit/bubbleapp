@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/alexanderbh/bubbleapp/component/box"
 	"os"
 
 	"github.com/alexanderbh/bubbleapp/app"
@@ -11,14 +12,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
-type CustomData struct{}
-
 func NewRoot(c *app.Ctx) *app.C {
 
 	return stack.New(c, func(c *app.Ctx) []*app.C {
 		return []*app.C{
 			text.New(c, "Hello World!", nil),
 			divider.New(c),
+			box.NewEmpty(c),
 			text.New(c, "Press [ctrl-c] to quit.", nil),
 		}
 	})

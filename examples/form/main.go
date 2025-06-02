@@ -27,7 +27,10 @@ var loginForm = huh.NewForm(
 	huh.NewGroup(
 		huh.NewInput().Key("email").Title("Email"),
 		huh.NewInput().Key("password").Title("Password").EchoMode(huh.EchoModePassword),
-		huh.NewSelect[string]().Key("rememberme").Title("Remember me").Description("Log in automatically when using this SSH key").Options(huh.NewOptions("Yes", "No")...),
+		huh.NewSelect[string]().Key("rememberme").
+			Title("Remember me").
+			Description("Log in automatically when using this SSH key").
+			Options(huh.NewOptions("Yes", "No")...),
 	),
 ).WithTheme(huh.ThemeFunc(huh.ThemeDracula)).WithShowHelp(false)
 
@@ -35,7 +38,7 @@ func NewRoot(c *app.Ctx) *app.C {
 	formSubmit, setFormSubmit := app.UseState[*FormData](c, nil)
 
 	return stack.New(c, func(c *app.Ctx) []*app.C {
-		cs := []*app.C{}
+		cs := make([]*app.C, 0)
 		cs = append(cs, c.Render(loginLogo, nil))
 
 		if formSubmit == nil {
@@ -46,9 +49,7 @@ func NewRoot(c *app.Ctx) *app.C {
 					remember: loginForm.GetString("rememberme"),
 				})
 			}))
-		}
-
-		if formSubmit != nil {
+		} else if formSubmit != nil {
 			cs = append(cs,
 				text.New(c, "Email: "+formSubmit.email, nil),
 				text.New(c, "Password 🙈: "+formSubmit.password, nil),
