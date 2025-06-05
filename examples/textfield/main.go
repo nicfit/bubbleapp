@@ -19,14 +19,22 @@ type CustomData struct{}
 func NewRoot(c *app.Ctx) *app.C {
 
 	textValue, setTextValue := app.UseState(c, "")
+	textValue2, setTextValue2 := app.UseState(c, "")
 
 	return stack.New(c, func(c *app.Ctx) []*app.C {
 		return []*app.C{
-			textfield.New(c, func(text string) {
-				setTextValue(text)
-			}, textValue, textfield.WithTitle("Type something here:")),
+			stack.New(c, func(c *app.Ctx) []*app.C {
+				return []*app.C{
+					textfield.New(c, func(text string) {
+						setTextValue(text)
+					}, textValue, textfield.WithTitle("Type something:")),
+					textfield.New(c, func(text string) {
+						setTextValue2(text)
+					}, textValue2, textfield.WithTitle("Or here?\nPerhaps:")),
+				}
+			}, stack.WithDirection(app.Horizontal)),
 			divider.New(c),
-			text.New(c, "You typed: "+textValue),
+			text.New(c, "You typed: "+textValue, text.WithMB(2)),
 			text.New(c, "Press [ctrl-c] to quit."),
 			button.New(c, "Quit", c.Quit, button.WithVariant(style.Danger)),
 		}

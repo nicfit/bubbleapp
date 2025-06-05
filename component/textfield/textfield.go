@@ -4,7 +4,8 @@ import (
 	"image/color"
 
 	"github.com/alexanderbh/bubbleapp/app"
-	"github.com/charmbracelet/bubbles/v2/textinput"
+
+	"github.com/alexanderbh/bubbleapp/component/textfield/internal/textinput"
 	"github.com/charmbracelet/lipgloss/v2"
 
 	tea "github.com/charmbracelet/bubbletea/v2"
@@ -58,7 +59,7 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 		setT(&newT)
 	}, app.RunOnceDeps)
 
-	width, _ := app.UseSize(c)
+	width, height := app.UseSize(c)
 	x, y := app.UseGlobalPosition(c)
 
 	app.UseEffect(c, func() {
@@ -66,8 +67,8 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 			return
 		}
 		if focused {
-			c.ExecuteCmd(t.Focus())
-			c.Update()
+			t.Focus()
+			c.UpdateInMs(100)
 		} else {
 			t.Blur()
 		}
@@ -92,7 +93,7 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 			return false
 		}
 
-		if keyMsg.String() == "tab" {
+		if keyMsg.String() == "tab" || keyMsg.String() == "shift+tab" {
 			return false
 		}
 
@@ -165,7 +166,7 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 	} else {
 		content += "\n" + t.View()
 	}
-	return c.MouseZone(s.Render(content))
+	return c.MouseZone(s.MaxWidth(width).MaxHeight(height).Render(content))
 }
 
 func New(c *app.Ctx, onChange func(text string), value string, opts ...prop) *app.C {

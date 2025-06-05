@@ -10,6 +10,26 @@ Sleep 500ms
 
 Enter
 
+Sleep 2s
+
+Tab
+
+Sleep 1s
+
+Type "something"
+
+Sleep 2s
+
+Tab
+
+Sleep 1s
+
+Type "here"
+
+Left@200ms 3
+
+Type "123"
+
 Sleep 3s
 
 Type "q"

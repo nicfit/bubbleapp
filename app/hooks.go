@@ -308,6 +308,8 @@ func UseMsgHandler(c *Ctx, handler MsgHandler) {
 	instance.messageHandlers = append(instance.messageHandlers, handler)
 }
 
+// UseCursor updates the cursor position based on the component's position
+// The offsets are local only offsets from the top left of the current component.
 func UseCursor(c *Ctx, cursor *tea.Cursor, offsetX int, offsetY int) {
 	if c.LayoutPhase != LayoutPhaseFinalRender {
 		return
@@ -315,9 +317,11 @@ func UseCursor(c *Ctx, cursor *tea.Cursor, offsetX int, offsetY int) {
 
 	instance := c.getCurrentComponent()
 	if c.UIState.Focused == instance.id {
-		//c.Update()
 		cursor.Position.X += instance.x + offsetX
 		cursor.Position.Y += instance.y + offsetY
-		c.Cursor = cursor
+		cr := *cursor
+		// TODO: Support cursor styles. From theme perhaps?
+		//cr.Shape = tea.CursorUnderline
+		c.Cursor = &cr
 	}
 }

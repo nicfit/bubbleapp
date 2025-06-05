@@ -28,6 +28,8 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 		return ""
 	}
 
+	width, height := app.UseSize(c)
+
 	s := c.Theme.Text[props.Variant][style.Normal]
 
 	if props.Foreground != nil {
@@ -53,7 +55,7 @@ func Text(c *app.Ctx, rawProps app.Props) string {
 
 	s = app.ApplyMargin(app.ApplyPadding(s, props.Padding), props.Margin)
 
-	return s.Render(props.Text)
+	return s.MaxWidth(width).MaxHeight(height).Render(props.Text)
 }
 
 // New creates a new text element.

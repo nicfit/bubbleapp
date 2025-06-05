@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/alexanderbh/bubbleapp/style"
 	zone "github.com/alexanderbh/bubblezone/v2"
@@ -190,6 +191,20 @@ func (c *Ctx) Update() {
 		if c.teaProgram != nil {
 			go c.teaProgram.Send(InvalidateMsg{})
 		}
+	}
+	c.invalidate = true
+}
+
+func (c *Ctx) UpdateInMs(ms int) {
+	if c.teaProgram == nil {
+		panic("teaProgram is nil. Cannot update manually.")
+	}
+
+	if c.teaProgram != nil {
+		go func() {
+			<-time.After(time.Duration(ms) * time.Millisecond)
+			c.teaProgram.Send(InvalidateMsg{})
+		}()
 	}
 	c.invalidate = true
 }
