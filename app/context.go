@@ -29,6 +29,8 @@ type Ctx struct {
 	LayoutPhase   layoutPhase
 	root          *C
 	layoutManager *layoutManager
+
+	Cursor *tea.Cursor
 }
 
 func NewCtx() *Ctx {
@@ -86,6 +88,7 @@ func (c *Ctx) initView() {
 	c.id.initPath()
 	c.tick.init()
 	c.zoneMap = make(map[string]*C)
+	c.Cursor = nil
 
 	c.ids = []string{}
 	for _, cs := range c.components {

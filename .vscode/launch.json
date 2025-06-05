@@ -118,6 +118,15 @@
       "program": "${workspaceFolder}/examples/tabs/.",
       "cwd": "${workspaceFolder}/examples/tabs",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Example: textfield",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/examples/textfield/.",
+      "cwd": "${workspaceFolder}/examples/textfield",
+      "console": "integratedTerminal"
     }
   ]
 }

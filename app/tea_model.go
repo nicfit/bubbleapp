@@ -166,18 +166,21 @@ func (a *app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 }
 
-func (a *app) View() string {
+func (a *app) View() (string, *tea.Cursor) {
 	// Get all component IDs before rendering (current state)
 	prevIDs := a.ctx.ids
 
 	a.ctx.initView()
 
+	// Intrinsic width phase
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintWidth
 	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
 		return a.root(c).String()
 	}, nil, "Root")
 	a.ctx.layoutManager.distributeWidth(a.ctx)
 	// TODO: CONTENT WRAPPING PHASE HERE!!!! ************************************
+
+	// Intrinsic height phase
 	a.ctx.LayoutPhase = LayoutPhaseIntrincintHeight
 	a.ctx.initPhase()
 	a.ctx.id.initPath()
@@ -186,6 +189,17 @@ func (a *app) View() string {
 	}, nil, "Root")
 	a.ctx.layoutManager.distributeHeight(a.ctx)
 
+	// Absolute positioning phase
+	a.ctx.LayoutPhase = LayoutPhaseAbsolutePositions
+	a.ctx.invalidate = false
+	a.ctx.initPhase()
+	a.ctx.id.initPath()
+	a.ctx.RenderWithName(func(c *Ctx, props Props) string {
+		return a.root(c).String()
+	}, nil, "Root")
+	a.ctx.layoutManager.calculatePositions(a.ctx)
+
+	// Final render phase
 	a.ctx.LayoutPhase = LayoutPhaseFinalRender
 	a.ctx.invalidate = false
 	a.ctx.initPhase()
@@ -212,7 +226,7 @@ func (a *app) View() string {
 		delete(a.ctx.components, removedID)
 	}
 
-	return renderedView
+	return renderedView, a.ctx.Cursor
 }
 
 // findRemovedIDs returns the IDs that are present in prevIDs but not in currentIDs.

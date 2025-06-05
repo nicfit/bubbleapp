@@ -28,6 +28,7 @@ type layoutPhase int
 const (
 	LayoutPhaseIntrincintWidth layoutPhase = iota
 	LayoutPhaseIntrincintHeight
+	LayoutPhaseAbsolutePositions
 	LayoutPhaseFinalRender
 )
 
@@ -88,6 +89,10 @@ func (lm *layoutManager) distributeWidth(c *Ctx) {
 }
 func (lm *layoutManager) distributeHeight(c *Ctx) {
 	Visit(c.root, 0, c, distributeAvailableHeightVisitor, PreOrder)
+}
+
+func (lm *layoutManager) calculatePositions(c *Ctx) {
+	Visit(c.root, 0, c, calculateAbsolutePositionVisitor, PreOrder)
 }
 
 type VisitorFunc func(node *C, index int, ctx *Ctx)
@@ -163,6 +168,47 @@ func extractLayoutFromProps(props interface{}) Layout {
 	}
 
 	return defaultLayout
+}
+
+func calculateAbsolutePositionVisitor(node *C, _ int, c *Ctx) {
+	if node == nil {
+		return
+	}
+
+	if node.parent == nil {
+		node.x = 0
+		node.y = 0
+	} else {
+		parent := node.parent
+		prevSibling := (*C)(nil)
+		childIndex := 0
+		for i, child := range parent.children {
+			if child == node {
+				childIndex = i
+				break
+			}
+		}
+
+		if childIndex > 0 {
+			prevSibling = parent.children[childIndex-1]
+		}
+
+		if parent.layout.Direction == Horizontal {
+			node.y = parent.y
+			if prevSibling == nil { // First child
+				node.x = parent.x
+			} else {
+				node.x = prevSibling.x + prevSibling.width + parent.layout.GapX
+			}
+		} else { // Vertical
+			node.x = parent.x
+			if prevSibling == nil { // First child
+				node.y = parent.y
+			} else {
+				node.y = prevSibling.y + prevSibling.height + parent.layout.GapY
+			}
+		}
+	}
 }
 
 func distributeAvailableWidthVisitor(node *C, _ int, c *Ctx) {

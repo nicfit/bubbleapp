@@ -27,7 +27,7 @@ BubbleApp is an opinionated app framework for BubbleTea. Using composable functi
 - **[Layout Components](#layout-components)**
   - [Stack](#stack) and Box makes it easy to create flexible layouts. (Responsive Grid Layout Component planned)
 - **[Widget Components](#widget-components)**
-  - Button, [Loader](#loader), [Tabs](#tabs), Text, [Markdown](#markdown), [Table](#table), [Forms](#form) and more to come...
+  - Button, [Loader](#loader), [Tabs](#tabs), Text, Text Field, [Markdown](#markdown), [Table](#table), [Forms](#form) and more to come...
 - **Custom Components**
   - Make your own components. All the provided components are built with the same hooks you have access to
 

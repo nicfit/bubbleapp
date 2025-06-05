@@ -52,6 +52,11 @@ func UseSize(c *Ctx) (int, int) {
 	return instance.width, instance.height
 }
 
+func UseGlobalPosition(c *Ctx) (int, int) {
+	instance := c.getCurrentComponent()
+	return instance.x, instance.y
+}
+
 // UseFCs executes the children function to get pre-rendered Components
 // and returns their string contents for layout component consumption
 func UseFCs(c *Ctx, fcs FCs) []string {
@@ -301,4 +306,18 @@ func UseMsgHandler(c *Ctx, handler MsgHandler) {
 	}
 	instance := c.getCurrentComponent()
 	instance.messageHandlers = append(instance.messageHandlers, handler)
+}
+
+func UseCursor(c *Ctx, cursor *tea.Cursor, offsetX int, offsetY int) {
+	if c.LayoutPhase != LayoutPhaseFinalRender {
+		return
+	}
+
+	instance := c.getCurrentComponent()
+	if c.UIState.Focused == instance.id {
+		//c.Update()
+		cursor.Position.X += instance.x + offsetX
+		cursor.Position.Y += instance.y + offsetY
+		c.Cursor = cursor
+	}
 }

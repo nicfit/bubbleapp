@@ -39,8 +39,10 @@ type C struct {
 	useEffectCounter int
 	useStateCounter  int
 
-	width  int
-	height int
+	width, height int
+	x, y          int
+
+	// cursor *tea.Cursor
 }
 
 func (c *C) String() string {
