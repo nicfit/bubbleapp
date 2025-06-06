@@ -93,7 +93,7 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 			return false
 		}
 
-		if keyMsg.String() == "tab" || keyMsg.String() == "shift+tab" {
+		if keyMsg.String() == "tab" || keyMsg.String() == "shift+tab" || keyMsg.String() == "enter" {
 			return false
 		}
 
