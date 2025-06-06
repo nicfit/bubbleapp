@@ -129,7 +129,11 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 	})
 
 	if t != nil {
-		app.UseCursor(c, t.Cursor(), 0, lipgloss.Height(props.Title))
+		offsetY := 0
+		if props.Title != "" {
+			offsetY = lipgloss.Height(props.Title)
+		}
+		app.UseCursor(c, t.Cursor(), 0, offsetY)
 	}
 
 	s := lipgloss.NewStyle()
