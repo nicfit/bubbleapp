@@ -96,6 +96,7 @@ func (c *Ctx) initView() {
 		cs.keyHandlers = make([]KeyHandler, 0)
 		cs.mouseHandlers = make([]MouseHandler, 0)
 		cs.messageHandlers = make([]MsgHandler, 0)
+		cs.globalKeyHandlers = make([]KeyHandler, 0)
 		cs.onFocused = nil
 		cs.height = 0
 		cs.width = 0
