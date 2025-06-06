@@ -40,6 +40,22 @@ func WithBackground(bg color.Color) prop {
 		p.Background = bg
 	}
 }
+func WithGrowX(grow bool) prop {
+	return func(p *Props) {
+		p.Layout.GrowX = grow
+	}
+}
+func WithGrowY(grow bool) prop {
+	return func(p *Props) {
+		p.Layout.GrowY = grow
+	}
+}
+func WithGrow(grow bool) prop {
+	return func(p *Props) {
+		p.Layout.GrowX = grow
+		p.Layout.GrowY = grow
+	}
+}
 
 // Text is the core functional component for rendering text.
 func TextField(c *app.Ctx, rawProps app.Props) string {

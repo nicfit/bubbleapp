@@ -16,6 +16,7 @@ func Stack(c *app.Ctx, props app.Props) string {
 	stackProps, _ := props.(StackProps)
 
 	fcs := app.UseFCs(c, stackProps.FCs)
+	w, h := app.UseSize(c)
 
 	var processedFCs []string
 	if stackProps.Layout.Direction == app.Horizontal {
@@ -48,7 +49,9 @@ func Stack(c *app.Ctx, props app.Props) string {
 		result = lipgloss.JoinVertical(lipgloss.Left, processedFCs...)
 	}
 
-	return result
+	s := lipgloss.NewStyle()
+
+	return s.Width(w).Height(h).Render(result)
 }
 
 func New(c *app.Ctx, fcs app.FCs, props ...StackProp) *app.C {
