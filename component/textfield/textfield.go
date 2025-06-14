@@ -18,6 +18,7 @@ type Props struct {
 	Background color.Color
 	Bold       bool
 	OnChange   func(text string)
+	OnEnter    func()
 	app.Margin
 	app.Padding
 	app.Layout
@@ -54,6 +55,11 @@ func WithGrow(grow bool) prop {
 	return func(p *Props) {
 		p.Layout.GrowX = grow
 		p.Layout.GrowY = grow
+	}
+}
+func WithOnEnter(onEnter func()) prop {
+	return func(p *Props) {
+		p.OnEnter = onEnter
 	}
 }
 
@@ -109,7 +115,12 @@ func TextField(c *app.Ctx, rawProps app.Props) string {
 			return false
 		}
 
-		if keyMsg.String() == "tab" || keyMsg.String() == "shift+tab" || keyMsg.String() == "enter" {
+		if props.OnEnter != nil && keyMsg.String() == "enter" {
+			props.OnEnter()
+			return true
+		}
+
+		if keyMsg.String() == "tab" || keyMsg.String() == "shift+tab" || keyMsg.String() == "enter" || keyMsg.String() == "ctrl+c" {
 			return false
 		}
 
@@ -193,7 +204,7 @@ func New(c *app.Ctx, onChange func(text string), value string, opts ...prop) *ap
 	p := Props{
 		OnChange: onChange,
 		Value:    value,
-		Layout:   app.Layout{GrowX: true},
+		Layout:   app.Layout{GrowX: true, GrowY: false},
 	}
 
 	for _, opt := range opts {
